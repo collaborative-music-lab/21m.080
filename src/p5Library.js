@@ -130,6 +130,7 @@ class Element {
         this.p = p;
         this.label = options.label || "myElement";
         this.id = this.label;
+        console.log(p.elements)
         let i = 1;
         while (this.id in p.elements) {
             this.id += i;
@@ -224,6 +225,7 @@ export class Knob extends Element {
 
         // Display the knob value inside the removed part of the knob
         this.p.fill(0);
+        console.log('log', this.value)
         this.p.text(this.value.toFixed(2), this.x, this.y + this.size / 2); // Display the value in the center of the knob
 
         // Draw the knob background
@@ -339,6 +341,7 @@ export class Button extends Element {
         this.callback = options.callback || function () { console.log('Define a callback function'); };
         this.color = this.p.color(200);
         this.mouseDown = false;
+        this.height = this.size / 2;
     }
 
     resize(scaleWidth, scaleHeight) {
@@ -361,28 +364,28 @@ export class Button extends Element {
     }
 
     draw() {
-        let height = this.size / 2;
+        this.height = this.size / 2;
         this.p.fill(this.color);
         this.p.stroke(0);
         this.p.strokeWeight(2);
-        this.p.ellipse(this.x, this.y, this.size, height);
+        this.p.ellipse(this.x, this.y, this.size, this.height);
 
         this.setTextParams();
         this.p.text(this.label, this.x, this.y);
+    }
 
-        this.p.mousePressed = () => {
-            let dist1 = this.p.mouseX - this.size / 2;
-            let dist2 = this.p.mouseY - height / 2;
-            if (dist1 >= 0 & dist1 <= this.x + this.size && dist2 >= 0 && dist2 <= this.y + this.size * .75) {
-                if (!this.mouseDown) {
-                    this.pressed();
-                    this.mouseDown = true;
-                }
+    isPressed = () => {
+        let dist1 = this.p.mouseX - this.size / 2;
+        let dist2 = this.p.mouseY - this.height / 2;
+        if (dist1 >= 0 & dist1 <= this.x + this.size && dist2 >= 0 && dist2 <= this.y + this.size * .75) {
+            if (!this.mouseDown) {
+                this.pressed();
+                this.mouseDown = true;
             }
         }
-        this.p.mouseReleased = () => {
-            this.released();
-        }
+    }
+    isReleased = () => {
+        this.released();
     }
 }
 
@@ -424,11 +427,14 @@ p5.prototype.Toggle = function (options = {}) {
 export class RadioButton extends Button {
     constructor(p, options) {
         super(p, options);
+        console.log(options.radioOptions)
         this.radioOptions = options.radioOptions || ['on', 'off'];
         this.horizontal = options.horizontal === false ? false : true;
+        //console.log(this.callback, this.value, this.radioOptions[0])
         //do we want option for none on?
         this.value = this.radioOptions[0]; //default first radioOption
         this.callback = options.callback || function () { console.log('Define a callback function with the input being the current radioOption'); };
+        //console.log(this.callback, this.value, this.radioOptions[0])
     }
 
     draw() {
@@ -439,7 +445,8 @@ export class RadioButton extends Button {
             let option = this.radioOptions[i];
             let x = this.horizontal ? this.x + i * radioSize : this.x;
             let y = this.horizontal ? this.y : this.y + i * radioSize / 2;
-            this.p.fill(this.value === option ? this.p.color(255, 255, 255) : this.color);
+            console.log('draw', this.value, option, this.value == option)
+            this.p.fill(this.value == option ? this.p.color(255, 255, 255) : this.color);
             this.p.stroke(0);
             this.p.strokeWeight(2);
             this.p.rect(x, y, radioSize, radioSize / 2);
@@ -452,13 +459,14 @@ export class RadioButton extends Button {
                 else return this.p.mouseY >= y && this.p.mouseY <= y + radioSize / 2
             };
 
-            this.p.mouseClicked = () => {
+            this.p.mouseIsClicked = () => {
                 let inRangeX = this.p.mouseX >= this.x && this.p.mouseX <= this.x + (this.horizontal ? this.size : radioSize);
                 let inRangeY = this.p.mouseY >= this.y && this.p.mouseY <= this.y + (this.horizontal ? radioSize / 2 : this.size);
                 if (inRangeX && inRangeY) {
                     for (const [option, clicked] of Object.entries(radioClicked)) {
                         if (clicked()) {
                             this.value = option;
+                            console.log(this.callback, this.value)
                             this.runCallBack();
                             this.setValue();
                             break;

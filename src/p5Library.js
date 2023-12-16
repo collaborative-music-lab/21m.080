@@ -439,7 +439,7 @@ export class RadioButton extends Button {
             let option = this.radioOptions[i];
             let x = this.horizontal ? this.x + i * radioSize : this.x;
             let y = this.horizontal ? this.y : this.y + i * radioSize / 2;
-            this.p.fill(this.value === option ? this.p.color(255, 255, 255) : this.color);
+            this.p.fill(this.value == option ? this.p.color(255, 255, 255) : this.color);
             this.p.stroke(0);
             this.p.strokeWeight(2);
             this.p.rect(x, y, radioSize, radioSize / 2);

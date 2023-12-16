@@ -230,7 +230,6 @@ function Editor(props) {
 
     function evaluate(string, p5Code) {
         try {
-            console.log(string);
             eval(string);
             eval(p5Code);
         } catch (error) {

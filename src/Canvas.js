@@ -26,6 +26,54 @@ function Canvas(props) {
                 p.drawElements();
             };
 
+            p.mousePressed = function () {
+                for (const element of Object.values(p.elements)) {
+                    if (typeof (element) !== 'string') {
+                        try {
+                            element.isPressed();
+                        } catch (e) {
+                            //no pressed function
+                        }
+                    }
+                }
+            }
+
+            p.mouseReleased = function () {
+                for (const element of Object.values(p.elements)) {
+                    if (typeof (element) !== 'string') {
+                        try {
+                            element.isReleased();
+                        } catch (e) {
+                            //no releaed function
+                        }
+                    }
+                }
+            }
+
+            p.mouseClicked = function () {
+                for (const element of Object.values(p.elements)) {
+                    if (typeof (element) !== 'string') {
+                        try {
+                            element.isClicked();
+                        } catch (e) {
+                            //no clicked function
+                        }
+                    }
+                }
+            }
+
+            p.mouseDragged = function () {
+                for (const element of Object.values(p.elements)) {
+                    if (typeof (element) !== 'string') {
+                        try {
+                            element.isDragged();
+                        } catch (e) {
+                            //no clicked function
+                        }
+                    }
+                }
+            }
+
             p.windowResized = function () {
                 p.divResized();
             };

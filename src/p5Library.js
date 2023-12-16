@@ -238,27 +238,27 @@ export class Knob extends Element {
         let indicatorY = this.y + this.p.sin(angle) * indicatorLength;
         this.p.stroke(255, 0, 0); // Red indicator
         this.p.line(this.x, this.y, indicatorX, indicatorY);
+    }
 
-        this.p.mouseDragged = () => {
-            let d = this.p.dist(this.x, this.y, this.p.mouseX, this.p.mouseY);
-            if (d < this.size / 2 || this.dragging) {
-                this.dragging = true;
-                if (this.p.movedY < 0 && this.value < this.max) {
-                    if (this.value + this.incr > this.max) this.value = this.max;
-                    else this.value += this.incr;
-                }
-                else if (this.p.movedY > 0 && this.value > this.min) {
-                    if (this.value - this.incr < this.min) this.value = this.min;
-                    else this.value -= this.incr;
-                }
-                this.setValue();
+    isDragged() {
+        let d = this.p.dist(this.x, this.y, this.p.mouseX, this.p.mouseY);
+        if (d < this.size / 2 || this.dragging) {
+            this.dragging = true;
+            if (this.p.movedY < 0 && this.value < this.max) {
+                if (this.value + this.incr > this.max) this.value = this.max;
+                else this.value += this.incr;
             }
+            else if (this.p.movedY > 0 && this.value > this.min) {
+                if (this.value - this.incr < this.min) this.value = this.min;
+                else this.value -= this.incr;
+            }
+            this.setValue();
         }
+    }
 
-        this.p.mouseReleased = () => {
-            if (this.dragging) this.runCallBack();
-            this.dragging = false;
-        }
+    isReleased() {
+        if (this.dragging) this.runCallBack();
+        this.dragging = false;
     }
 }
 
@@ -281,14 +281,14 @@ export class Fader extends Element {
 
     draw() {
         let strokeWeight = this.size * .05;
-        let thickness = this.size * .1; //Indicator thickness
-        let rectThickness = thickness * .95;
+        this.thickness = this.size * .1; //Indicator thickness
+        let rectThickness = this.thickness * .95;
         // Display the label string beneath 
         this.setTextParams();
-        this.p.text(this.label, this.x + (this.horizontal ? this.size / 2 : thickness / 2), this.y + this.textSize + strokeWeight * 2 + (this.horizontal ? thickness : this.size));
+        this.p.text(this.label, this.x + (this.horizontal ? this.size / 2 : this.thickness / 2), this.y + this.textSize + strokeWeight * 2 + (this.horizontal ? this.thickness : this.size));
 
         // Display the value under x & y
-        this.p.text(this.value.toFixed(2), this.x + (this.horizontal ? this.size / 2 : thickness / 2), this.y + strokeWeight * 2 + (this.horizontal ? thickness : this.size));
+        this.p.text(this.value.toFixed(2), this.x + (this.horizontal ? this.size / 2 : this.thickness / 2), this.y + strokeWeight * 2 + (this.horizontal ? this.thickness : this.size));
 
         //Display Actual Fader
         this.p.noFill();
@@ -300,32 +300,31 @@ export class Fader extends Element {
         //Display Indicator
         this.p.fill(0);
         this.p.noStroke();
-        this.pos = this.p.map(this.value, this.min, this.max, this.horizontal ? this.x : this.y + this.size - thickness, this.horizontal ? this.x + this.size - thickness : this.y);
-        if (this.horizontal) this.p.rect(this.pos, this.y - strokeWeight + .2, thickness, this.size * .18);
-        else this.p.rect(this.x - strokeWeight + .2, this.pos, this.size * .18, thickness);
+        this.pos = this.p.map(this.value, this.min, this.max, this.horizontal ? this.x : this.y + this.size - this.thickness, this.horizontal ? this.x + this.size - this.thickness : this.y);
+        if (this.horizontal) this.p.rect(this.pos, this.y - strokeWeight + .2, this.thickness, this.size * .18);
+        else this.p.rect(this.x - strokeWeight + .2, this.pos, this.size * .18, this.thickness);
+    }
 
-        this.p.mouseDragged = () => {
-            let dist1 = this.horizontal ? this.p.mouseX - this.x : this.p.mouseY - this.y;
-            let dist2 = this.horizontal ? this.p.mouseY - this.y : this.p.mouseX - this.x - this.size * .08 / 2;
-            if ((dist1 >= 0 && dist1 <= (this.horizontal ? this.x : this.y) + this.size - thickness && dist2 >= 0 && dist2 <= this.size * .08) || this.dragging === true) {
-                this.dragging = true;
-                if (this.horizontal && this.p.mouseX >= this.x - 2 && this.p.mouseX <= this.x + this.size) {
-                    this.value = this.p.map(this.p.mouseX, this.x, this.x + this.size - thickness, this.min, this.max);
-                }
-                else if (!this.horizontal && this.p.mouseY >= this.y - 2 && this.p.mouseY <= this.y + this.size) {
-                    this.value = this.p.map(this.p.mouseY, this.y + this.size - thickness, this.y, this.min, this.max);
-                }
-                if (this.value <= this.min) this.value = this.min;
-                else if (this.value >= this.max) this.value = this.max;
-                this.setValue();
+    isDragged() {
+        let dist1 = this.horizontal ? this.p.mouseX - this.x : this.p.mouseY - this.y;
+        let dist2 = this.horizontal ? this.p.mouseY - this.y : this.p.mouseX - this.x - this.size * .08 / 2;
+        if ((dist1 >= 0 && dist1 <= (this.horizontal ? this.x : this.y) + this.size - this.thickness && dist2 >= 0 && dist2 <= this.size * .08) || this.dragging === true) {
+            this.dragging = true;
+            if (this.horizontal && this.p.mouseX >= this.x - 2 && this.p.mouseX <= this.x + this.size) {
+                this.value = this.p.map(this.p.mouseX, this.x, this.x + this.size - this.thickness, this.min, this.max);
             }
+            else if (!this.horizontal && this.p.mouseY >= this.y - 2 && this.p.mouseY <= this.y + this.size) {
+                this.value = this.p.map(this.p.mouseY, this.y + this.size - this.thickness, this.y, this.min, this.max);
+            }
+            if (this.value <= this.min) this.value = this.min;
+            else if (this.value >= this.max) this.value = this.max;
+            this.setValue();
         }
+    }
 
-        this.p.mouseReleased = () => {
-            if (this.dragging) this.runCallBack();
-            this.dragging = false;
-        }
-
+    isReleased() {
+        if (this.dragging) this.runCallBack();
+        this.dragging = false;
     }
 }
 
@@ -336,52 +335,50 @@ p5.prototype.Fader = function (options = {}) {
 export class Button extends Element {
     constructor(p, options) {
         super(p, options);
-        this.callback = options.callback || function () { console.log('Define a callback function'); };
         this.color = this.p.color(200);
         this.mouseDown = false;
+        this.callback = options.callback || function () { console.log('Define a callback function'); };
     }
 
     resize(scaleWidth, scaleHeight) {
-        super.resize(scaleWidth, scaleHeight);
+        super.resize(scaleWidth, scaleHeight)
         this.size *= this.horizontal !== false ? scaleWidth : scaleHeight;
     }
 
+    draw() {
+        this.height = this.size / 2;
+        this.p.fill(this.color);
+        this.p.stroke(0);
+        this.p.strokeWeight(2);
+        this.p.ellipse(this.x, this.y, this.size, this.height);
+
+        this.setTextParams();
+        this.p.text(this.label, this.x, this.y);
+    }
+
+    isPressed() {
+        let dist1 = this.p.mouseX - (this.x - this.size / 2);
+        let dist2 = this.p.mouseY - (this.y - this.height / 2);
+        if (dist1 >= 0 & dist1 <= this.size && dist2 >= 0 && dist2 <= this.height) {
+            if (!this.mouseDown) {
+                this.mouseDown = true;
+                this.pressed();
+            }
+        }
+    }
+
     pressed() {
+        this.mouseDown = true;
         this.value = this.max;
         this.color = this.p.color(255, 255, 255);
     }
 
-    released() {
+    isReleased() {
         if (this.mouseDown) {
             this.setValue();
             this.runCallBack();
             this.color = this.p.color(200);
             this.mouseDown = false;
-        }
-    }
-
-    draw() {
-        let height = this.size / 2;
-        this.p.fill(this.color);
-        this.p.stroke(0);
-        this.p.strokeWeight(2);
-        this.p.ellipse(this.x, this.y, this.size, height);
-
-        this.setTextParams();
-        this.p.text(this.label, this.x, this.y);
-
-        this.p.mousePressed = () => {
-            let dist1 = this.p.mouseX - this.size / 2;
-            let dist2 = this.p.mouseY - height / 2;
-            if (dist1 >= 0 & dist1 <= this.x + this.size && dist2 >= 0 && dist2 <= this.y + this.size * .75) {
-                if (!this.mouseDown) {
-                    this.pressed();
-                    this.mouseDown = true;
-                }
-            }
-        }
-        this.p.mouseReleased = () => {
-            this.released();
         }
     }
 }
@@ -398,22 +395,19 @@ export class Toggle extends Button {
     }
 
     pressed() {
+        this.mouseDown = true;
         this.state = !this.state;
+        this.color = this.state ? this.p.color(255, 255, 255) : this.p.color(200);
         if (this.state) this.value = this.max;
         else this.value = this.min;
-        this.color = this.state ? this.p.color(255, 255, 255) : this.p.color(200);
     }
 
-    released() {
+    isReleased() {
         if (this.mouseDown) {
             this.setValue();
             this.runCallBack();
             this.mouseDown = false;
         }
-    }
-
-    draw() {
-        super.draw();
     }
 }
 
@@ -426,47 +420,53 @@ export class RadioButton extends Button {
         super(p, options);
         this.radioOptions = options.radioOptions || ['on', 'off'];
         this.horizontal = options.horizontal === false ? false : true;
-        //do we want option for none on?
         this.value = this.radioOptions[0]; //default first radioOption
         this.callback = options.callback || function () { console.log('Define a callback function with the input being the current radioOption'); };
     }
 
     draw() {
-        let radioClicked = {};
-        let radioSize = this.size / this.radioOptions.length * (this.horizontal ? 1 : 2);
-        this.thickness = this.radioSize / (this.horizontal ? 1 : 2);
+        this.radioClicked = {};
+        this.radioSize = this.size / this.radioOptions.length * (this.horizontal ? 1 : 2);
         for (let i = 0; i < this.radioOptions.length; i++) {
             let option = this.radioOptions[i];
-            let x = this.horizontal ? this.x + i * radioSize : this.x;
-            let y = this.horizontal ? this.y : this.y + i * radioSize / 2;
+            let x = this.horizontal ? this.x + i * this.radioSize : this.x;
+            let y = this.horizontal ? this.y : this.y + i * this.radioSize / 2;
             this.p.fill(this.value == option ? this.p.color(255, 255, 255) : this.color);
             this.p.stroke(0);
             this.p.strokeWeight(2);
-            this.p.rect(x, y, radioSize, radioSize / 2);
+            this.p.rect(x, y, this.radioSize, this.radioSize / 2);
 
-            this.setTextParams(radioSize * .2);
-            this.p.text(option, x + radioSize / 2, y + radioSize / 4);
-            this.p.text(this.label, this.x + (this.horizontal ? this.size : radioSize) / 2, this.y + 10 + (this.horizontal ? radioSize / 2 : radioSize))
-            radioClicked[this.radioOptions[i]] = () => {
-                if (this.horizontal) return this.p.mouseX >= x && this.p.mouseX <= x + radioSize
-                else return this.p.mouseY >= y && this.p.mouseY <= y + radioSize / 2
+            this.setTextParams(this.radioSize * .2);
+            this.p.text(option, x + this.radioSize / 2, y + this.radioSize / 4);
+            this.p.text(this.label, this.x + (this.horizontal ? this.size : this.radioSize) / 2, this.y + 10 + (this.horizontal ? this.radioSize / 2 : this.radioSize))
+            this.radioClicked[this.radioOptions[i]] = () => {
+                if (this.horizontal) return this.p.mouseX >= x && this.p.mouseX <= x + this.radioSize
+                else return this.p.mouseY >= y && this.p.mouseY <= y + this.radioSize / 2
             };
+        }
+    }
 
-            this.p.mouseClicked = () => {
-                let inRangeX = this.p.mouseX >= this.x && this.p.mouseX <= this.x + (this.horizontal ? this.size : radioSize);
-                let inRangeY = this.p.mouseY >= this.y && this.p.mouseY <= this.y + (this.horizontal ? radioSize / 2 : this.size);
-                if (inRangeX && inRangeY) {
-                    for (const [option, clicked] of Object.entries(radioClicked)) {
-                        if (clicked()) {
-                            this.value = option;
-                            this.runCallBack();
-                            this.setValue();
-                            break;
-                        }
-                    }
+    isClicked() {
+        let inRangeX = this.p.mouseX >= this.x && this.p.mouseX <= this.x + (this.horizontal ? this.size : this.radioSize);
+        let inRangeY = this.p.mouseY >= this.y && this.p.mouseY <= this.y + (this.horizontal ? this.radioSize / 2 : this.size);
+        if (inRangeX && inRangeY) {
+            for (const [option, clicked] of Object.entries(this.radioClicked)) {
+                if (clicked()) {
+                    this.value = option;
+                    this.runCallBack();
+                    this.setValue();
+                    break;
                 }
             }
         }
+    }
+
+    isPressed() {
+        //so super isPressed not called
+    }
+
+    isReleased() {
+        //so super isReleased not called
     }
 }
 

@@ -2,12 +2,12 @@ let vcos = []
 let vcas = []
 const numVoices = 8
 let fundamental = 100
-const output = new Tone.Multiply(0.02).toDestination()
-const display = new Tone.Multiply(1)
+const output = new Tone.Multiply(0.02).label('output').toDestination()
+const display = new Tone.Multiply(1).label('display')
 //create vcos and vcas
 for(let i=0;i<numVoices;i++){
-  vcos.push( new Tone.Oscillator() )
-  vcas.push( new Tone.Multiply(1) )
+  vcos.push( new Tone.Oscillator().label(`vcos[${i}]`) )
+  vcas.push( new Tone.Multiply(1).label(`vcas[${i}]`) )
 }
 //set everything up
 for(let i=0;i<numVoices;i++){

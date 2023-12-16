@@ -1,12 +1,12 @@
 //A: create audio objects
-const carrier = new Tone.Oscillator().start()
-const modulator = new Tone.Oscillator().start()
-const vca = new Tone.Multiply(.5)
-const output = new Tone.Multiply(0.05).toDestination()
-const freq = new Tone.Signal()
-const harmonicity = new Tone.Multiply()
-const index_of_mod = new Tone.Multiply()
-const mod_amp = new Tone.Multiply()
+const carrier = new Tone.Oscillator().label('carrier').start()
+const modulator = new Tone.Oscillator().label('modulator').start()
+const vca = new Tone.Multiply(.5).label('vca')
+const output = new Tone.Multiply(0.05).label('output').toDestination()
+const freq = new Tone.Signal().label('freq')
+const harmonicity = new Tone.Multiply().label('harmonicity')
+const index_of_mod = new Tone.Multiply().label('index_of_mod')
+const mod_amp = new Tone.Multiply().label('mod_amp')
 
 //B: create initial connections
 carrier.connect( vca), vca.connect( output)
@@ -35,12 +35,12 @@ harmonicity.factor.value = 1
 index_of_mod.factor.value = 0
 
 //F: create envelopes for FM and VCA
-let index_env = new Tone.Envelope()
-const index_env_depth = new Tone.Multiply(2)
+let index_env = new Tone.Envelope().label('index_env')
+const index_env_depth = new Tone.Multiply(2).label('index_env_depth')
 index_env.connect( index_env_depth), index_env_depth.connect(index_of_mod.factor)
 //vca env
-let vca_env = new Tone.Envelope()
-const vca_env_depth = new Tone.Multiply(.5)
+let vca_env = new Tone.Envelope().label('vca_env')
+const vca_env_depth = new Tone.Multiply(.5).label('vca_env_depth')
 vca_env.connect( vca_env_depth), vca_env_depth.connect(vca.factor)
 
 //G: envelope controls

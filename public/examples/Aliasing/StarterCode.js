@@ -1,8 +1,8 @@
 //initialize audio objects
-let carrier = new Tone.Oscillator(200).start()
-let modulator = new Tone.Oscillator(200).start()
-let amp_mod = new Tone.Multiply()
-let output = new Tone.Multiply(1/100).toDestination()
+let carrier = new Tone.Oscillator(200).label('carrier').start()
+let modulator = new Tone.Oscillator(200).label('modulator').start()
+let amp_mod = new Tone.Multiply().label('amp_mod')
+let output = new Tone.Multiply(1/100).label('output').toDestination()
 carrier.connect( amp_mod ), modulator.connect( amp_mod.factor )
 amp_mod.connect( output )
 carrier.frequency.value = 12000

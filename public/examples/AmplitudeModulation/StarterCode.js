@@ -1,10 +1,10 @@
 //create audio objects
-const carrier  = new Tone.Oscillator().start()
-const modulator = new Tone.Oscillator().start()
-const mod_amp = new Tone.Multiply()
-const car_amp = new Tone.Multiply()
-const vca = new Tone.Multiply(1)
-const output = new Tone.Multiply(0.02).toDestination()
+const carrier  = new Tone.Oscillator().label('carrier').start()
+const modulator = new Tone.Oscillator().label('modulator').start()
+const mod_amp = new Tone.Multiply().label('mod_amp')
+const car_amp = new Tone.Multiply().label('car_amp')
+const vca = new Tone.Multiply(1).label('vca')
+const output = new Tone.Multiply(0.02).label('output').toDestination()
 
 //oscillator type is 'sine' by default - try 'square'
 carrier.type = 'sine'

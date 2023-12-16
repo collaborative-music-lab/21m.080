@@ -14,6 +14,12 @@ const midi = require('./Midi.js');
 //Save history in browser
 const stateFields = { history: historyField };
 
+// const moduleParamPorts = {
+//     'Oscillator': ['frequency', 'detune'],
+//     'Multiply': ['factor'],
+// };
+const nodeDataArray = [];
+const linkDataArray = [];
 
 function Editor(props) {
     window.p5 = p5;
@@ -27,6 +33,30 @@ function Editor(props) {
     window.setNoteOnHandler = midi.midiHandlerInstance.setNoteOnHandler.bind(midi.midiHandlerInstance);
     window.setNoteOffHandler = midi.midiHandlerInstance.setNoteOffHandler.bind(midi.midiHandlerInstance);
     window.setCCHandler = midi.midiHandlerInstance.setCCHandler.bind(midi.midiHandlerInstance);
+
+    const addPort = (cls, portName) => {
+        if (!cls.prototype._input_ports) {
+            cls.prototype._input_ports = [];
+        }
+        if (cls.prototype._input_ports.includes(portName))
+            return;
+        cls.prototype._input_ports.push(portName);
+    };
+
+    const getGraphModel = () => {
+        return {
+            nodeDataArray,
+            linkDataArray,
+            linkFromPortIdProperty: "fromPort",
+            linkToPortIdProperty: "toPort",
+        };
+    };
+    window.getGraphModel = getGraphModel;
+    window.visualize = () => {
+        const model = getGraphModel();
+        localStorage.setItem(`VisualizerState`, JSON.stringify(model));
+        window.open('visualizer.html');
+    };
 
     var curLineNum = 0;
 
@@ -52,6 +82,111 @@ function Editor(props) {
         if (container) {
             setHeight(`${container.clientHeight}px`);
         }
+    }, []);
+
+    // Initialize graph maker stuff
+    useEffect(() => {
+        
+        // Add .label() functions to all necessary modules
+        function setLabel(label, parent=undefined) {
+            this._label = label;
+            this._parent = parent;
+            const params = this._input_ports ?? [];
+            for (const param of params) {
+                this[param].label(param, this);
+            }
+
+            if (!parent) {
+                const node = {
+                    key: label,
+                    class: this.name,
+                    inputs: [],
+                    outputs: [],
+                };
+                if (this.numberOfInputs) {
+                    node.inputs.push('input');
+                }
+                node.outputs.push('output');
+                node.inputs.push(...params);
+                nodeDataArray.push(node);
+            }
+            return this;
+        };
+
+        function getLabel(node) {
+            if (!node._label)
+                return '<unlabeled>';
+            else if (!node._parent)
+                return node._label;
+            else
+                return getLabel(node._parent) + '.' + node._label;
+        }
+
+        function getKeyPort(node, defaultPort) {
+            const label = getLabel(node);
+            const parts = label.split('.');
+            if (parts.length === 1) {
+                return [parts[0], defaultPort];
+            } else if (parts.length === 2) {
+                return parts;
+            } else {
+                return undefined;
+            }
+        }
+        
+        // Wrap over as many .connect() as we know about
+        function wrapConnect(cls) {
+            const oldVersion = cls.prototype['connect'];
+            cls.prototype['connect'] = function (...args) {
+                // Only add a graph edge if both from and to labels exist.
+                // if (this._label && args[0]?._label) {
+                //     console.log(`Connected ${getLabel(this)} to ${getLabel(args[0])}`);
+                // }
+
+                if (this._label && args[0]?._label) {
+                    const [from, fromPort] = getKeyPort(this, 'output');
+                    const [to, toPort] = getKeyPort(args[0], 'input');
+                    const edge = { from, fromPort, to, toPort };
+                    // console.log(edge);
+                    linkDataArray.push(edge);
+                }
+
+                // Run the original person
+                return oldVersion.bind(this)(...args);
+            }
+        }
+
+        // TODO: add more as needed!
+
+        Tone.ToneAudioNode.prototype.label = setLabel;
+        Tone.Signal.prototype.label = setLabel;
+        Tone.Param.prototype.label = setLabel;
+
+        wrapConnect(Tone.ToneAudioNode);
+        wrapConnect(Tone.Signal);
+        // wrapConnect(Tone.SignalOperator); // error because this is not exported
+        wrapConnect(Tone.Scale);
+        wrapConnect(Tone.Envelope);
+
+        addPort(Tone.Oscillator, 'frequency');
+        addPort(Tone.Oscillator, 'detune');
+        addPort(Tone.Add, 'addend');
+        addPort(Tone.Subtract, 'subtrahend');
+        addPort(Tone.Multiply, 'factor');
+        addPort(Tone.Filter, 'frequency');
+        addPort(Tone.FeedbackDelay, 'delayTime');
+
+        // Tone.getDestination().label('<destination>');
+
+        // Sadly these guys don't really work because AnalyserNode refuses to be overwritten.
+        // Oscilloscope.prototype.label = setLabel;
+        // Spectroscope.prototype.label = setLabel;
+        // AnalyserNode.prototype.label = setLabel;
+        // wrapConnect(Oscilloscope);
+        // wrapConnect(Spectroscope);
+        // addPort(Oscilloscope, 'analyserNode');
+        // addPort(Spectroscope, 'analyserNode');
+
     }, []);
 
     function removeComments() {

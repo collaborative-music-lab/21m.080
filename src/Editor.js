@@ -9,7 +9,7 @@ import ml5 from 'ml5';
 import Canvas from "./Canvas.js";
 import gui_sketch from "./gui.js";
 import { Oscilloscope, Spectroscope } from './oscilloscope';
-import MidiKeyboard from './midiKeyboard.js';
+import MidiKeyboard from './MidiKeyboard.js';
 const midi = require('./Midi.js');
 //Save history in browser
 const stateFields = { history: historyField };

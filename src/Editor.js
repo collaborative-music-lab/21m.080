@@ -9,7 +9,7 @@ import ml5 from 'ml5';
 import Canvas from "./Canvas.js";
 import gui_sketch from "./gui.js";
 import { Oscilloscope, Spectroscope } from './oscilloscope';
-import MidiKeyboard from './midiKeyboard.js';
+import MidiKeyboard from './MidiKeyboard.js';
 const midi = require('./Midi.js');
 //Save history in browser
 const stateFields = { history: historyField };
@@ -29,6 +29,7 @@ function Editor(props) {
     window.setCCHandler = midi.midiHandlerInstance.setCCHandler.bind(midi.midiHandlerInstance);
 
     var curLineNum = 0;
+    let p5Elements = ["p5", "Knob", "Fader", "Button", "Toggle", "RadioButton"];
 
     // Save history in browser
     const serializedState = localStorage.getItem(`${props.page}EditorState`);
@@ -93,11 +94,13 @@ function Editor(props) {
         const visitors = {
             VariableDeclaration(node, state, c) {
                 //remove kind (let/var/const)
+                //console.log('1',string)
                 if (!state.innerScope) {
                     let kind = node.kind;
                     string = string.substring(0, node.start + incr) + string.substring(node.start + incr + kind.length);
                     incr -= kind.length;
                 }
+                ///console.log('2',string)
                 //Continue walk to search for identifiers
                 for (const declaration of node.declarations) {
                     let name = declaration.id.name;
@@ -105,6 +108,7 @@ function Editor(props) {
                     let end = declaration.end;
                     //Add globalThis & push variable names
                     if (!state.innerScope && !state.forLoop) {
+                        //console.log('3',string)
                         string = string.substring(0, start + incr) + "globalThis." + string.substring(start + incr);
                         incr += length1;
                         varNames.push(name);
@@ -122,18 +126,21 @@ function Editor(props) {
                             innerScopeVars[name] = [];
                         }
                     }
+                    //console.log('4',string)
                     //In case of no assignment, set to var to null
                     let init = declaration.init;
                     if (!init && !state.forLoop) {
+                        //console.log('5',string)
                         string = string.substring(0, end + incr) + " = null" + string.substring(end + incr);
                         incr += length2;
                     }
                     else if (init) {
                         let val = string.substring(init.start + incr, init.end + incr);
-                        let p5Elements = ["p5", "Knob", "Fader", "Button", "Toggle", "RadioButton"];
                         for (let canvas of canvases) {
+                            //console.log('6',canvas, canvases, val)
                             if (val.includes(canvas) && !p5Elements.some(word => val.includes(word))) {
                                 p5Code += `${canvas}.elements[${name}]="${val}"\n`;
+                                console.log('p5 code', p5Code)
                             }
                         }
                         if (init.body) {
@@ -230,8 +237,9 @@ function Editor(props) {
 
     function evaluate(string, p5Code) {
         try {
+            //console.log('eval', string, 'p5', p5Code)
             eval(string);
-            eval(p5Code);
+            //eval(p5Code);
         } catch (error) {
             console.log("Error Evaluating Code", error);
         }
@@ -239,8 +247,10 @@ function Editor(props) {
 
     function updateVars(varNames) {
         let cleanedCode = removeComments();
+        //console.log(node)
         function isAudioNode(node) {
-            return node.context || node instanceof AudioContext;
+            try{ return node.context || node instanceof AudioContext;}
+            catch(e){console.log(e)}
         }
         for (const [key, instances] of Object.entries(innerScopeVars)) {
             if (liveMode && !cleanedCode.includes(key)) {
@@ -258,9 +268,9 @@ function Editor(props) {
         //REMINDER: Issue may arise from scheduled sounds
         for (const varName of varNames) {
             //Add name, val pairs of ONLY audionodes to vars dictionary 
-            let val = eval(varName)
-            if (isAudioNode(val)) {
-                vars[varName] = val;
+            let nameOfCurrentVariable = eval(varName)
+            if (isAudioNode(nameOfCurrentVariable)) {
+                vars[varName] = nameOfCurrentVariable;
             }
         }
 

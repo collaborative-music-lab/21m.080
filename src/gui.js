@@ -1,4 +1,4 @@
-//example of P5.js code in my mode
+//example of P5.js code in instance mode
 //https://youtu.be/Su792jEauZg
 import p5 from 'p5';
 

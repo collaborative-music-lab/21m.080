@@ -149,9 +149,13 @@ class Element {
             this.id += i;
             i++;
         }
+        //position
         this.x = options.x || 50;
         this.y = options.y || 50;
+        //appearance
         this.size = options.size || 1;
+        this.outline = options.outline || 6;
+        //parameter values
         this.min = options.min || 0;
         this.max = options.max || 1;
         if(typeof(options.mapto)=='string') this.mapto = eval(options.mapto)
@@ -166,11 +170,18 @@ class Element {
         this.y *= scaleHeight;
     }
 
-    setTextParams(size = null) {
+    setTextParams(size) {
+        // this.p.stroke(0);
+        // this.textSize = size || this.size * .1;
+        // this.p.textSize(this.textSize);
+        // this.p.strokeWeight(0.0001 * this.size);
+        // this.p.textAlign(this.p.CENTER, this.p.CENTER);
+        // this.p.fill(0);
+        //console.log(size)
         this.p.stroke(0);
-        this.textSize = size || this.size * .1;
+        this.textSize = size/10;
         this.p.textSize(this.textSize);
-        this.p.strokeWeight(0.0001 * this.size);
+        this.p.strokeWeight(0.00001 * this.textSize);
         this.p.textAlign(this.p.CENTER, this.p.CENTER);
         this.p.fill(0);
     }
@@ -235,9 +246,9 @@ export class Knob extends Element {
         let angle = this.p.map(this.value, this.min, this.max, this.startAngle, this.endAngle);
         let cur_x = (this.x/100)*this.p.width
         let cur_y = (this.y/100)*this.p.height
-        let cur_size = (this.size/100*20)*this.p.width
+        let cur_size = (this.size/6)*this.p.width
         // Display the label string beneath the knob
-        this.setTextParams();
+        this.setTextParams(cur_size);
         this.p.text(this.label, cur_x, cur_y + cur_size / 2 + this.textSize);
 
         // Display the knob value inside the removed part of the knob
@@ -246,7 +257,8 @@ export class Knob extends Element {
 
         // Draw the knob background
         this.p.noFill();
-        let strokeWeight = cur_size * .06;
+        //let strokeWeight = cur_size * .06;
+        let  strokeWeight = this.outline;
         this.p.strokeWeight(strokeWeight);
         this.p.arc(cur_x, cur_y, cur_size, cur_size, this.startAngle, this.endAngle);
 

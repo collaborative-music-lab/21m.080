@@ -10,7 +10,12 @@ const TableOfContents = (props) => {
                     <div className="contents-container" >
                         <div className="title center-self">Assignments</div>
                         {Object.keys(props.assignments).map((option) => (
-                            <Link to={`/${option}`} className="text-button list" onClick={() => props.setPage(option)}>
+                            <Link 
+                                key={option}
+                                to={`/${option}`} 
+                                className="text-button list" 
+                                onClick={() => props.setPage(option)}
+                            >
                                 {option}
                             </Link>
                         ))}
@@ -20,7 +25,12 @@ const TableOfContents = (props) => {
                     <div className="contents-container">
                         <div className="title center-self">Examples</div>
                         {Object.keys(props.examples).map((option) => (
-                            <Link to={`/${option}`} className="text-button list" onClick={() => props.setPage(option)}>
+                            <Link 
+                                key={option}
+                                to={`/${option}`} 
+                                className="text-button list" 
+                                onClick={() => props.setPage(option)}
+                            >
                                 {option}
                             </Link>
                         ))}
@@ -30,7 +40,12 @@ const TableOfContents = (props) => {
                     <div className="contents-container">
                         <div className="title center-self">References</div>
                         {Object.keys(props.references).map((option) => (
-                            <Link to={`/${option}`} className="text-button list" onClick={() => props.setPage(option)}>
+                            <Link 
+                                key={option}
+                                to={`/${option}`} 
+                                className="text-button list" 
+                                onClick={() => props.setPage(option)}
+                            >
                                 {option}
                             </Link>
                         ))}

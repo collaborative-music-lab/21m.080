@@ -14,6 +14,8 @@ import * as Tone from 'tone';
 export const Oscilloscope = function(_target) {
     //var _drawWave, _bufferLength, _dataArray;
 
+    this.name = 'Oscilloscope';
+
     //this.target = document.querySelector(target);
     this.target = document.getElementById(_target)
 
@@ -194,6 +196,8 @@ SPECTROSCOPE
 ****************************************/
 
 export const Spectroscope = function(_target) {
+    this.name = 'Spectroscope';
+
     //var _drawWave, _bufferLength, _dataArray;
 
     //this.target = document.querySelector(target);

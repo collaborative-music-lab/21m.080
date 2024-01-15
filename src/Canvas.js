@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { initialize, divResized, drawElements } from './p5Library';
+import { sketch } from './p5Library';
 //, Knob, Dial, Fader, Slider, Button, Toggle, RadioButton, Radio, Line
 
 //if adding more P5Elements to list below, add to list "p5Elements' in Editor.js
@@ -15,71 +15,71 @@ function Canvas(props) {
     const [isMaximized, setIsMaximized] = useState(false);
 
     useEffect(() => {
-        const sketch = (p) => {
-            let grey = p.color(220, 229, 234);
-            let div;
+        // const sketch = (p) => {
+        //     let grey = p.color(220, 229, 234);
+        //     let div;
 
-            p.setup = function () {
-                div = document.getElementById(props.id);
-                p.initialize(div, grey);
-            };
+        //     p.setup = function () {
+        //         div = document.getElementById(props.id);
+        //         p.initialize(div, grey);
+        //     };
 
-            p.draw = function () {
-                p.drawElements();
-            };
+        //     p.draw = function () {
+        //         p.drawElements();
+        //     };
 
-            p.mousePressed = function () {
-                for (const element of Object.values(p.elements)) {
-                    if (typeof (element) !== 'string') {
-                        try {
-                            element.isPressed();
-                        } catch (e) {
-                            //no pressed function
-                        }
-                    }
-                }
-            }
+        //     p.mousePressed = function () {
+        //         for (const element of Object.values(p.elements)) {
+        //             if (typeof (element) !== 'string') {
+        //                 try {
+        //                     element.isPressed();
+        //                 } catch (e) {
+        //                     //no pressed function
+        //                 }
+        //             }
+        //         }
+        //     }
 
-            p.mouseReleased = function () {
-                for (const element of Object.values(p.elements)) {
-                    if (typeof (element) !== 'string') {
-                        try {
-                            element.isReleased();
-                        } catch (e) {
-                            //no releaed function
-                        }
-                    }
-                }
-            }
+        //     p.mouseReleased = function () {
+        //         for (const element of Object.values(p.elements)) {
+        //             if (typeof (element) !== 'string') {
+        //                 try {
+        //                     element.isReleased();
+        //                 } catch (e) {
+        //                     //no releaed function
+        //                 }
+        //             }
+        //         }
+        //     }
 
-            p.mouseClicked = function () {
-                for (const element of Object.values(p.elements)) {
-                    if (typeof (element) !== 'string') {
-                        try {
-                            element.isClicked();
-                        } catch (e) {
-                            //no clicked function
-                        }
-                    }
-                }
-            }
+        //     p.mouseClicked = function () {
+        //         for (const element of Object.values(p.elements)) {
+        //             if (typeof (element) !== 'string') {
+        //                 try {
+        //                     element.isClicked();
+        //                 } catch (e) {
+        //                     //no clicked function
+        //                 }
+        //             }
+        //         }
+        //     }
 
-            p.mouseDragged = function () {
-                for (const element of Object.values(p.elements)) {
-                    if (typeof (element) !== 'string') {
-                        try {
-                            element.isDragged();
-                        } catch (e) {
-                            //no clicked function
-                        }
-                    }
-                }
-            }
+        //     p.mouseDragged = function () {
+        //         for (const element of Object.values(p.elements)) {
+        //             if (typeof (element) !== 'string') {
+        //                 try {
+        //                     element.isDragged();
+        //                 } catch (e) {
+        //                     //no clicked function
+        //                 }
+        //             }
+        //         }
+        //     }
 
-            p.windowResized = function () {
-                p.divResized();
-            };
-        };
+        //     p.windowResized = function () {
+        //         p.divResized();
+        //     };
+        // };
         window.sketch = sketch;
 
     }, [props.id]);

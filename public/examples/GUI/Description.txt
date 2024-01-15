@@ -2,7 +2,6 @@
 
 ## Setting Object locations
 Every object can be initialized with an x and y position. The unit for these are percentages of the overall gui size.
-* You can set the position of a gui object after it has been created but using the position() method, e.g. `knob.position(25, 50)`, where the arguments are x and y position
 
 ## Mapto parameter
 

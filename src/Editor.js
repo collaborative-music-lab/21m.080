@@ -7,7 +7,7 @@ import p5 from 'p5';
 import * as Tone from 'tone';
 import ml5 from 'ml5';
 import Canvas from "./Canvas.js";
-import gui_sketch from "./gui.js";
+//import gui_sketch from "./gui.js";
 import { Oscilloscope, Spectroscope } from './oscilloscope';
 import MidiKeyboard from './MidiKeyboard.js';
 const midi = require('./Midi.js');
@@ -17,12 +17,11 @@ const stateFields = { history: historyField };
 
 function Editor(props) {
     window.p5 = p5;
-    window.gui_sketch = gui_sketch;
     window.Tone = Tone;
     window.ml5 = ml5;
     window.Oscilloscope = Oscilloscope;
     window.Spectroscope = Spectroscope;
-    window.gui_sketch = gui_sketch;
+    //window.gui_sketch = gui_sketch;
     window.setMidiInput = midi.setMidiInput;
     window.setNoteOnHandler = midi.midiHandlerInstance.setNoteOnHandler.bind(midi.midiHandlerInstance);
     window.setNoteOffHandler = midi.midiHandlerInstance.setNoteOffHandler.bind(midi.midiHandlerInstance);
@@ -138,10 +137,10 @@ function Editor(props) {
                         let val = string.substring(init.start + incr, init.end + incr);
                         for (let canvas of canvases) {
                             //console.log('6',canvas, canvases, val)
-                            if (val.includes(canvas) && !p5Elements.some(word => val.includes(word))) {
-                                p5Code += `${canvas}.elements[${name}]="${val}"\n`;
-                                console.log('p5 code', p5Code)
-                            }
+                            // if (val.includes(canvas) && !p5Elements.some(word => val.includes(word))) {
+                            //     p5Code += `${canvas}.elements[${name}]="${val}"\n`;
+                            //     console.log('p5 code', p5Code)
+                            // }
                         }
                         if (init.body) {
                             let newState = {

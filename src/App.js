@@ -16,20 +16,23 @@ function App() {
   const [markdownContent, setMarkdownContent] = useState("");
 
   const exampleFiles = [
-    'FirstSteps', 'FourierTheorem', 'SubtractiveSynth', 'Aliasing', 'AmplitudeModulation', 
-    'FrequencyModulation', 'GUI', 'MIDI', 'Sampler', 'GranularSynth', 'Physical Model'
+    'FirstSteps', 'FourierTheorem',  'GUI', 'SubtractiveSynth', 'Aliasing', 'AmplitudeModulation', 
+    'FrequencyModulation','MIDI', 'Sampler', 'GranularSynth', 'Physical Model'
   ];
   const assignmentFiles = [
-    'Lab1','JavaScript101', 'PhaseLab', 'PhaseLab2', 'MarkovChains', 'Perceptron'
+    'Lab1','JavaScript101'
+    //,'PhaseLab', 'PhaseLab2'
+    //,'MarkovChains', 'Perceptron'
   ];
   const referenceFiles = [
-    'Oscillator', 'Filter', 'Multiply', 'Noise', 'Envelope', 'Oscilloscope', 'Spectroscope', 'Player', 'Knob', 'GUI elements', 'Convolver', 'Panner3D'
+    'Oscillator', 'Filter', 'Multiply', 'Knob', 'GUI elements', 'Envelope', 'Oscilloscope', 'Spectroscope', 'Noise', 'Player', 'Convolver', 'Panner3D'
   ];
 
   const homeStarterCode = `/*
   Alt-Enter: Evaluate Line in Live Mode
   Alt-Shift-Enter: Evaluate Block in Live Mode
 */`;
+
 
   useEffect(() => {
     const importFiles = async (files, folder) => {

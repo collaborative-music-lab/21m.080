@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { historyField } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
+import {exportFiles} from './Export.js'
 
 import p5 from 'p5';
 import * as Tone from 'tone';
@@ -26,6 +27,7 @@ function Editor(props) {
     window.setNoteOnHandler = midi.midiHandlerInstance.setNoteOnHandler.bind(midi.midiHandlerInstance);
     window.setNoteOffHandler = midi.midiHandlerInstance.setNoteOffHandler.bind(midi.midiHandlerInstance);
     window.setCCHandler = midi.midiHandlerInstance.setCCHandler.bind(midi.midiHandlerInstance);
+    window.exportFiles = exportFiles
 
     var curLineNum = 0;
     let p5Elements = ["p5", "Knob", "Fader", "Button", "Toggle", "RadioButton"];
@@ -46,6 +48,9 @@ function Editor(props) {
     const [codeMinimized, setCodeMinimized] = useState(false);
     const [p5Minimized, setP5Minimized] = useState(false);
     const [maximized, setMaximized] = useState('');
+
+    const [exportFileName, setexportFileName] = useState('Enter filename...');
+
 
     useEffect(() => {
         const container = document.getElementById('container');
@@ -435,6 +440,37 @@ function Editor(props) {
         localStorage.setItem(`${props.page}Value`, props.starterCode);
     }
 
+    //Export webpage code
+    const handleExportFile = (fileName) => {
+        const blob = new Blob([localStorage.getItem(`${props.page}Value`)], { type: 'text/plain' });
+        let tempName = 'mySynth'
+        if(fileName === 'Enter filename...') tempName = exportFileName
+
+        const url = URL.createObjectURL(blob);
+        // Create an invisible anchor element
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        // Set the anchor's href attribute to the URL
+        a.href = url;
+        // Set the anchor's download attribute to specify the filename
+        a.download = tempName; // Set the default filename
+        // Append the anchor element to the document
+        document.body.appendChild(a);
+        // Simulate a click event on the anchor to trigger the download
+        a.click();
+        // Remove the anchor element from the document
+        document.body.removeChild(a);
+        // Revoke the URL to free up resources
+        URL.revokeObjectURL(url);
+        console.log(`Exporting file with name: ${fileName}`);
+      };
+      //end export dialog support
+
+    const handleFilenameChange = (e) => {
+      setexportFileName( e.target.value );
+    };
+
+
     const codeMinClicked = () => {
         setCodeMinimized(!codeMinimized);
         for (let id of canvases) {
@@ -442,7 +478,6 @@ function Editor(props) {
                 window[id].divResized(codeMinimized ? '-w' : '+w');
             }
             catch {
-
             }
         }
     }
@@ -476,12 +511,16 @@ function Editor(props) {
                     <span className="span-container">
                         <span className="span-container">
                             <button className="button-container" onClick={playClicked}>Run</button>
-                            <button className={liveCSS} onClick={liveClicked}>Live</button>
-                            <button className="button-container" onClick={stopClicked}>Stop</button>
-                        </span>
-                        <span className="span-container">
+                            {/* <button className={liveCSS} onClick={liveClicked}>Live</button>
+                            <button className="button-container" onClick={stopClicked}>Stop</button> */}
                             <MidiKeyboard />
                             <button className="button-container" onClick={refreshClicked}>Starter Code</button>
+                        </span>
+                        <span className="span-container">
+                            
+                            <input  type="text" value={exportFileName} id="filenameInput"
+                                placeholder="Enter filename..." onChange={handleFilenameChange} />
+                            <button className="button-container" onClick={handleExportFile}>Export</button>
                             {!p5Minimized &&
                                 <button className="button-container" onClick={codeMinClicked}>-</button>
                             }
@@ -526,7 +565,9 @@ function Editor(props) {
                     ))}
                 </div>
             }
+
         </div>
+
     );
 }
 

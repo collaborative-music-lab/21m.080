@@ -10,21 +10,57 @@ Notes: to add new gui elements, make the following changes:
 
 
 import p5 from 'p5';
+import themes from './p5Themes.json';
+let activeTheme = themes.themes['default']; // Default theme preset
 
-export function initialize(p, div, backgroundColor) {
+export function debug(){
+    console.log('esy')
+    console.log(activeTheme)
+}
+
+//************** THEME DEFINITIONS *************/
+// Function to list available themes
+export function listThemes() {
+  console.log( Object.keys(themes.themes) ) 
+}
+
+export function setTheme(themeName) {
+    if (!themes.themes[themeName]) {
+        console.error(`Theme '${themeName}' not found.`);
+        return;
+  } 
+    activeTheme = themes.themes[themeName]; // Default theme preset
+}
+
+// Function to update theme parameters
+export function setThemeParameters(parameters) {
+  if (activeTheme) {
+    // Merge the provided parameters with the active theme
+    activeTheme = { ...activeTheme, ...parameters };
+  } else {
+    console.error(`Active theme '${activeTheme}' not found.`);
+  }
+}
+
+// Function to get the current theme values in JSON format
+export function exportTheme() {
+    console.log(`exporting ` + activeTheme);
+    console.log( JSON.stringify(activeTheme, null, 2))
+    return JSON.stringify(activeTheme, null, 2);
+}
+
+//************** INITIALIZE **************
+
+export function initialize(p, div) {
     p.div = div;
     p.createCanvas(div.offsetWidth, div.offsetHeight);
     p.width = div.offsetWidth;
     p.height = div.offsetHeight;
     p.elements = {};
-    if (backgroundColor) {
-        p.backgroundColor = backgroundColor;
-        p.background(backgroundColor);
-    }
 }
 
-p5.prototype.initialize = function (div, backgroundColor = false) {
-    initialize(this, div, backgroundColor);
+p5.prototype.initialize = function (div) {
+    initialize(this, div);
 };
 
 function resizeP5(string, scaleWidth, scaleHeight) {
@@ -108,8 +144,9 @@ function drawGrid(p) {
     let spacingX = Math.ceil((p.width - 2 * margin) / 3) - 5;
     let spacingY = Math.ceil((p.height - 2 * margin) / 3) - 5;
     p.textSize(12);
-    let isBlack = p.red(p.backgroundColor) === 0 && p.green(p.backgroundColor) === 0 && p.blue(p.backgroundColor) === 0;
-    p.fill(isBlack ? 255 : 0);
+    let bgColorSum = activeTheme.backgroundColor.reduce((a,b)=>a+b)
+    //let isBlack = p.red(p.backgroundColor) === 0 && p.green(p.backgroundColor) === 0 && p.blue(p.backgroundColor) === 0;
+    p.fill(bgColorSum < 382 ? 255 : 0);
     p.noStroke();
     for (let i = 0; i < 4; i++) {
         let x = margin + i * spacingX;
@@ -121,10 +158,12 @@ function drawGrid(p) {
 
 let updateCanvas = 1;
 
+//************** DRAW ELEMENTS //**************
+
 export function drawElements(p) {
     if( updateCanvas > 0 ){
         updateCanvas = 1
-        p.background(GuiColors.background);
+        p.background(activeTheme.backgroundColor);
         //drawGrid(p);
         for (let element of Object.values(p.elements)) {
             if (typeof (element) === "string") {
@@ -152,32 +191,32 @@ const scaleOutput = function (input, inLow, inHigh, outLow, outHigh, curve) {
 
 
 /********************** COLORS & FONTS ***********************/
-export const GuiColors = {
-    background: [240, 240, 240], // Background color of the GUI
-    border: [100, 100, 100], // Border color for elements
-    accent: [0, 128, 255], // Highlight or accent color
-    text: [0, 0, 0], // Text color
-};
-
 export const setColor = function(name, value) {
-    if( typeof( name ) == 'string'){
-        if (GuiColors.hasOwnProperty(name)) {
-            GuiColors[name] = value;
-        } else {
-            GuiColors[name] = value;
+    if( name === 'border' ) activeTheme.borderColor = value
+    else if( name === 'accent' )  activeTheme.accentColor = value
+    else if( name === 'background' )  activeTheme.backgroundColor = value
+    else if( name === 'text' )  activeTheme.textColor = value
+
+    else if( typeof( name ) == 'string' && Array.isArray(value)){
+        if(value.length = 3){
+            activeTheme[name] = value;
             console.error(`new Color added: ${name}`);
-        }
-        
+        } else console.error('second argument must be an array of three values in RGB format')
     }
-    // updateCanvas = 1;
-    //p.drawElements();
+    else console.error(`incorrect color values: ${name}, ${value} `)
 }
 
 const getColor = function(name) {
-    if (GuiColors.hasOwnProperty(name)) {
-        return GuiColors[name];
+    if( name === 'border' ) return activeTheme.borderColor
+    if( name === 'accent' ) return activeTheme.accentColor
+    if( name === 'background' ) return activeTheme.backgroundColor
+    if( name === 'text' ) return activeTheme.textColor
+
+    if (Array.isArray(name)){
+        return name
     } else {
         console.error(`Invalid color property: ${name}`);
+        return [0,0,0]
     }
 }
 
@@ -185,26 +224,34 @@ export const GuiFonts = {
     label: 'Helvetica',
     value: 'Courier',
     text: 'Times New Roman',
-    textAlt: 'Verdana',
+    title: 'Verdana',
 };
 
 export const setFont = function(name, value) {
-    if (GuiFonts.hasOwnProperty(name)) {
-        GuiFonts[name] = value;
-    } else {
-        GuiFonts[name] = value;
-        console.error(`new font added: ${name}`);
+    if( name === 'label' ) activeTheme.labelFont = value
+    else if( name === 'value' )  activeTheme.valueFont = value
+    else if( name === 'text' )  activeTheme.textFont = value
+    else if( name === 'title' )  activeTheme.titleFont = value
+
+    else if( typeof( name ) === 'string' && typeof(value) === 'string'){
+        activeTheme[name] = value;
+            console.error(`new Font added: ${name}`);
     }
-    updateCanvas = 1;
-    //p.drawElements();
+    else console.error(`incorrect font values: ${name}, ${value} `)
 }
 
 const getFont = function(name) {
-    if (GuiFonts.hasOwnProperty(name)) {
-        return GuiFonts[name];
-    } else if ( typeof(name) == 'string' ) return name;
-     console.error(`Invalid font property: ${name}`);
-     return 'Courier'
+    if( name === 'label' ) return activeTheme.labelFont 
+    if( name === 'value' )  return activeTheme.valueFont 
+    if( name === 'text' )  return activeTheme.textFont 
+    if( name === 'title' )  return activeTheme.titleFont 
+
+    if (typeof(name) === 'string'){
+        return name
+    } else {
+        console.error(`Invalid font property: ${name}`);
+        return 'Geneva'
+    }
 }
 
 /**************************************** ELEMENT ******************************************/
@@ -215,6 +262,7 @@ let prevYElementSize = 0;
 class Element {
     constructor(p, options) {
         this.p = p;
+        this.theme = activeTheme;
         this.label = options.label || "myElement";
         this.id = this.label;
         let i = 1;
@@ -223,18 +271,27 @@ class Element {
             i++;
         }
         //appearance
+        this.style = options.style || 1;
         this.size = options.size || 1;
         this.textSize = options.textSize || 1;
-        this.border = options.border || 6;
+        this.border = options.border || 'theme' || 6;
         this.borderColor = options.borderColor || 'border';
         this.accentColor = options.accentColor || 'accent';
+        this.borderRadius = options.borderRadius ||activeTheme.borderRadius || 0;
+        
+        //text
         this.textColor = options.textColor || 'text';
-        this.showLabel = options.showLabel || true;
-        this.showValue = options.showValue || true;
+        this.showLabel = typeof(options.showLabel) === 'undefined' ? true : options.showLabel; //|| activeTheme.showLabel
+        this.showValue = typeof(options.showValue) === 'undefined' ? true : options.showValue; //|| activeTheme.showValue
         this.labelFont = options.labelFont || 'label'
         this.valueFont = options.valueFont || 'value'
         this.textFont = options.textFont || 'text'
-        this.borderRadius = options.borderRadius || 0;
+        this.labelX = options.labelX || 0
+        this.labelY = options.labelY || 0
+        this.valueX = options.valueX || 0
+        this.valueY = options.valueY || 0
+        this.textX = options.textX || 0
+        this.textY = options.textY || 0
 
         //position
         let currentGap = (prevElementSize+this.size) / 2
@@ -262,10 +319,14 @@ class Element {
         if(typeof(options.mapto)=='string') this.mapto = eval(options.mapto)
         else this.mapto = options.mapto || null;
         this.callback = options.callback || null;
+        if( this.mapto || this.callback) this.maptoDefined = 'true'
+        else this.maptoDefined = 'false'
         this.value = scaleOutput(options.value,this.min,this.max,0,1,1/this.curve) || 0.5;
         p.elements[this.id] = this;
 
     }
+
+    getParam(param,val){ return val == 'theme' ? activeTheme[param] : val}
 
     isPressed(){
         if( this.p.mouseX < (this.cur_x + this.x_box/2) &&
@@ -275,7 +336,6 @@ class Element {
         {
             this.active = 1
             //console.log('pressedas', this.label, this.p.mouseX.toFixed(1), this.p.mouseY.toFixed(1), this.cur_x.toFixed(1), this.cur_y.toFixed(1), this.x_box, this.y_box)
-            //console.log(this.cur_y - this.y_box/2, this.cur_y + this.y_box/2)
         }
     }
 
@@ -295,7 +355,7 @@ class Element {
         this.p.textAlign(this.p.CENTER, this.p.CENTER);
         this.p.fill(this.setColor(this.textColor));
         this.p.textFont(getFont(this.labelFont))
-        this.p.text(this.label, x, y);
+        this.p.text(this.label, x + (this.labelX/100)*this.p.width, y + (this.labelY/100)*this.p.height);
     }
 
     drawValue(x,y){
@@ -306,7 +366,7 @@ class Element {
         this.p.textAlign(this.p.CENTER, this.p.CENTER);
         this.p.fill(this.setColor(this.textColor));
         this.p.textFont(getFont(this.valueFont))
-        this.p.text(output.toFixed(2), x, y);
+        this.p.text(output.toFixed(2), x + (this.valueX/100)*this.p.width, y + (this.valueY/100)*this.p.height);
     }
 
     drawText(text,x,y){
@@ -316,7 +376,7 @@ class Element {
         this.p.textAlign(this.p.CENTER, this.p.CENTER);
         this.p.fill(getColor(this.textColor));
         this.p.textFont(getFont(this.textFont))
-        this.p.text(text, x, y);
+        this.p.text(text, x + (this.textX/100)*this.p.width, y + (this.textY/100)*this.p.height);
     }
 
     setPosition(x, y) {
@@ -351,7 +411,7 @@ class Element {
                     }
                 }
             }
-        } else { console.log(this.label, 'no destination defined')}
+        } else if( this.maptoDefined == 'false'){ console.log(this.label, 'no destination defined')}
     }
 
     runCallBack() {
@@ -365,7 +425,7 @@ class Element {
                     console.log('Error with Callback Function: ', error);
                 }
             }
-        } else { console.log(this.label, 'no callback defined')}
+        } else if( this.maptoDefined == 'false'){ console.log(this.label, 'no destination defined')}
     }
 
     set(value){
@@ -406,6 +466,8 @@ export class Knob extends Element {
         this.x_box = this.cur_size
         this.y_box = this.cur_size
 
+        let border = this.getParam('border',this.border)
+
         // clear the previously drawn knob
         // this.p.fill(getColor('background'));
         // let  strokeWeight = this.border;
@@ -414,18 +476,21 @@ export class Knob extends Element {
         // this.p.arc(cur_x, cur_y, cur_size*1.2, cur_size*1.2,0,2*this.p.PI);
 
         // Display the label string beneath the knob
-        if(this.showLabel) this.drawLabel(this.cur_x, this.cur_y + this.cur_size/2 + this.border  )
-        if(this.showValue) this.drawValue(this.cur_x, this.cur_y + this.cur_size/2  + this.border + this.textSize*10)
+        this.p.textSize(this.textSize*10);
+        let textWidthValue = this.p.textWidth(this.label);
+        let textHeightValue = this.p.textAscent() + this.p.textDescent();
+        if(this.showLabel) this.drawLabel(this.cur_x, this.cur_y + this.cur_size/2 + textHeightValue * .5 )
+        if(this.showValue) this.drawValue(this.cur_x, this.cur_y + this.cur_size/2 + textHeightValue * 1.5)
 
         // Draw the inactive knob background
         this.p.noFill();
-        this.p.strokeWeight(this.border);
+        this.p.strokeWeight(border);
         this.p.stroke(this.setColor(this.borderColor))
-        this.p.arc(this.cur_x, this.cur_y, this.cur_size, this.cur_size, this.p.constrain(this.startAngle + angle + (this.border/30/this.size/2),this.startAngle,this.endAngle), this.endAngle);
+        this.p.arc(this.cur_x, this.cur_y, this.cur_size, this.cur_size, this.p.constrain(this.startAngle + angle + (border/30/this.size/2),this.startAngle,this.endAngle), this.endAngle);
 
         // Draw the active knob background
         this.p.stroke(this.setColor(this.accentColor));
-        this.p.arc(this.cur_x, this.cur_y, this.cur_size, this.cur_size, this.startAngle, this.p.constrain(this.startAngle + angle - (this.border/30/this.size/2),this.startAngle,this.endAngle));
+        this.p.arc(this.cur_x, this.cur_y, this.cur_size, this.cur_size, this.startAngle, this.p.constrain(this.startAngle + angle - (border/30/this.size/2),this.startAngle,this.endAngle));
 
         // Draw the knob value indicator as a line
         let indicatorLength = this.cur_size / 2 // Length of the indicator line
@@ -479,46 +544,49 @@ export class Fader extends Element {
     draw() {
         this.isHorizontal = this.orientation==='horizontal'
         this.cur_size = (this.size/6)*this.p.width/2
+        let border = this.getParam('border',this.border)
         
         let x_corner = (this.x/100)*this.p.width
         let y_corner = (this.y/100)*this.p.height
         if( this.isHorizontal ) {
             this.x_box = this.cur_size
-            this.y_box = this.border * 3 * this.size
+            this.y_box = border * 3 * this.size
             this.cur_x = (this.x/100)*this.p.width + this.cur_size/2
-            this.cur_y = (this.y/100)*this.p.height + this.border
+            this.cur_y = (this.y/100)*this.p.height + border
         }
         else  {
             this.y_box = this.cur_size
-            this.x_box = this.border * 3 * this.size
-            this.cur_x = (this.x/100)*this.p.width + this.border
+            this.x_box = border * 3 * this.size
+            this.cur_x = (this.x/100)*this.p.width + border
             this.cur_y = (this.y/100)*this.p.height + this.cur_size/2
         }
-        let strokeWeight = this.border*this.size;
-        this.thickness = this.border // cur_size * .1; //Indicator thickness
+        let strokeWeight = border*this.size;
+        this.thickness = border // cur_size * .1; //Indicator thickness
         let rectThickness = this.thickness * .95;
 
-        // Display the label string beneath the knob
-        //if(this.showLabel) this.drawLabel((this.isHorizontal ? this.cur_x : this.thickness / 2), y_corner + this.textSize*15 + strokeWeight * 2 + (this.isHorizontal ? this.thickness : this.cur_size))
-        //if(this.showValue) this.drawValue(this.cur_x + (this.isHorizontal ? this.cur_size / 2 : this.thickness / 2), y_corner + strokeWeight * 2 + (this.isHorizontal ? this.thickness : this.cur_size))
-        if(this.showLabel) this.drawLabel(this.cur_x, this.isHorizontal ? this.cur_y+this.border*3 : this.cur_y+this.cur_size/2+this.border*3)
-        if(this.showValue) this.drawValue(this.cur_x, this.isHorizontal ? this.cur_y+this.border*5 : this.cur_y+this.cur_size/2+this.border*5)
+        // Display the label and value strings
+        this.p.textSize(this.textSize*10);
+        let textWidthValue = this.p.textWidth(this.label);
+        let textHeightValue = this.p.textAscent() + this.p.textDescent();
+        let curTextY = this.isHorizontal ? this.cur_y+border*2 + textHeightValue* .5 : this.cur_y+this.cur_size/2+ border + textHeightValue * .5
+        if(this.showLabel) this.drawLabel(this.cur_x, curTextY)
+        if(this.showValue) this.drawValue(this.cur_x, curTextY + textHeightValue)
 
         //Display Actual Fader
         this.p.noFill();
         this.p.stroke(this.setColor(this.borderColor))
-        this.p.strokeWeight(this.border*1.5);
-        if (this.isHorizontal) this.p.rect(x_corner, y_corner, this.cur_size, this.border*2);
-        else this.p.rect(x_corner, y_corner, this.border*2, this.cur_size);
+        this.p.strokeWeight(border*1.5);
+        if (this.isHorizontal) this.p.rect(x_corner, y_corner, this.cur_size, border*2);
+        else this.p.rect(x_corner, y_corner, border*2, this.cur_size);
         // this.p.stroke(getColor(this.accentColor))
-        // if (this.isHorizontal) this.p.rect(this.cur_x, this.cur_y, this.cur_size, this.border);
+        // if (this.isHorizontal) this.p.rect(this.cur_x, this.cur_y, this.cur_size, border);
         // else this.p.rect(this.cur_x, this.cur_y, rectThickness, this.cur_size);
 
         //Clear beneath Display Indicator
         this.p.fill(getColor('background') )
         this.p.stroke(this.setColor('background') )
         this.pos = this.p.map(this.value, 0,1, this.isHorizontal ? x_corner : y_corner + this.cur_size - this.thickness, this.isHorizontal ? x_corner + this.cur_size - this.thickness : y_corner);
-        let clearSize = this.border*.25
+        let clearSize = border*.25
         if (this.isHorizontal) this.p.rect(this.pos-clearSize, y_corner, this.thickness+clearSize*2, this.thickness*2);
         else this.p.rect(x_corner, this.pos-clearSize, this.thickness*2, this.thickness+clearSize*2);
         //Display indicator
@@ -532,13 +600,13 @@ export class Fader extends Element {
     isDragged() {
         if( this.active ){
             if (this.isHorizontal){
-                if(this.p.movedX != 0 ){ 
+                if(this.p.movedX !== 0 ){ 
                     if( this.p.keyIsDown(this.p.ALT)) this.value += this.p.movedX * this.incr/10;
                     else this.value += this.p.movedX * this.incr / this.size;
                 }
             }
             else {
-                if(this.p.movedY != 0 ){ 
+                if(this.p.movedY !== 0 ){ 
                     if( this.p.keyIsDown(this.p.ALT)) this.value -= this.p.movedY * this.incr/10;
                     else this.value -= this.p.movedY * this.incr / this.size;
                 }
@@ -558,12 +626,101 @@ p5.prototype.Slider = function (options = {}) {
     return new Fader(this, options);
 };
 
+/**************************************** PAD ******************************************/
+export class Pad extends Element {
+    constructor(p, options) {
+        super(p, options);
+        this.incr = options.incr || 0.01;
+        this.valueX = this.valueX || 0.5
+        this.valueY = this.valueY || 0.5
+        this.dragging = false;
+        this.sizeX = options.sizeX || 5
+        this.sizeY = options.sizeY || 5
+        if(typeof(options.maptoX)=='string') this.maptoX = eval(options.maptoX)
+        else this.maptoX = options.maptoX || null;
+        if(typeof(options.maptoY)=='string') this.maptoY = eval(options.maptoY)
+        else this.maptoY = options.maptoY || null;
+    }
+
+    resize(scaleWidth, scaleHeight) {
+        super.resize(scaleWidth, scaleHeight);
+        //this.size *= this.isHorizontal ? scaleWidth : scaleHeight;
+    }
+
+    draw() {
+        this.cur_size = (this.size/6)*this.p.width/2
+        this.cur_sizeX = (this.sizeX/6)*this.p.width/2
+        this.cur_sizeY = (this.sizeY/6)*this.p.width/2
+        let border = this.getParam('border',this.border)
+        
+        let x_corner = (this.x/100)*this.p.width-this.cur_sizeX/2
+        let y_corner = (this.y/100)*this.p.height-this.cur_sizeY/2
+
+        this.x_box = this.cur_sizeX*2
+        this.y_box = this.cur_sizeY*2
+        this.cur_x = (this.x/100)*this.p.width + this.cur_sizeX/2
+        this.cur_y = (this.y/100)*this.p.height + this.cur_sizeY/2
+
+        //console.log(this.cur_x, this.cur_y, this.x_box,this.y_box)
+      
+        let strokeWeight = border
+        this.thickness = border // cur_size * .1; //Indicator thickness
+        let rectThickness = this.thickness * .95;
+
+        //Display Actual Fader
+        this.p.fill(this.setColor(this.borderColor));
+        this.p.stroke(this.setColor(this.borderColor))
+        this.p.strokeWeight(border*1.5);
+        this.p.rect(x_corner, y_corner, this.cur_sizeX, this.cur_sizeY);
+        
+        //Display indicator
+        this.p.fill(this.setColor(this.accentColor));
+        this.p.stroke(this.setColor(this.accentColor))
+        let indicatorX = x_corner + this.valueX *  (this.cur_sizeX - 0*border)
+        let indicatorY = y_corner + this.valueY * ( this.cur_sizeY - 0*border)
+        //this.pos = this.p.map(this.value, 0,1,  x_corner  + this.cur_size - this.thickness, this.isHorizontal ? x_corner + this.cur_size - this.thickness : y_corner);
+        this.p.circle(indicatorX, indicatorY, (this.cur_sizeX+this.cur_sizeY)/30)    
+   
+        // Display the label and values
+        if(this.showLabel) this.drawLabel(this.cur_x,  y_corner + this.sizeY)
+    }
+
+    isDragged() {
+        if( this.active ){
+            if(this.p.movedX !== 0 ){ 
+                if( this.p.keyIsDown(this.p.ALT)) this.valueX += this.p.movedX * this.incr/10;
+                else this.valueX += this.p.movedX * this.incr / this.sizeX;
+            }
+
+            if(this.p.movedY !== 0 ){ 
+                if( this.p.keyIsDown(this.p.ALT)) this.valueY += this.p.movedY * this.incr/10;
+                else this.valueY += this.p.movedY * this.incr / this.sizeY;
+            }
+
+            if( this.valueX > 1 ) this.valueX = 1
+            if( this.valueX < 0 ) this.valueX = 0
+            this.mapValue(this.valueX,this.min,this.max,this.curve,this.maptoX);
+
+            if( this.valueY > 1 ) this.valueY = 1
+            if( this.valueY < 0 ) this.valueY = 0
+            this.mapValue(this.valueY,this.min,this.max,this.curve,this.maptoY);
+        }
+    }
+}
+
+p5.prototype.Pad = function (options = {}) {
+    return new Pad(this, options);
+};
+
+p5.prototype.JoyStick = function (options = {}) {
+    return new Pad(this, options);
+};
+
 /**************************************** BUTTON ******************************************/
 export class Button extends Element {
     constructor(p, options) {
         super(p, options);
         this.value = options.value || 0
-        this.callback = options.callback || function () { console.log('Define a callback function'); };
     }
 
     resize(scaleWidth, scaleHeight) {
@@ -577,17 +734,18 @@ export class Button extends Element {
         this.cur_size = (this.size/6)*this.p.width/2
         this.x_box = this.cur_size
         this.y_box = this.cur_size
+        let border = this.getParam('border',this.border)
 
         if( this.value ){            
             this.p.noFill()
             this.p.stroke(this.setColor(this.accentColor));
-            this.p.strokeWeight(this.border);
+            this.p.strokeWeight(border);
             this.p.ellipse(this.cur_x, this.cur_y, this.cur_size, this.cur_size);
         }
         else{
             this.p.noFill()
             this.p.stroke(this.setColor(this.borderColor));
-            this.p.strokeWeight(this.border/2);
+            this.p.strokeWeight(border/2);
             this.p.ellipse(this.cur_x, this.cur_y, this.cur_size, this.cur_size);
         }
 
@@ -605,6 +763,7 @@ export class Button extends Element {
             this.value = 1
             this.mapValue(this.value,this.min,this.max,this.curve,this.mapto);
             this.runCallBack();
+            if( this.maptoDefined == 'false') postButtonError('Buttons')
         }
     }
 
@@ -620,12 +779,27 @@ p5.prototype.Button = function (options = {}) {
     return new Button(this, options);
 };
 
+function postButtonError(name){
+    if(name === 'Buttons') console.log(name + ' generally work by defining a callback function. For buttons, the value is 1 on every press.')
+    if(name === 'Toggle buttons') console.log(name + ' generally work by defining a callback function. The value for toggle buttons alternates between 1 and 0.')
+    if(name === 'RadioButtons') console.log(name + ' generally work by defining a callback function. The value for radio buttons is the text string of the selected button.')
+    
+    if(name === 'Buttons') console.log(`An example of defining a callback for a button is: 
+callback: function(val){ env.triggerAttackRelease(0.1) }`)
+    if(name === 'Toggle buttons') console.log(`An example of defining a callback for a toggle is: 
+callback: function(val){ 
+    if(val==1) vco.type = 'square'; 
+    else vco.type = 'sawtooth'; 
+}`)
+    if(name === 'RadioButtons') console.log(`An example of defining a callback for a radio button is: 
+callback: function(val){ vco.type = val }`)
+}
+
 /**************************************** TOGGLE ******************************************/
 export class Toggle extends Button {
     constructor(p, options) {
         super(p, options);
         this.state = options.state || false;
-        this.callback = options.callback || function () { console.log('Define a callback function with the input being the value (max or min aka. on or off)'); };
     }
 
     isPressed(){
@@ -638,6 +812,7 @@ export class Toggle extends Button {
             this.value = this.value ? 0 : 1
             this.mapValue(this.value,this.min,this.max,this.curve,this.mapto);
             this.runCallBack();
+            if( this.maptoDefined == 'false') postButtonError('Toggle buttons')
         }
     }
 
@@ -660,10 +835,9 @@ export class RadioButton extends Button {
         this.orientation = options.orientation || 'vertical';
         this.isHorizontal = this.orientation==='horizontal'
         this.value = options.value || this.radioOptions[0]; //default first radioOption
-        this.callback = options.callback || function () { console.log('Define a callback function with the input being the current radioOption'); };
         this.radioHeight = this.cur_size / 2;
         this.radioWidth = this.cur_size * 2;
-        this.border = options.border || 2
+        this.border = options.border ||activeTheme.radioBorder || 2
     }
 
     draw() {
@@ -674,9 +848,11 @@ export class RadioButton extends Button {
         
         this.radioHeight = this.cur_size / 2;
         this.radioWidth = this.cur_size * 2;
+        let border = this.getParam('border',this.border)
 
 
         //calculate widest radioOption for radioButton width
+        this.p.textSize(this.textSize*10);
         let textWidth = 0 
         for (let i = 0; i < this.radioOptions.length; i++){
             let width = this.p.textWidth(this.radioOptions[i]);
@@ -717,7 +893,7 @@ export class RadioButton extends Button {
 
             this.p.fill(this.value == option ? this.setColor(this.accentColor) : this.setColor(this.borderColor));
             this.p.stroke(0);
-            this.p.strokeWeight(this.border);
+            this.p.strokeWeight(border);
             this.p.rect(x, y, this.radioWidth, this.radioHeight);
 
             this.drawText(option,  x+this.radioWidth/2,  y + this.radioHeight/2 )
@@ -751,6 +927,7 @@ export class RadioButton extends Button {
 
             this.runCallBack();
             this.mapValue();
+            if( this.maptoDefined == 'false') postButtonError('RadioButtons')
         }
     }
 
@@ -777,7 +954,7 @@ export class Line extends Element {
         this.y2 = y2 || 0
         this.showLabel = options.showLabel || 'false'
         this.border = options.border || 2
-        this.color = options.color || 'border'
+        this.color = options.color ||activeTheme.lineColor || 'border'
     }
 
     resize(scaleWidth, scaleHeight) {
@@ -790,10 +967,11 @@ export class Line extends Element {
         let x2 = (this.x2/100)*this.p.width
         let y1 = (this.y1/100)*this.p.height
         let y2 = (this.y2/100)*this.p.height
+        let border = this.getParam('border',this.border)
 
         this.p.fill(this.setColor(this.color));
         this.p.stroke(this.setColor(this.color));
-        this.p.strokeWeight(this.border);
+        this.p.strokeWeight(border*2);
         this.p.line(x1,y1,x2,y2)
     }
 
@@ -810,8 +988,8 @@ p5.prototype.Line = function (x1,y1,x2,y2, options = {}) {
 export class Text extends Element {
     constructor(p, options) {
         super(p, options);
-        this.border = options.border || 0
-        this.textSize = options.size || options.textSize || 1
+        this.border = options.border || activeTheme['border'] || 0
+        this.textSize = options.size || activeTheme['textSize'] || options.textSize || 1
     }
 
     resize(scaleWidth, scaleHeight) {
@@ -823,18 +1001,20 @@ export class Text extends Element {
         this.cur_x = (this.x/100)*this.p.width
         this.cur_y = (this.y/100)*this.p.height
         this.cur_size = (this.size/6)*this.p.width/2
+        let border = this.getParam('border',this.border)
+        let borderRadius = this.getParam('borderRadius',this.borderRadius)
 
         this.drawText(this.label,this.cur_x, this.cur_y)
         
-        if(this.border > 0 ){
+        if(border > 0 ){
             let textWidthValue = this.p.textWidth(this.label);
             let textHeightValue = this.p.textAscent() + this.p.textDescent();
             this.p.noFill()
             this.p.stroke(this.setColor(this.borderColor));
-            this.p.strokeWeight(this.border);
-            this.p.rect(this.cur_x-textWidthValue/2-2-this.borderRadius/2,this.cur_y-textHeightValue/2-1,
-                textWidthValue+4+this.borderRadius, textHeightValue+1,
-                this.borderRadius,this.borderRadius)
+            this.p.strokeWeight(border);
+            this.p.rect(this.cur_x-textWidthValue/2-2-borderRadius/2,this.cur_y-textHeightValue/2-1,
+                textWidthValue+4+borderRadius, textHeightValue+1,
+                borderRadius,borderRadius)
         }
     }
 

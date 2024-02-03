@@ -1,10 +1,22 @@
-import { initialize, divResized, drawElements, GuiColors, setColor, setFont } from './p5Elements';
+import { initialize, divResized, drawElements, GuiColors, 
+    setColor, setFont, setTheme, debug,
+    listThemes, setThemeParameters, exportTheme } from './p5Elements';
 
 export const sketch = (p) => {
     let grey = p.color(220, 229, 234);
     let div;
     p.setColor = setColor;
     p.setFont = setFont;
+    p.debug = debug
+
+    //theme functions
+    p.setTheme = setTheme
+    p.listThemes = listThemes
+    p.setThemeParameters = setThemeParameters
+    p.exportTheme = exportTheme
+
+
+    p.Debug = function(){ p.debug(); }
 
     p.setup = function () {
         let divID = p.canvas.parentElement.id;

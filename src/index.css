@@ -8,9 +8,17 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  background-color: black;
-  color: lightgray;
-  /* Amber is not a standard color name in CSS. You might want to use its hex representation */
+  
+  background-color: #333333;
+  color: #FFFFFF;
+  /*
+  background-color: #1C1C1C;
+  color: #EEEEEE;
+
+  background-color: #1C1C1C;
+  color: #FFC107;
+  */
+
 
 }
 
@@ -37,7 +45,7 @@ li {
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+  font-family: 'Courier New',source-code-pro, Menlo, Monaco, Consolas, 
     monospace;
 }
 

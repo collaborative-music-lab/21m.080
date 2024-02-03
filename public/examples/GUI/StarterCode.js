@@ -5,11 +5,16 @@ let output = new Tone.Multiply(0.1).toDestination()
 vco.connect(vcf), vcf.connect( vca ), vca.connect( output )
 let env = new Tone.Envelope()
 env.connect(vca.factor)
-
 const gui = new p5( sketch, GUI )
-gui.setFont('value', 'Monaco')// 'label','value', or 'text'
-gui.setColor('border', [200,190,200])//'border','accent','text'
-gui.setColor('accent', [55,195,95])
+
+gui.setTheme('dark')
+gui.listThemes() 
+gui.exportTheme() 
+
+gui.setThemeParameters({
+  titleFont: 'Helvetica', 
+  borderColor: [200,200,200]
+})
 
 let freq_knob = gui.Knob({
   label:'freq',
@@ -18,6 +23,9 @@ let freq_knob = gui.Knob({
   min:20, max: 500, curve: 2
 })
 freq_knob.set( 300 )
+freq_knob.borderColor = [115, 53, 10]
+freq_knob.accentColor = [252, 174, 25]
+freq_knob.border = 10
 
 let vcf_fader = gui.Slider({
   label:'cutoff',
@@ -62,9 +70,9 @@ let env_trigger = gui.Button({
 
 let exampleName =  gui.Text({
   label: 'GUI Example', x:13, y:5, size:2,
-  border: 2, borderRadius: 3
+  border: 2, borderRadius: 3,
+  textFont: 'title'
 })
-gui.setFont('text','Georgia')
 
 let lineA = gui.Line(0,65,100,65,{
   border:4, color: 'accent'

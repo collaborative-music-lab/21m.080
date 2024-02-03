@@ -1,9 +1,18 @@
+/* Intro
+Be sure to open the javascript console in Chrome for this tutorial
+Also, click the '+' button next to export
+- makes the codebox fullscreen!
+*/
+
 /**** A - Variables, values, and objects *****/
 //let, const, and var all let you define variables
-//if in doubt, just use let
+//if in doubt, just use let!
 
-//define an oscillator object, and refer to is as vco:
+//define an oscillator object, and refer to it as vco:
 let vco = new Tone.Oscillator()
+//var and const can be used just like let (mostly)
+//var vco = new Tone.Oscillator()
+//const vco = new Tone.Oscillator()
 
 //we can also just store numbers:
 let val = 100
@@ -13,7 +22,9 @@ val = 200
 
 /**** B - Executing and Debugging *****/
 //execute a line by putting your cursor on it and typing option/alt-enter
-let vco = new Tone.Oscillator()
+let vco = new Tone.Oscillator().start()
+let output = new Tone.Multiply(0.1).toDestination()
+vco.connect( output )
 
 //open the javascript console and inspect the vco
 console.log( vco )
@@ -26,17 +37,22 @@ vco.frequency.value = 100
 console.log( vco.get() )
 let vco = new Tone.Oscillator()
 console.log( vco.get() )
-
+//note this may cause the first 'vco' to keep playing endlessly
+//refresh your browser to clear all currently running code
 
 /**** C - Methods and Functions *****/
 
 //properties use the '=' operator
+let vco = new Tone.Oscillator().start()
+let output = new Tone.Multiply(0.1).toDestination()
+vco.connect( output )
+
 vco.frequency.value = 100
 vco.type = 'square'
 //methods use parentheses
 vco.start()
 vco.stop()
-//look at examples to find available properties and methods
+//look at examples and references to find available properties and methods
 
 //methods and functions MAY use arguments inside the parentheses.
 //again, look at examples or references

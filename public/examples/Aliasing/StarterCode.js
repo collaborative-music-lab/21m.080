@@ -5,7 +5,7 @@ let amp_mod = new Tone.Multiply()
 let output = new Tone.Multiply(1/100).toDestination()
 carrier.connect( amp_mod ), modulator.connect( amp_mod.factor )
 amp_mod.connect( output )
-carrier.frequency.value = 12000
+carrier.frequency.value = 5000
 modulator.frequency.value = 1000
 
 //visual monitor to see frequencies
@@ -21,7 +21,10 @@ output.factor.value = 1/100
 //you will see two sidebands go up and down
 //notice when you see them hit the sides
 //of the spectrum they reflect off
-modulator.frequency.rampTo(20000, 10)
+//the resulting frequencies should be:
+//    carrier(5000) +/- the modulator frequency
+modulator.frequency.rampTo(10000, 10)
+modulator.frequency.rampTo(22000, 10)
 
 //turn output volume to 0 if you don't want to hear the audio
-output.factor.value = 0
+output.factor.value = 0.0

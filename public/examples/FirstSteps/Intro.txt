@@ -6,4 +6,4 @@ And you can execute a block of code by typing:
 * mac: shift-option-enter
 * (a block is sequential lines of code with no blank lines between them)
 
-You can also run all of the code in the codebox by clicking the 'Play' button.
+You can also run all of the code in the codebox by clicking the 'Run' button.

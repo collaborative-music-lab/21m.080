@@ -405,6 +405,7 @@ class Element {
                     destination.value = output;
                 } catch {
                     try {
+                        console.log(destination, output)
                         destination = output;
                     } catch (error) {
                         console.log('Error setting Mapto to value: ', error);
@@ -614,6 +615,8 @@ export class Fader extends Element {
             if( this.value > 1 ) this.value = 1
             if( this.value < 0 ) this.value = 0
             this.mapValue(this.value,this.min,this.max,this.curve,this.mapto);
+            
+            this.runCallBack()
         }
     }
 }
@@ -704,6 +707,7 @@ export class Pad extends Element {
             if( this.valueY > 1 ) this.valueY = 1
             if( this.valueY < 0 ) this.valueY = 0
             this.mapValue(this.valueY,this.min,this.max,this.curve,this.maptoY);
+            this.runCallBack()
         }
     }
 }

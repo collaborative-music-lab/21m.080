@@ -14,8 +14,7 @@ modulator.connect( mod_amp ), mod_amp.connect( carrier.frequency)
 freq.connect( carrier.frequency), freq.connect( harmonicity)
 // monitor the frequency spectrum
 let spectrum = new Spectroscope('FrequencyModulation')
-carrier.connect( spectrum.analyserNode)
-spectrum.start()
+carrier.connect( spectrum.input)
 spectrum.maxFrequency = 24000
 
 //C: set Fc, Fm, and modulation depth directly

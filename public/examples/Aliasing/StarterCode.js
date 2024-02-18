@@ -10,8 +10,7 @@ modulator.frequency.value = 1000
 
 //visual monitor to see frequencies
 let spectrum = new Spectroscope('Aliasing')
-amp_mod.connect( spectrum.analyserNode )
-spectrum.start()
+amp_mod.connect( spectrum.input )
 spectrum.maxFrequency = 24000
 
 //you can scale output value here if you need to

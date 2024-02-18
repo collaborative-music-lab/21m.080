@@ -57,14 +57,12 @@ for(let i=0;i<numVoices;i++) vcos[i].phase = 0
 display.factor.value = 1/2
 
 let scope = new Oscilloscope('FourierTheorem')
-display.connect( scope.analyserNode )
-scope.start()
+display.connect( scope.input )
 scope.setFftSize( 1024*4 )
 scope.threshold = -.9
 
 //view the spectroscope
 let spectrum = new Spectroscope( "FourierTheorem" )
-display.connect( spectrum.analyserNode )
-spectrum.start()
+display.connect( spectrum.input )
 spectrum.setFftSize( 128*32)
 spectrum.maxFrequency = 2000

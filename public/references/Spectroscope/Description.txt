@@ -1,7 +1,7 @@
 ### Mandatory Arguments
 1. The argument to the Spectroscope constructor MUST be a valid html div. In our framework the name of the div will always be displayed above it. 
-2. When connecting an audio source to the oscilloscope, the argument to connect() MUST be the name of the scope followed by .analyserNode, e.g. vco.connect( spectrum.analyserNode )
-   1. The analyserNode is the audio object that does the actual analysis
+2. When connecting an audio source to the oscilloscope, the argument to connect() MUST be the name of the scope followed by .input, e.g. vco.connect( spectrum.input )
+
 ### Primary Properties & Methods
 #### Properties
 * maxFrequency: [Hertz] Sets the maximum frequency displayed on the Spectroscope. default: 24000

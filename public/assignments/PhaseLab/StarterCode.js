@@ -42,12 +42,10 @@ delay_level.connect( delay )
 delay.connect( vca )
 //
 const scope = new Oscilloscope('PhaseLab')
-scope.start()
-vca.connect( scope.analyserNode)
+vca.connect( scope.input)
 //
 const spectrum = new Spectroscope('PhaseLab')
-spectrum.start()
-vca.connect( spectrum.analyserNode)
+vca.connect( spectrum.input)
 
 /**** GUI ELEMENTS ****/
 let vol_knob = gui.Knob({

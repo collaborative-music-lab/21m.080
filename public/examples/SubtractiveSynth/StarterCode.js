@@ -40,6 +40,5 @@ cutoff.value = 100
 env.triggerAttackRelease(0.01)
 
 let spectrum = new Spectroscope('SubtractiveSynth')
-vcf.connect( spectrum.analyserNode )
-spectrum.start()
+vcf.connect( spectrum.input )
 spectrum.maxFrequency = 20000

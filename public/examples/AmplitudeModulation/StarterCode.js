@@ -25,6 +25,5 @@ car_amp.factor.value = .25
 vca.factor.value = .5
 
 let spectrum = new Spectroscope('AmplitudeModulation')
-car_amp.connect( spectrum.analyserNode)
-spectrum.start()
+car_amp.connect( spectrum.input)
 spectrum.maxFrequency = 22050

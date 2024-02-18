@@ -46,18 +46,25 @@ export const Oscilloscope = function(_target) {
     this.hasAudio = false;
 
      // Create the oscilloscope analyser-node
+    this.input= new Tone.Multiply()
+    this.gain = new Tone.Signal(1)
     this.analyserNode = this.audioContext.createAnalyser();
+    this.input.connect( this.analyserNode )
+    this.gain.connect( this.input.factor )
+
     this.analyserNode.fftSize = 2048; // Default fftSize
     this.bufferLength = this.analyserNode.frequencyBinCount;
     this.dataArray = new Uint8Array(this.bufferLength);
     this.yScaling = 1; //
     this.xScaling = 2;
+    this.zoom = 1.25;
     this.enableTrigger = 1;
     this.threshold = 128;
 
     //ToDo: get constructor to automatically start the scope
     this.constructor = function(){
         this.start();
+        this.running = true;
         console.log('scope started');
     }
 
@@ -74,84 +81,82 @@ export const Oscilloscope = function(_target) {
         this.dataArray = new Uint8Array(this.bufferLength);
     }.bind(this);
 
-    // this.display = function(destination){
-    //     eval(destination + '.connect(' + )
-    // }
-
     /**
      * Draw the oscillation wave
      */
     this.drawWave = function() {
-    var path = 'M';
+        var path = 'M';
 
-    this.analyserNode.getByteTimeDomainData(this.dataArray);
+        this.analyserNode.getByteTimeDomainData(this.dataArray);
 
-    // Find the index of the first positive zero-crossing point
-    var firstOverThreshold = 0;
-    let _threshold = this.threshold;
-    if(Math.abs(this.threshold) <= 1) _threshold  = this.threshold*128 + 127;
+        // Find the index of the first positive zero-crossing point
+        var firstOverThreshold = 0;
+        let _threshold = this.threshold;
+        if(Math.abs(this.threshold) <= 1) _threshold  = this.threshold*128 + 127;
 
-    for (var i = 1; i < this.bufferLength; i++) {
+        for (var i = 1; i < this.bufferLength; i++) {
 
-        let asign = this.dataArray[i] > _threshold;
-        let bsign = this.dataArray[i-1] <= _threshold;
-        if (Math.abs(asign + bsign) == 2) {
-            firstOverThreshold = i;
-            break;
+            let asign = this.dataArray[i] > _threshold;
+            let bsign = this.dataArray[i-1] <= _threshold;
+            if (Math.abs(asign + bsign) == 2) {
+                firstOverThreshold = i;
+                break;
+            }
         }
-    }
 
-    if ( this.enableTrigger == 0) firstOverThreshold = 0;
+        if ( this.enableTrigger == 0) firstOverThreshold = 0;
 
-    let x = 0;
-    let y = this.height / 2;
-    path += `${x} ${y}, `;
-
-    const maxValue = Math.max(...this.dataArray);
-    const minValue = Math.min(...this.dataArray);
-
-    ////scale y axis. . . not implemented
-    // if(this.yScaling > 1) this.yScaling *= 0.99;
-    // if(maxValue > this.yScaling) this.yScaling = maxValue;
-    // if(Math.abs(minValue) > this.yScaling) this.yScaling = Math.abs(minValue);
-
-    for (var i = 0; i < this.bufferLength-firstOverThreshold; i++) {
-        let val = (255-this.dataArray[i+firstOverThreshold]) * (1/this.yScaling);
-        x = (((this.width + (this.width / this.bufferLength)) / this.bufferLength) * (i));
-        x = x * this.xScaling;
-        y = ((this.height / 2) * (val / 128.0));
-
-
-        // Check if the x-coordinate is beyond the width of the scope
-        if (x > this.width-10) break; // Exit the loop if x exceeds width
-
+        let x = 0;
+        let y = this.height / 2;
         path += `${x} ${y}, `;
-    }
 
-    //draw zero point
-    // x += 1
-    // y = this.height / 2;
-    // path += `${x} ${y}, `;
+        const maxValue = Math.max(...this.dataArray);
+        const minValue = Math.min(...this.dataArray);
 
-    this.wave.setAttribute('d', path);
-    this.wave.setAttribute('stroke', 'black');
-    this.wave.setAttribute('stroke-width', '2');
-    this.wave.setAttribute('fill', 'none');
+        ////scale y axis. . . not implemented
+        // if(this.yScaling > 1) this.yScaling *= 0.99;
+        // if(maxValue > this.yScaling) this.yScaling = maxValue;
+        // if(Math.abs(minValue) > this.yScaling) this.yScaling = Math.abs(minValue);
 
-    if (this.running) {
-        //console.log(this.dataArray)
-        window.requestAnimationFrame(this.drawWave);
-    }
+        this.xScaling = this.zoom < 0.1 ? 0.2 : this.zoom * 2;
 
-    this.disconnect = function(){
-        this.target.removeChild(this.svg);
-    }.bind(this)
+        for (var i = 0; i < this.bufferLength-firstOverThreshold; i++) {
+            let val = (255-this.dataArray[i+firstOverThreshold]) * (1/this.yScaling);
+            x = (((this.width + (this.width / this.bufferLength)) / this.bufferLength) * (i));
+            x = x * this.xScaling;
+            y = ((this.height / 2) * (val / 128.0));
 
-    this.connect = function(_target){
-        this.target = document.getElementById(_target)
-        this.target.appendChild(this.svg);
-    }
-}.bind(this);
+
+            // Check if the x-coordinate is beyond the width of the scope
+            if (x > this.width-10) break; // Exit the loop if x exceeds width
+
+            path += `${x} ${y}, `;
+        }
+
+        //draw zero point
+        // x += 1
+        // y = this.height / 2;
+        // path += `${x} ${y}, `;
+
+        this.wave.setAttribute('d', path);
+        this.wave.setAttribute('stroke', 'black');
+        this.wave.setAttribute('stroke-width', '2');
+        this.wave.setAttribute('fill', 'none');
+
+        if (this.running) {
+            //console.log(this.dataArray)
+            window.requestAnimationFrame(this.drawWave);
+        }
+
+        this.disconnect = function(){
+            this.target.removeChild(this.svg);
+        }.bind(this)
+
+        this.connect = function(_target){
+            this.target = document.getElementById(_target)
+            this.target.appendChild(this.svg);
+        }
+    }.bind(this);
 
     /**
      * Start the oscilloscope
@@ -161,29 +166,13 @@ export const Oscilloscope = function(_target) {
 
         window.requestAnimationFrame(this.drawWave);
     }.bind(this);
+
+    this.stop = function(){
+        this.running = false;
+    }.bind(this)
+
+    this.start();
 };
-
-/**
- * Stop the oscilloscope
- */
-Oscilloscope.prototype.stop = function() {
-    this.running = false;
-};
-
-
-/**
- * Connect the analyser-node to the audio-context' destination
- */
-Oscilloscope.prototype.toggleAudio = function() {
-    if (!!this.hasAudio) {
-        this.analyserNode.disconnect();
-    } else {
-        this.analyserNode.connect(this.audioContext.destination);
-    }
-
-    this.hasAudio = !this.hasAudio;
-};
-
 
 
 
@@ -228,7 +217,13 @@ export const Spectroscope = function(_target) {
     this.hasAudio = false;
 
      // Create the oscilloscope analyser-node
+    // Create the oscilloscope analyser-node
+    this.input= new Tone.Multiply()
+    this.gain = new Tone.Signal(0.1)
     this.analyserNode = this.audioContext.createAnalyser();
+    this.input.connect( this.analyserNode )
+    this.gain.connect( this.input.factor )
+
     this.analyserNode.fftSize = 4096; // Default fftSize
     this.bufferLength = this.analyserNode.frequencyBinCount;
     this.dataArray = new Uint8Array(this.bufferLength);
@@ -256,60 +251,60 @@ export const Spectroscope = function(_target) {
      * Draw the oscillation wave
      */
     this.drawWave = function() {
-    var path = 'M';
+        var path = 'M';
 
-    this.analyserNode.getByteFrequencyData(this.dataArray);
+        this.analyserNode.getByteFrequencyData(this.dataArray);
 
-    let x = this.width;
-    let y = this.height / 2;
+        let x = this.width;
+        let y = this.height / 2;
 
-    const maxValue = Math.max(...this.dataArray);
-    const minValue = Math.min(...this.dataArray);
+        const maxValue = Math.max(...this.dataArray);
+        const minValue = Math.min(...this.dataArray);
 
-    ////scale y axis. . . not implemented
-    // if(this.yScaling > 1) this.yScaling *= 0.99;
-    // if(maxValue > this.yScaling) this.yScaling = maxValue;
-    // if(Math.abs(minValue) > this.yScaling) this.yScaling = Math.abs(minValue);
+        ////scale y axis. . . not implemented
+        // if(this.yScaling > 1) this.yScaling *= 0.99;
+        // if(maxValue > this.yScaling) this.yScaling = maxValue;
+        // if(Math.abs(minValue) > this.yScaling) this.yScaling = Math.abs(minValue);
 
-    x = 0
-    y = this.height;
-
-    path += `${x} ${y}, `;
-    for (var i = 0 ; i < this.bufferLength; i++) {
-
-        let freqDivider = 24000 / (this.maxFrequency-this.minFrequency)
-        let freqOffset = this.minFrequency / this.binWidth
-
-        //To do: get minFrequency working
-        //console.log(this.binWidth, freqOffset, freqDivider)
-
-        let val = (255-this.dataArray[i+freqOffset]) * (1/this.yScaling);
-        x = (((this.width + (this.width / this.bufferLength)) / this.bufferLength) * (i));
-        x = x * freqDivider;
-        y = ((this.height / 2) * (val / 128.0));
-
-
-        // Check if the x-coordinate is beyond the width of the scope
-        if (x > this.width) break; // Exit the loop if x exceeds width
+        x = 0
+        y = this.height;
 
         path += `${x} ${y}, `;
-    }
+        for (var i = 0 ; i < this.bufferLength; i++) {
 
-    x += 1
-    y = this.height;
+            let freqDivider = 24000 / (this.maxFrequency-this.minFrequency)
+            let freqOffset = this.minFrequency / this.binWidth
 
-    path += `${x} ${y}, `;
+            //To do: get minFrequency working
+            //console.log(this.binWidth, freqOffset, freqDivider)
 
-    this.wave.setAttribute('d', path);
-    this.wave.setAttribute('stroke', 'black');
-    //this.wave.setAttribute('stroke-width', '2');
-    //this.wave.setAttribute('fill', 'none');
+            let val = (255-this.dataArray[i+freqOffset]) * (1/this.yScaling);
+            x = (((this.width + (this.width / this.bufferLength)) / this.bufferLength) * (i));
+            x = x * freqDivider;
+            y = ((this.height / 2) * (val / 128.0));
 
-    if (this.running) {
-        //console.log(this.dataArray)
-        window.requestAnimationFrame(this.drawWave);
-    }
-}.bind(this);
+
+            // Check if the x-coordinate is beyond the width of the scope
+            if (x > this.width) break; // Exit the loop if x exceeds width
+
+            path += `${x} ${y}, `;
+        }
+
+        x += 1
+        y = this.height;
+
+        path += `${x} ${y}, `;
+
+        this.wave.setAttribute('d', path);
+        this.wave.setAttribute('stroke', 'black');
+        //this.wave.setAttribute('stroke-width', '2');
+        //this.wave.setAttribute('fill', 'none');
+
+        if (this.running) {
+            //console.log(this.dataArray)
+            window.requestAnimationFrame(this.drawWave);
+        }
+    }.bind(this);
 
 
     /**
@@ -321,6 +316,10 @@ export const Spectroscope = function(_target) {
         window.requestAnimationFrame(this.drawWave);
     }.bind(this);
 
+    this.stop = function(){
+        this.running = false;
+    }.bind(this)
+
     this.disconnect = function(){
         this.target.removeChild(this.svg);
     }.bind(this)
@@ -329,4 +328,6 @@ export const Spectroscope = function(_target) {
         this.target = document.getElementById(_target)
         this.target.appendChild(this.svg);
     }
+
+    this.start();
 };

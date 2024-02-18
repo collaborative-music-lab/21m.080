@@ -6,7 +6,7 @@ import {exportFiles} from './Export.js'
 
 import p5 from 'p5';
 import * as Tone from 'tone';
-import ml5 from 'ml5';
+//import ml5 from 'ml5';
 import Canvas from "./Canvas.js";
 //import gui_sketch from "./gui.js";
 import { Oscilloscope, Spectroscope } from './oscilloscope';
@@ -19,7 +19,7 @@ const stateFields = { history: historyField };
 function Editor(props) {
     window.p5 = p5;
     window.Tone = Tone;
-    window.ml5 = ml5;
+    //window.ml5 = ml5;
     window.Oscilloscope = Oscilloscope;
     window.Spectroscope = Spectroscope;
     //window.gui_sketch = gui_sketch;

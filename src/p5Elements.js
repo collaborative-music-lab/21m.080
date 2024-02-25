@@ -189,6 +189,14 @@ const scaleOutput = function (input, inLow, inHigh, outLow, outHigh, curve) {
     return val * (outHigh - outLow) + outLow;
   }
 
+const unScaleOutput = function (input, outLow, outHigh, inLow, inHigh, curve) {
+    if (curve === undefined) curve = 1;
+    else curve = 1/curve;
+    let val = (input - inLow) * (1 / (inHigh - inLow));
+    val = Math.pow(val, curve);
+    return val * (outHigh - outLow) + outLow;
+  }
+
 
 /********************** COLORS & FONTS ***********************/
 export const setColor = function(name, value) {
@@ -321,7 +329,8 @@ class Element {
         this.callback = options.callback || null;
         if( this.mapto || this.callback) this.maptoDefined = 'true'
         else this.maptoDefined = 'false'
-        this.value = scaleOutput(options.value,this.min,this.max,0,1,1/this.curve) || 0.5;
+        this.rawValue = unScaleOutput(options.value,0,1,this.min,this.max,this.curve) || 0.5;
+        this.value = options.value || scaleOutput(0.5,0,1,this.min,this.max,this.curve);
         p.elements[this.id] = this;
 
     }
@@ -359,14 +368,18 @@ class Element {
     }
 
     drawValue(x,y){
-        let output = scaleOutput(this.value, 0,1, this.min,this.max,this.curve)
+        let output = this.value
         this.p.stroke(this.setColor(this.textColor))
         this.p.textSize(this.textSize*10);
         this.p.strokeWeight(0.00001 * this.textSize*20);
         this.p.textAlign(this.p.CENTER, this.p.CENTER);
         this.p.fill(this.setColor(this.textColor));
         this.p.textFont(getFont(this.valueFont))
-        this.p.text(output.toFixed(2), x + (this.valueX/100)*this.p.width, y + (this.valueY/100)*this.p.height);
+        if(Math.abs(output) < 1) output = output.toFixed(4)
+        else if(Math.abs(output) < 5) output = output.toFixed(3) 
+        else if(Math.abs(output) < 100) output = output.toFixed(2) 
+        else  output = output.toFixed(1)   
+        this.p.text(output, x + (this.valueX/100)*this.p.width, y + (this.valueY/100)*this.p.height);
     }
 
     drawText(text,x,y){
@@ -395,8 +408,7 @@ class Element {
         return [0,0,0]
     }
 
-    mapValue(value,min,max,curve,destination) {
-        let output = scaleOutput(value, 0,1, min,max,curve)
+    mapValue(output, destination) {
         if (destination) {
             try {
                 destination.value.rampto(output, .1);
@@ -405,7 +417,7 @@ class Element {
                     destination.value = output;
                 } catch {
                     try {
-                        console.log(destination, output)
+                        //console.log(destination, output)
                         destination = output;
                     } catch (error) {
                         console.log('Error setting Mapto to value: ', error);
@@ -417,8 +429,9 @@ class Element {
 
     runCallBack() {
         if (this.callback) {
+            let output = this.value
             try {
-                this.callback(this.value);
+                this.callback(output);
             } catch {
                 try {
                     this.callback();
@@ -432,8 +445,8 @@ class Element {
     set(value){
         if(typeof(value) === 'string') this.value = value;
         else{
-            this.value = scaleOutput(value,this.min,this.max,0,1,1/this.curve)
-            this.mapValue(this.value,this.min,this.max,this.curve,this.mapto);
+            this.value = value
+            this.mapValue(this.value, this.mapto);
         }
         this.runCallBack()
     }
@@ -459,7 +472,7 @@ export class Knob extends Element {
         // Calculate the angle based on the knob's value
         this.startAngle = this.p.PI * (4/8 + (360 - this.degrees)/360);
         this.endAngle = this.p.PI * (4/8 - (360 - this.degrees)/360 ) + 2 * this.p.PI;
-        let angle = this.p.map(this.value, 0,1, 0, this.endAngle-this.startAngle);
+        let angle = this.p.map(this.rawValue, 0,1, 0, this.endAngle-this.startAngle);
 
         this.cur_x = (this.x/100)*this.p.width
         this.cur_y = (this.y/100)*this.p.height
@@ -505,13 +518,14 @@ export class Knob extends Element {
         if(this.active){
         
             if(this.p.movedY != 0 ){ 
-                if( this.p.keyIsDown(this.p.ALT)) this.value -= this.p.movedY * this.incr/10;
-                else this.value -= this.p.movedY * this.incr;
+                if( this.p.keyIsDown(this.p.ALT)) this.rawValue -= this.p.movedY * this.incr/10;
+                else this.rawValue -= this.p.movedY * this.incr;
             }
             
-            if( this.value > 1 ) this.value = 1
-            if( this.value < 0 ) this.value = 0
-            this.mapValue(this.value,this.min,this.max,this.curve,this.mapto);
+            if( this.rawValue > 1 ) this.rawValue = 1
+            if( this.rawValue < 0 ) this.rawValue = 0
+            this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
+            this.mapValue(this.value, this.mapto);
             this.runCallBack()
         }
     }
@@ -586,14 +600,14 @@ export class Fader extends Element {
         //Clear beneath Display Indicator
         this.p.fill(getColor('background') )
         this.p.stroke(this.setColor('background') )
-        this.pos = this.p.map(this.value, 0,1, this.isHorizontal ? x_corner : y_corner + this.cur_size - this.thickness, this.isHorizontal ? x_corner + this.cur_size - this.thickness : y_corner);
+        this.pos = this.p.map(this.rawValue, 0,1, this.isHorizontal ? x_corner : y_corner + this.cur_size - this.thickness, this.isHorizontal ? x_corner + this.cur_size - this.thickness : y_corner);
         let clearSize = border*.25
         if (this.isHorizontal) this.p.rect(this.pos-clearSize, y_corner, this.thickness+clearSize*2, this.thickness*2);
         else this.p.rect(x_corner, this.pos-clearSize, this.thickness*2, this.thickness+clearSize*2);
         //Display indicator
         this.p.fill(this.setColor(this.accentColor));
         this.p.stroke(this.setColor(this.accentColor))
-        this.pos = this.p.map(this.value, 0,1, this.isHorizontal ? x_corner : y_corner + this.cur_size - this.thickness, this.isHorizontal ? x_corner + this.cur_size - this.thickness : y_corner);
+        this.pos = this.p.map(this.rawValue, 0,1, this.isHorizontal ? x_corner : y_corner + this.cur_size - this.thickness, this.isHorizontal ? x_corner + this.cur_size - this.thickness : y_corner);
         if (this.isHorizontal) this.p.rect(this.pos, y_corner, this.thickness, this.thickness*2);
         else this.p.rect(x_corner, this.pos, this.thickness*2, this.thickness);
     }
@@ -602,19 +616,20 @@ export class Fader extends Element {
         if( this.active ){
             if (this.isHorizontal){
                 if(this.p.movedX !== 0 ){ 
-                    if( this.p.keyIsDown(this.p.ALT)) this.value += this.p.movedX * this.incr/10;
-                    else this.value += this.p.movedX * this.incr / this.size;
+                    if( this.p.keyIsDown(this.p.ALT)) this.rawValue += this.p.movedX * this.incr/10;
+                    else this.rawValue += this.p.movedX * this.incr / this.size;
                 }
             }
             else {
                 if(this.p.movedY !== 0 ){ 
-                    if( this.p.keyIsDown(this.p.ALT)) this.value -= this.p.movedY * this.incr/10;
-                    else this.value -= this.p.movedY * this.incr / this.size;
+                    if( this.p.keyIsDown(this.p.ALT)) this.rawValue -= this.p.movedY * this.incr/10;
+                    else this.rawValue -= this.p.movedY * this.incr / this.size;
                 }
             }
-            if( this.value > 1 ) this.value = 1
-            if( this.value < 0 ) this.value = 0
-            this.mapValue(this.value,this.min,this.max,this.curve,this.mapto);
+            if( this.rawValue > 1 ) this.rawValue = 1
+            if( this.rawValue < 0 ) this.rawValue = 0
+            this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
+            this.mapValue(this.value, this.mapto);
             
             this.runCallBack()
         }
@@ -636,9 +651,11 @@ export class Pad extends Element {
         this.incr = options.incr || 0.01;
         this.valueX = this.valueX || 0.5
         this.valueY = this.valueY || 0.5
+        this.rawValueX = this.valueX
+        this.rawValueY = this.valueY
         this.dragging = false;
-        this.sizeX = options.sizeX || 5
-        this.sizeY = options.sizeY || 5
+        this.sizeX = options.sizeX || options.size || 5
+        this.sizeY = options.sizeY || options.size || 5
         if(typeof(options.maptoX)=='string') this.maptoX = eval(options.maptoX)
         else this.maptoX = options.maptoX || null;
         if(typeof(options.maptoY)=='string') this.maptoY = eval(options.maptoY)
@@ -661,8 +678,8 @@ export class Pad extends Element {
 
         this.x_box = this.cur_sizeX*2
         this.y_box = this.cur_sizeY*2
-        this.cur_x = (this.x/100)*this.p.width + this.cur_sizeX/2
-        this.cur_y = (this.y/100)*this.p.height + this.cur_sizeY/2
+        this.cur_x = (this.x/100)*this.p.width //+ this.cur_sizeX/2
+        this.cur_y = (this.y/100)*this.p.height //+ this.cur_sizeY/2
 
         //console.log(this.cur_x, this.cur_y, this.x_box,this.y_box)
       
@@ -679,34 +696,46 @@ export class Pad extends Element {
         //Display indicator
         this.p.fill(this.setColor(this.accentColor));
         this.p.stroke(this.setColor(this.accentColor))
-        let indicatorX = x_corner + this.valueX *  (this.cur_sizeX - 0*border)
-        let indicatorY = y_corner + this.valueY * ( this.cur_sizeY - 0*border)
+        let indicatorX = x_corner + this.rawValueX *  (this.cur_sizeX - 0*border)
+        let indicatorY = y_corner + this.rawValueY * ( this.cur_sizeY - 0*border)
         //this.pos = this.p.map(this.value, 0,1,  x_corner  + this.cur_size - this.thickness, this.isHorizontal ? x_corner + this.cur_size - this.thickness : y_corner);
         this.p.circle(indicatorX, indicatorY, (this.cur_sizeX+this.cur_sizeY)/30)    
    
         // Display the label and values
-        if(this.showLabel) this.drawLabel(this.cur_x,  y_corner + this.sizeY)
+        let textHeightValue = this.p.textAscent() + this.p.textDescent();
+        if(this.showLabel) this.drawLabel(this.cur_x,  this.cur_y - this.cur_sizeY/2 - textHeightValue)
+
+             // Display the label and value strings
+        // this.p.textSize(this.textSize*10);
+        // let textWidthValue = this.p.textWidth(this.label);
+        // let textHeightValue = this.p.textAscent() + this.p.textDescent();
+        // let curTextY = this.isHorizontal ? this.cur_y+border*2 + textHeightValue* .5 : this.cur_y+this.cur_size/2+ border + textHeightValue * .5
+        // if(this.showLabel) this.drawLabel(this.cur_x, curTextY)
+        // if(this.showValue) this.drawValue(this.cur_x, curTextY + textHeightValue)
+
     }
 
     isDragged() {
         if( this.active ){
             if(this.p.movedX !== 0 ){ 
-                if( this.p.keyIsDown(this.p.ALT)) this.valueX += this.p.movedX * this.incr/10;
-                else this.valueX += this.p.movedX * this.incr / this.sizeX;
+                if( this.p.keyIsDown(this.p.ALT)) this.rawValueX += this.p.movedX * this.incr/10;
+                else this.rawValueX += this.p.movedX * this.incr / this.sizeX;
             }
 
             if(this.p.movedY !== 0 ){ 
-                if( this.p.keyIsDown(this.p.ALT)) this.valueY += this.p.movedY * this.incr/10;
-                else this.valueY += this.p.movedY * this.incr / this.sizeY;
+                if( this.p.keyIsDown(this.p.ALT)) this.rawValueY += this.p.movedY * this.incr/10;
+                else this.rawValueY += this.p.movedY * this.incr / this.sizeY;
             }
 
-            if( this.valueX > 1 ) this.valueX = 1
-            if( this.valueX < 0 ) this.valueX = 0
-            this.mapValue(this.valueX,this.min,this.max,this.curve,this.maptoX);
+            if( this.rawValueX > 1 ) this.rawValueX = 1
+            if( this.rawValueX < 0 ) this.rawValueX = 0
+            this.valueX = scaleOutput(this.rawValueX,0,1,this.min,this.max,this.curve)
+            this.mapValue(this.valueX,this.maptoX);
 
-            if( this.valueY > 1 ) this.valueY = 1
-            if( this.valueY < 0 ) this.valueY = 0
-            this.mapValue(this.valueY,this.min,this.max,this.curve,this.maptoY);
+            if( this.rawValueY > 1 ) this.rawValueY = 1
+            if( this.rawValueY < 0 ) this.rawValueY = 0
+            this.valueY = scaleOutput(this.rawValueY,0,1,this.min,this.max,this.curve)
+            this.mapValue(this.valueY,this.maptoY);
             this.runCallBack()
         }
     }
@@ -725,6 +754,7 @@ export class Button extends Element {
     constructor(p, options) {
         super(p, options);
         this.value = options.value || 0
+        this.rawValue = this.value
     }
 
     resize(scaleWidth, scaleHeight) {
@@ -740,7 +770,7 @@ export class Button extends Element {
         this.y_box = this.cur_size
         let border = this.getParam('border',this.border)
 
-        if( this.value ){            
+        if( this.rawValue ){            
             this.p.noFill()
             this.p.stroke(this.setColor(this.accentColor));
             this.p.strokeWeight(border);
@@ -764,8 +794,9 @@ export class Button extends Element {
             this.p.mouseY < (this.cur_y + this.y_box/2) )
         {
             this.active = 1
-            this.value = 1
-            this.mapValue(this.value,this.min,this.max,this.curve,this.mapto);
+            this.rawValue = 1
+            this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
+            this.mapValue(this.value,this.mapto);
             this.runCallBack();
             if( this.maptoDefined == 'false') postButtonError('Buttons')
         }
@@ -774,7 +805,8 @@ export class Button extends Element {
     isReleased(){
         if( this.active == 1 )  {
             this.active = 0
-            this.value = 0
+            this.rawValue = 0
+            this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
         }
     }
 }
@@ -813,8 +845,9 @@ export class Toggle extends Button {
             this.p.mouseY < (this.cur_y + this.y_box/2) )
         {
             this.active = 1
-            this.value = this.value ? 0 : 1
-            this.mapValue(this.value,this.min,this.max,this.curve,this.mapto);
+            this.rawValue = this.rawValue ? 0 : 1
+            this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
+            this.mapValue(this.value,this.mapto);
             this.runCallBack();
             if( this.maptoDefined == 'false') postButtonError('Toggle buttons')
         }
@@ -930,7 +963,7 @@ export class RadioButton extends Button {
             this.active = 1
 
             this.runCallBack();
-            this.mapValue();
+            this.mapValue(this.value, this.mapto);
             if( this.maptoDefined == 'false') postButtonError('RadioButtons')
         }
     }

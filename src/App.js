@@ -16,7 +16,7 @@ function App() {
   const [markdownContent, setMarkdownContent] = useState("");
 
   const exampleFiles = [
-    'FirstSteps', 'FourierTheorem',  'GUI', 'SubtractiveSynth', 'Aliasing', 'AmplitudeModulation', 
+    'FirstSteps', 'FourierTheorem',  'GUI', 'SubtractiveSynth', 'Temperaments', 'Aliasing', 'AmplitudeModulation', 
     'FrequencyModulation','MIDI', 'Sampler', 'GranularSynth', 'Physical Model'
   ];
   const assignmentFiles = [

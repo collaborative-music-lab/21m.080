@@ -335,6 +335,7 @@ class Element {
 
         this.mapValue(this.value, this.mapto);
         this.runCallBack()
+        console.log('call')
     }
 
     getParam(param,val){ return val == 'theme' ? activeTheme[param] : val}
@@ -496,7 +497,7 @@ export class Knob extends Element {
         let textWidthValue = this.p.textWidth(this.label);
         let textHeightValue = this.p.textAscent() + this.p.textDescent();
         if(this.showLabel) this.drawLabel(this.cur_x, this.cur_y + this.cur_size/2 + textHeightValue * .5 )
-        if(this.showValue) this.drawValue(this.cur_x, this.cur_y + this.cur_size/2 + textHeightValue * (.5 + this.showLabel))
+        if(this.showValue) this.drawValue(this.cur_x, this.cur_y + this.cur_size/2 + textHeightValue * (this.showLabel ? 1.5 : .5))
 
         // Draw the inactive knob background
         this.p.noFill();

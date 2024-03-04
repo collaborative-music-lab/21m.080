@@ -285,7 +285,7 @@ class Element {
         this.border = options.border || 'theme' || 6;
         this.borderColor = options.borderColor || 'border';
         this.accentColor = options.accentColor || 'accent';
-        this.borderRadius = options.borderRadius ||activeTheme.borderRadius || 0;
+        this.borderRadius = options.borderRadius || activeTheme.borderRadius || 0;
         
         //text
         this.textColor = options.textColor || 'text';
@@ -333,6 +333,8 @@ class Element {
         this.value = options.value || scaleOutput(0.5,0,1,this.min,this.max,this.curve);
         p.elements[this.id] = this;
 
+        this.mapValue(this.value, this.mapto);
+        this.runCallBack()
     }
 
     getParam(param,val){ return val == 'theme' ? activeTheme[param] : val}
@@ -494,7 +496,7 @@ export class Knob extends Element {
         let textWidthValue = this.p.textWidth(this.label);
         let textHeightValue = this.p.textAscent() + this.p.textDescent();
         if(this.showLabel) this.drawLabel(this.cur_x, this.cur_y + this.cur_size/2 + textHeightValue * .5 )
-        if(this.showValue) this.drawValue(this.cur_x, this.cur_y + this.cur_size/2 + textHeightValue * 1.5)
+        if(this.showValue) this.drawValue(this.cur_x, this.cur_y + this.cur_size/2 + textHeightValue * (.5 + this.showLabel))
 
         // Draw the inactive knob background
         this.p.noFill();

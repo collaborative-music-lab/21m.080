@@ -1,0 +1,14 @@
+[<img src="./assignments/FMOperator/FMOperator_diagram.png" alt="Alt text" style="width:50%">](./FMOperator/FMOperator_diagram.png)
+
+The main controls for each operator are what you'd expect:
+* the incoming frequency goes to harmonicity
+* set the harmonicity using harmonicity.factor
+* set the index using index.factor
+* ADSR envelope parameters
+* index_env_depth.factor lets the envelopes set the index
+
+Each operator has an output vca, used to connect to external Tone objects.
+
+Notice that operators identified as carriers are slightly different:
+* they won't have an index or index envelope
+* they use an amplitude.value to set their amplitude

@@ -335,7 +335,6 @@ class Element {
 
         this.mapValue(this.value, this.mapto);
         this.runCallBack()
-        console.log('call')
     }
 
     getParam(param,val){ return val == 'theme' ? activeTheme[param] : val}

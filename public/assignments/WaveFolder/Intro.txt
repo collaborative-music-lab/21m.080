@@ -1,6 +1,5 @@
-Samples let you load in an audio and then play it faster or slower in order to change its pitch.
+Waveshaping is a great way to transform signals. This works by creating a *transfer function*, which maps values from [-1,1] of an incoming signal to new values based on the *transfer function's* shape.
 
-There are several mp3 audio files included as part of this website:
-120bpm_beat, haugharp, kalimba, marimba, rhodes, ukulele, vocal
+This example shows two kinds of wavefolding, using a sine wave and a triangle wave, as well as implementing soft and hard clipping. Notice how easy it is to implement transfer functions - try experimenting with your own! Do note, though, that they need to have input and output values limited to [-1,1].
 
-You can load these by replacing 'vocal.mp3' with another file name. 
+Also note that we use the amplitude of the signal going into the transfer function to determine how much of an effect the waveshapper has on the signal.

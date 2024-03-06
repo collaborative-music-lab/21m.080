@@ -20,7 +20,7 @@ function App() {
     'FrequencyModulation','MIDI', 'Sampler', 'GranularSynth', 'Physical Model'
   ];
   const assignmentFiles = [
-    'Lab1','JavaScript101', 'VCOMixer', 'Sequencer', 'FMOperator', 'WaveFolder'
+    'Lab1','JavaScript101', 'VCOMixer', 'Sequencer', 'FMOperator', 'WaveFolder', 'KarplusStrong'
     //,'PhaseLab', 'PhaseLab2'
     //,'MarkovChains', 'Perceptron'
   ];

@@ -587,7 +587,7 @@ export class Fader extends Element {
         let textHeightValue = this.p.textAscent() + this.p.textDescent();
         let curTextY = this.isHorizontal ? this.cur_y+border*2 + textHeightValue* .5 : this.cur_y+this.cur_size/2+ border + textHeightValue * .5
         if(this.showLabel) this.drawLabel(this.cur_x, curTextY)
-        if(this.showValue) this.drawValue(this.cur_x, curTextY + textHeightValue)
+        if(this.showValue) this.drawValue(this.cur_x, curTextY + (this.showLabel ? 1: 0 ) * textHeightValue)
 
         //Display Actual Fader
         this.p.noFill();

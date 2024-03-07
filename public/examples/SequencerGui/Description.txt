@@ -1,0 +1,21 @@
+Here we are using sliders (or *faders*) to control the pitches of a sequencer. The tricky thing is to *quantize* the slider values to a musical scale. We do that with the `scaleToMidi()` function. In this function, we take the slider value (using `Math.floor()` to make it an integer) and then use it as an index to the `scale` array.
+
+We have four values we need to keep track of:
+1. `pitches`: the final MIDI values for our sequence
+2. `scale`: the intervals of a musical scale (in this case a major scale)
+3. `octave`: the base octave for our sequence
+4. `index`: the current step of our sequence to send to the VCOs.
+
+The whole process of setting the frequency of the operator ends up being:
+1. in the gui:
+	* set the values of the sequencer steps to 0-12, then:
+2. in scaleToMidi()
+	* convert the step to an integer
+	* convert the step value to an index, which has to be less than the length of our scale array. If the index is greater or equal, we know we are in the next octave up.
+	* get the scale degree using our index, and then add an octave if we need to
+	* store the final scale degree in the pitches array.
+3. in our sequence 
+	* final MIDI pitch is (MIDI note for the current index) + (`octave * 12`)
+	* use Tone.Midi().toFrequency to convert the pitch to a frequency in Hertz
+	* set the `frequency.value` to the result
+	* (`frequency` is a Tone.Signal() connected to the frequency input of vco1 and vco2)

@@ -1,0 +1,1 @@
+This is a simple example showing one way you might use a GUI to control a sequencer. See the *Sequencer* assignment for more on the basic use of Tone.Sequence()

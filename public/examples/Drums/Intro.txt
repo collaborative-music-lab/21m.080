@@ -1,0 +1,5 @@
+Simple Drum Synthesis Techniques
+
+Kick Drums and Hihats are often synthesized using basic synthesis techniques. The examples given here can also be modified to synthesize toms, snares, cymbals, and other percussive sound fx. 
+
+These examples create Kick and HiHat classes, with the associated methods trigger() for the Kick, and triggerClosed() and triggerOpen() for the hihat. While making the classes is a bit verbose, once they are written it is easy to create and trigger kick and hat objects.

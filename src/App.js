@@ -17,7 +17,7 @@ function App() {
 
   const exampleFiles = [
     'FirstSteps', 'FourierTheorem',  'GUI', 'SubtractiveSynth', 'Temperaments', 'Aliasing', 'AmplitudeModulation', 
-    'FrequencyModulation','MIDI', 'Sampler', 'GranularSynth', 'Physical Model', 'SequencerGui'
+    'FrequencyModulation','MIDI', 'Sampler', 'GranularSynth', 'Physical Model', 'SequencerGui', 'Drums'
   ];
   const assignmentFiles = [
     'Lab1','JavaScript101', 'VCOMixer', 'Sequencer', 'FMOperator', 'WaveFolder', 'KarplusStrong'

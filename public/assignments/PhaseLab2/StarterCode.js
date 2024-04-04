@@ -1,5 +1,5 @@
 //21M.080 phase lab pt 2
-const gui = new p5(gui_sketch, PhaseLab2)
+const gui = new p5(sketch, PhaseLab2)
 let output = new Tone.Multiply(0.1).toDestination()
 
 let audioURL = "audio/120bpm_beat.mp3"

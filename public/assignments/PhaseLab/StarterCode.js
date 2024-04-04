@@ -1,5 +1,5 @@
 //21M.080 phase lab
-const gui = new p5(gui_sketch, PhaseLab)
+const gui = new p5(sketch, PhaseLab)
 let output = new Tone.Multiply(0.1).toDestination()
 
 //we will start by exploring a sine wave

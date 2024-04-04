@@ -442,32 +442,35 @@ function Editor(props) {
 
     //Export webpage code
     const handleExportFile = (fileName) => {
-        const blob = new Blob([localStorage.getItem(`${props.page}Value`)], { type: 'text/plain' });
-        let tempName = 'mySynth'
-        if(fileName === 'Enter filename...') tempName = exportFileName
+    const blob = new Blob([localStorage.getItem(`${props.page}Value`)], { type: 'text/plain' });
+    let tempName = 'mySynth';
+    if (exportFileName !== 'Enter filename...') {
+        tempName = exportFileName;
+    }
 
-        const url = URL.createObjectURL(blob);
-        // Create an invisible anchor element
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        // Set the anchor's href attribute to the URL
-        a.href = url;
-        // Set the anchor's download attribute to specify the filename
-        a.download = tempName; // Set the default filename
-        // Append the anchor element to the document
-        document.body.appendChild(a);
-        // Simulate a click event on the anchor to trigger the download
-        a.click();
-        // Remove the anchor element from the document
-        document.body.removeChild(a);
-        // Revoke the URL to free up resources
-        URL.revokeObjectURL(url);
-        console.log(`Exporting file with name: ${fileName}`);
-      };
+    const url = URL.createObjectURL(blob);
+    // Create an invisible anchor element
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    // Set the anchor's href attribute to the URL
+    a.href = url;
+    // Set the anchor's download attribute to specify the filename
+    a.download = tempName; // Set the default filename
+    // Append the anchor element to the document
+    document.body.appendChild(a);
+    // Simulate a click event on the anchor to trigger the download
+    a.click();
+    // Remove the anchor element from the document
+    document.body.removeChild(a);
+    // Revoke the URL to free up resources
+    URL.revokeObjectURL(url);
+    console.log(`Exporting file with name: ${tempName}`);
+};
       //end export dialog support
 
     const handleFilenameChange = (e) => {
       setexportFileName( e.target.value );
+      console.log('export file name ', exportFileName)
     };
 
 

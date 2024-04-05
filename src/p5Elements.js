@@ -448,6 +448,7 @@ class Element {
         if(typeof(value) === 'string') this.value = value;
         else{
             this.value = value
+            this.rawValue = unScaleOutput(value,0,1,this.min,this.max,this.curve) || 0.5;
             this.mapValue(this.value, this.mapto);
         }
         this.runCallBack()

@@ -3,6 +3,9 @@ import CodeMirror from '@uiw/react-codemirror';
 import { historyField } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
 import {exportFiles} from './Export.js'
+import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
+        Rumble, Daisies} from './synths/index.js';
+
 
 import p5 from 'p5';
 import * as Tone from 'tone';
@@ -15,6 +18,9 @@ const midi = require('./Midi.js');
 //Save history in browser
 const stateFields = { history: historyField };
 
+// Initialize the Tone context
+let audioContext = new AudioContext();
+// Tone.setContext(audioContext);
 
 function Editor(props) {
     window.p5 = p5;
@@ -28,6 +34,16 @@ function Editor(props) {
     window.setNoteOffHandler = midi.midiHandlerInstance.setNoteOffHandler.bind(midi.midiHandlerInstance);
     window.setCCHandler = midi.midiHandlerInstance.setCCHandler.bind(midi.midiHandlerInstance);
     window.exportFiles = exportFiles
+
+    //synths
+    window.NoiseVoice = NoiseVoice
+    window.Resonator = Resonator
+    window.ToneWood = ToneWood
+    window.DelayOp = DelayOp
+    window.Caverns = Caverns
+    window.Rumble = Rumble
+    window.Daisies = Daisies
+
 
     var curLineNum = 0;
     let p5Elements = ["p5", "Knob", "Fader", "Button", "Toggle", "RadioButton"];
@@ -50,7 +66,6 @@ function Editor(props) {
     const [maximized, setMaximized] = useState('');
 
     const [exportFileName, setexportFileName] = useState('Enter filename...');
-
 
     useEffect(() => {
         const container = document.getElementById('container');

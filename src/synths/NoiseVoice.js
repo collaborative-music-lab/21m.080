@@ -19,7 +19,11 @@ methods:
 
 properties:
 - env_depth.factor.value (env controls vca)
-- 
+- hpf.frequency, Q
+- lpf.frequency, Q
+- gain.factor (into waveshaper)
+- env ADSR
+
 */
 
 import p5 from 'p5';

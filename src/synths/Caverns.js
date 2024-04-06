@@ -52,6 +52,12 @@ export class Caverns{
   setFeedback = function(val){
     for(let i=0;i<8;i++) {
       this.delay[i].delay.feedback.value = val
+      //this.cross[i].factor.value = val
+    }
+  }
+  setCross = function(val){
+    for(let i=0;i<8;i++) {
+      //this.delay[i].delay.feedback.value = val
       this.cross[i].factor.value = val
     }
   }
@@ -72,7 +78,7 @@ export class Caverns{
   }
   setPanning = function(val){
     for(let i=0;i<8;i++) {
-      this.delay[i].panner.pan.value = Math.sin(i*val)
+      this.delay[i].panner.pan.rampTo( Math.sin(i*val),.1)
     }
   }
 }

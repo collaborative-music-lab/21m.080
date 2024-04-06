@@ -2,16 +2,38 @@
 Rumble
 
 Three oscillator monosynth
-* 3 vcos->mixer->gain->waveshaper->vcf->vca->resonator->output
-* includes a dry path around resonator
+* 3 vcos->mixer->gain->waveShaper->vcf->vca->output
 * main pitch input is .frequency.value
 
 methods:
 - connect
-- 
+setADSR(a,d,s,r)
+setFilterADSR(a,d,s,r)
+setDetune(a,b,c)
+setPwmDepth(a,b,c)
+setGain(a,b,c)
 
-properties:
-- 
+properties set directly:
+frequency.value
+velocity.value
+cutoff_cv.value
+sub_freq.factor
+sub_gain.factor
+clip.factor (into waveShaper)
+vca_lvl.value
+cutoff.value
+vcf_env_depth.factor
+keyTracking.factor
+lfo.frequency
+
+properties set using methods:
+vco_freq_1, vco_freq_2, vco_freq_3
+vco_gain_1, vco_gain_2, vco_gain_3
+env and vcf_env ADSR
+lfo_pwm_1, lfo_pwm_2, lfo_pwm_3
+gain (into waveShaper)
+
+ 
 */
 import p5 from 'p5';
 import * as Tone from 'tone';
@@ -31,9 +53,9 @@ export class Rumble {
     this.frequency.connect(this.vco_freq_3);
 
     // VCOs
-    this.vco_1 = new Tone.PulseOscillator().start();
-    this.vco_2 = new Tone.PulseOscillator().start();
-    this.vco_3 = new Tone.PulseOscillator().start();
+    this.vco_1 = new Tone.OmniOscillator({type:'pulse'}).start();
+    this.vco_2 = new Tone.OmniOscillator({type:'pulse'}).start();
+    this.vco_3 = new Tone.OmniOscillator({type:'pulse'}).start();
     this.vco_freq_1.connect(this.vco_1.frequency);
     this.vco_freq_2.connect(this.vco_2.frequency);
     this.vco_freq_3.connect(this.vco_3.frequency);
@@ -52,49 +74,53 @@ export class Rumble {
     this.sub_gain = new Tone.Multiply(0)
     this.sub.connect(this.sub_gain)
 
-    //waveshaper
-    this.gain = new Tone.Multiply(0.125)
-    this.vco_gain_1.connect(this.gain);
-    this.vco_gain_2.connect(this.gain);
-    this.vco_gain_3.connect(this.gain);
-    this.sub_gain.connect(this.gain)
-    this.waveshaper = new Tone.WaveShaper((x)=>{
-      //return Math.sin(x*Math.PI*2)
-    	return Math.tanh(x*8)
+    this.vcf = new Tone.Filter({type:"lowpass", rolloff:-24});
+    this.vco_gain_1.connect(this.vcf);
+    this.vco_gain_2.connect(this.vcf);
+    this.vco_gain_3.connect(this.vcf);
+    this.sub_gain.connect(this.vcf)
+
+    //waveShaper
+    this.clip = new Tone.Multiply(0.125)
+    // this.vco_gain_1.connect(this.clip);
+    // this.vco_gain_2.connect(this.clip);
+    // this.vco_gain_3.connect(this.clip);
+    // this.sub_gain.connect(this.clip)
+    this.waveShaper = new Tone.WaveShaper((x)=>{
+      return Math.sin(x*Math.PI*2)
+    	//return Math.tanh(x*8)
     })
-    this.gain.connect(this.waveshaper)
+    this.waveShaper.oversample = "4x"
+    this.vcf.connect(this.clip)
+    this.clip.connect(this.waveShaper)
 
     // VCF, VCA, output
-    this.vcf = new Tone.Filter({rolloff:-24});
-    this.vca = new Tone.Multiply();
-    this.dry = new Tone.Multiply(1)
+    // this.vcf = new Tone.Filter({rolloff:-24});
+    this.vca = new Tone.Multiply()
     this.output = new Tone.Multiply(1)
-    this.waveshaper.connect(this.vcf)
-    this.vcf.connect(this.vca)
-    this.vca.connect(this.dry)
-    this.dry.connect(this.output)
-
-    //resonator
-    this.resonator_gain = new Tone.Multiply();
-    this.resonator = new Tone.Convolver('./audio/marshall_amp.mp3');
-    this.vca.connect(this.resonator_gain)
-    this.resonator_gain.connect(this.resonator)
-    this.resonator.connect(this.output)
+    this.waveShaper.connect(this.vca)
+    this.vca.connect(this.output)
 
     // VCA control
     this.vca_lvl = new Tone.Signal();
-    this.env = new Tone.Envelope();
     this.vca_lvl.connect(this.vca.factor)
-    this.env.connect(this.vca.factor)
+    this.env = new Tone.Envelope();
+    this.env_depth = new Tone.Multiply()
+    this.env.connect(this.env_depth)
+    this.env_depth.connect(this.vca.factor)
+    this.velocity = new Tone.Signal(1)
+    this.velocity.connect(this.env_depth.factor)
 
     //vcf control
     this.vcf_env = new Tone.Envelope();
     this.cutoff = new Tone.Signal(1000);
+    this.cutoff_cv = new Tone.Signal(0);
     this.vcf_env_depth = new Tone.Multiply(500);
     this.keyTracking = new Tone.Multiply(.1)
     this.vcf_env.connect(this.vcf_env_depth)
     this.vcf_env_depth.connect(this.vcf.frequency)
     this.cutoff.connect(this.vcf.frequency)
+    this.cutoff_cv.connect(this.vcf.frequency)
     this.frequency.connect(this.keyTracking)
     this.keyTracking.connect(this.vcf.frequency)
 
@@ -112,15 +138,17 @@ export class Rumble {
   }//constructor
 
   //envelopes
-  triggerAttack (val, time=null){
+  triggerAttack (freq, amp, time=null){
     if(time){
       this.env.triggerAttack(time)
       this.vcf_env.triggerAttack(time)
-      this.frequency.setValueAtTime(val, time)
+      this.frequency.setValueAtTime(freq, time)
+      this.velocity.rampTo(amp,.03)
     } else{
       this.env.triggerAttack()
       this.vcf_env.triggerAttack()
-      this.frequency.value = val
+      this.frequency.value = freq
+      this.velocity.rampTo(amp,.03)
     }
   }
   triggerRelease (time=null){
@@ -129,18 +157,21 @@ export class Rumble {
     	this.vcf_env.triggerRelease(time)
     }
     else {
+      this.env.triggerRelease()
     	this.vcf_env.triggerRelease()
     }
   }
-  triggerAttackRelease (val, dur=0.01, time=null){
+  triggerAttackRelease (freq, amp, dur=0.01, time=null){
     if(time){
       this.env.triggerAttackRelease(dur, time)
       this.vcf_env.triggerAttackRelease(dur, time)
-      this.frequency.setValueAtTime(val, time)
+      this.frequency.setValueAtTime(freq, time)
+      this.velocity.rampTo(amp,.03)
     } else{
       this.env.triggerAttackRelease(dur)
       this.vcf_env.triggerAttackRelease(dur)
-      this.frequency.value = val
+      this.frequency.value = freq
+      this.velocity.rampTo(amp,.03)
     }
   }//attackRelease
 
@@ -172,14 +203,6 @@ export class Rumble {
   	this.vco_gain_2.factor.value = b
   	this.vco_gain_3.factor.value = c
   }
-  load(url) {
-    return new Promise((resolve, reject) => {
-      new Tone.Buffer(url, (buffer) => {
-        this.resonator.buffer = buffer
-        resolve();
-      }, reject);
-    });
-  }
 
   //GUI
   initGui (x=2,y=2,ccolor=[200,200,0], gui = null){
@@ -200,17 +223,24 @@ export class Rumble {
 
     // VCO Knobs
     // Note: You'll need to adjust callback functions to fit your class methods for setting values
-    this.vco1_oct_knob = this.createKnob('freq', vco_knob_x[0], 20, -2, 1, 0.75, [200,50,0], /* callback */);
-    this.vco1_detune_knob = this.createKnob('detune', vco_knob_x[0], 50, -.2, .2, 0.75, [50,150,100], /* callback */);
-    this.vco1_gain_knob = this.createKnob('gain', vco_knob_x[0], 80, 0, 1, 0.75, [200,50,0], /* mapto: vco_gain_1.factor */);
+    this.vco1_oct_knob = this.gui.Knob({label:'freq', 
+      x:vco_knob_x[0], y:20, min:-2, max:1, size:0.75, accentColor:[200,50,0], border:2,
+      callback:(x)=>this.vco_freq_1.value = Math.pow(2,Math.floor(x)) + this.vco1_detune_knob.value  });
+    this.vco1_detune_knob = this.gui.Knob({label:'detune', 
+      x:vco_knob_x[0], y:50, min:-2, max:1, size:0.75, accentColor:[200,50,0], 
+      callback:(x)=>this.vco_freq_1.value = x + Math.pow(2,Math.floor(this.vco1_oct_knob.value))  });
+    this.vco1_gain_knob = this.gui.Knob({label:'gain', 
+      x:vco_knob_x[0], y:80, min:-2, max:1, size:0.75, accentColor:[200,50,0], 
+      mapto: this.vco_gain_1.factor });
+    
 
-    this.vco2_oct_knob = this.createKnob('freq', vco_knob_x[1], 20, -2, 1, 0.75, [200,50,0], /* callback */);
-    this.vco2_detune_knob = this.createKnob('detune', vco_knob_x[1], 50, -.2, .2, 0.75, [50,150,100], /* callback */);
-    this.vco2_gain_knob = this.createKnob('gain', vco_knob_x[1], 80, 0, 1, 0.75, [200,50,0] /* mapto: vco_gain_1.factor */);
+    this.vco2_oct_knob = this.gui.Knob('freq', vco_knob_x[1], 20, -2, 1, 0.75, [200,50,0], /* callback */);
+    this.vco2_detune_knob = this.gui.Knob('detune', vco_knob_x[1], 50, -.2, .2, 0.75, [50,150,100], /* callback */);
+    this.vco2_gain_knob = this.gui.Knob('gain', vco_knob_x[1], 80, 0, 1, 0.75, [200,50,0] /* mapto: vco_gain_1.factor */);
 
-    this.vco3_oct_knob = this.createKnob('freq', vco_knob_x[2], 20, -2, 1, 0.75, [200,50,0], /* callback */);
-    this.vco3_detune_knob = this.createKnob('detune', vco_knob_x[2], 50, -.2, .2, 0.75, [50,150,100], /* callback */);
-    this.vco3_gain_knob = this.createKnob('gain', vco_knob_x[2], 80, 0, 1, 0.75, [200,50,0], /* mapto: vco_gain_1.factor */);
+    this.vco3_oct_knob = this.gui.Knob('freq', vco_knob_x[2], 20, -2, 1, 0.75, [200,50,0], /* callback */);
+    this.vco3_detune_knob = this.gui.Knob('detune', vco_knob_x[2], 50, -.2, .2, 0.75, [50,150,100], /* callback */);
+    this.vco3_gain_knob = this.gui.Knob('gain', vco_knob_x[2], 80, 0, 1, 0.75, [200,50,0], /* mapto: vco_gain_1.factor */);
 
 
     // VCF and VCA Knobs

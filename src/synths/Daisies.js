@@ -2,7 +2,7 @@
 Daisies
 Polyphonic Subtractice Synthesizer
 
-* 2 OmniOscillators(vco_1, vco_2)->mixer->lpf->hpf->vca
+* 2 OmniOscillators(vco_1, vco_2)->mixer->lpf->hpf->panner->vca
 * frequency->frequency_scalar->(detune for vco_2)->vco_1.frequency
 * cutoff control: cutoff, cutoff_vc, keyTracking, lpf_env_depth
 * lfo->vca_lfo_depth-<output.factor, pitch_lfo_depth->
@@ -10,9 +10,37 @@ Polyphonic Subtractice Synthesizer
 
 methods:
 - connect
+- panic()
+- setFrequency
+- setDetune
+-  setResonance
+-  setCutoff
+-  setCutoffCV
+-  setHighpass 
+-  setKeyTracking 
+-  setFilterEnvDepth = function(val){this.voiceSettings["lpf_env_depth.factor"] =  val }
+-  setPanning(val)
+-  setPulseWidth (num,val)
+-  setVcoGain(num,val)
+-  setVcoType(num, type)
+-  setLfoFrequency(val)
+-  setTremoloDepth(val)
+-  setVibratoDepth(val)
+- setADSR
 
 properties:
 - 
+
+CC control of:
+- setCutoffCV
+- setPulseWidth
+- setADSR
+- setFilterADSR
+- setDecayCV
+- setHighpass
+- setDetune
+- setLfoFrequency
+
 */
 
 import p5 from 'p5';
@@ -21,8 +49,6 @@ import * as Tone from 'tone';
 class DaisyVoice{
 	constructor(color = [200,200,200], gui = null){
 	this.gui = gui
-
-	this.output = new Tone.Multiply(1)
 
 	this.frequency = new Tone.Signal(100)
 	this.frequency_scalar = new Tone.Multiply(1)
@@ -46,9 +72,11 @@ class DaisyVoice{
 	this.hpf.connect(this.lpf)
 
 	this.vca = new Tone.Multiply()
-	// this.output = new Tone.Multiply(1)
+	this.panner = new Tone.Panner(0)
+	this.output = new Tone.Multiply(1)
 	this.lpf.connect(this.vca)
-	this.vca.connect(this.output)
+	this.vca.connect(this.panner)
+	this.panner.connect(this.output)
 
 	//envelopes
 	this.env = new Tone.Envelope()
@@ -70,13 +98,13 @@ class DaisyVoice{
 	this.lfo = new Tone.Oscillator(.5).start()
 	this.vca_constant = new Tone.Signal(1)
 	this.vca_lfo_depth = new Tone.Multiply(0)
-	this.lfo.connect(this.vca_lfo_depth.factor)
+	this.lfo.connect(this.vca_lfo_depth)
 	this.vca_lfo_depth.connect(this.output.factor)
 	this.vca_constant.connect(this.output.factor)
-	this.lfo_pitch_depth = new Tone.Multiply(0)
-	this.lfo.connect(this.lfo_pitch_depth)
+	this.pitch_lfo_depth = new Tone.Multiply(0)
+	this.lfo.connect(this.pitch_lfo_depth)
 	this.frequency_constant = new Tone.Signal(1)
-	this.lfo_pitch_depth.connect(this.frequency_scalar.factor)
+	this.pitch_lfo_depth.connect(this.frequency_scalar.factor)
 	this.frequency_constant.connect(this.frequency_scalar.factor)
 	//no PWM to prevent errors when vco is not set to pulse
 	// this.pwm_lfo_depth = new Tone.Multiply()
@@ -99,6 +127,16 @@ export class Daisies {
 	this.adsr = [.01,.5,.5,2]
 	this.vcf_adsr = [.01,.5,.5,2]
 	this.vco_type = ["pulse","pulse"]
+	this.voiceSettings = {
+        "detune.factor": 0,
+        "lpf_env_depth.factor": 0,
+        "panner.pan": 0,
+        "keyTracking.factor": 0,
+        "hpf.frequency": 0,
+        "lfo.frequency": 0,
+        "vca_lfo_depth.factor": 0,
+        "pitch_lfo_depth.factor": 0,
+    }
     //voice tracking
     this.prevNote = 0
     this.v = 0
@@ -109,15 +147,20 @@ export class Daisies {
   // //trigger methods
   triggerAttack = function(val, time=null){
     this.v = this.getNewVoice(val)
-    val = Tone.Midi(val).toFrequency()
     if(time){
-      this.voice[this.v].frequency.setValueAtTime(val,time)
+      this.voice[this.v].frequency.setValueAtTime(Tone.Midi(val).toFrequency(),time)
       this.voice[this.v].env.triggerAttack(time)
       this.voice[this.v].vcf_env.triggerAttack(time)
     } else{
-      this.voice[this.v].frequency.value = val
+      this.voice[this.v].frequency.value = Tone.Midi(val).toFrequency()
       this.voice[this.v].env.triggerAttack()
       this.voice[this.v].vcf_env.triggerAttack()
+    }
+
+    if (time) {
+      this.updateVoiceParameters(this.v, { val }, time);
+    } else {
+      this.updateVoiceParameters(this.v, { val });
     }
   }
   triggerRelease = function(val, time=null){
@@ -142,6 +185,11 @@ export class Daisies {
       this.voice[this.v].frequency.value = val
       this.voice[this.v].env.triggerAttackRelease(dur)
       this.voice[this.v].vcf_env.triggerAttackRelease(dur)
+    }
+    if (time) {
+      this.updateVoiceParameters(this.v, { val }, time);
+    } else {
+      this.updateVoiceParameters(this.v, { val });
     }
   }//attackRelease
 
@@ -171,7 +219,6 @@ export class Daisies {
 	      return index;
 	    }
 	  }
-
 
 	    this.voiceCounter = (this.voiceCounter + 1) % this.numVoices; // Prepare for the next voice
 	    return this.voiceCounter
@@ -212,20 +259,23 @@ export class Daisies {
   }
   // //setters
   setFrequency = function(val){for(let i=0;i<this.numVoices;i++) this.voice[i].frequency.value = val}
-  setDetune = function(val){for(let i=0;i<this.numVoices;i++) this.voice[i].detune.factor.value = val}
+  setDetune = function(val){this.voiceSettings["detune.factor"] = val}
   setResonance = function(val){for(let i=0;i<this.numVoices;i++) this.voice[i].lpf.Q.value = val}
   setCutoff = function(val){for(let i=0;i<this.numVoices;i++) this.voice[i].cutoff.value = val}
   setCutoffCV = function(val){ for(let i=0;i<this.numVoices;i++) this.voice[i].cutoff_cv.value = val}
-  setHighpass = function(val){for(let i=0;i<this.numVoices;i++) this.voice[i].hpf.frequency.value = val }
-  setKeyTracking = function(val){for(let i=0;i<this.numVoices;i++) this.voice[i].keyTracking.factor.value = val }
-  setFilterEnvDepth = function(val){for(let i=0;i<this.numVoices;i++) this.voice[i].lpf_env_depth.factor.value = val }
+  setHighpass = function(val){this.voiceSettings["hpf.frequency"] = val }
+  setKeyTracking = function(val){this.voiceSettings["keyTracking.factor"] = val }
+  setFilterEnvDepth = function(val){this.voiceSettings["lpf_env_depth.factor"] =  val }
+  setPanning(val){ this.voiceSettings["panner.pan"] = val }
+  setLfoFrequency(val){this.voiceSettings["lfo.frequency"] = val }
+  setTremoloDepth(val){this.voiceSettings["vca_lfo_depth.factor"] = val }
+  setVibratoDepth(val){this.voiceSettings["pitch_lfo_depth.factor"] = val }
+
   setPulseWidth = function(num,val){ //
   	if(num <0 || num >2 ){ console.log("daisy vcos are 0 and 1"); return;}
 	if(this.vco_type[num] !== 'pulse' ) return;
-	for(let i=0;i<this.numVoices;i++) {
-		if(num==0 && this.voice[i].vco_1)this.voice[i].vco_1.width.value = Math.abs((val-.5)*2) 
-		else if(num==1)this.voice[i].vco_gain_2.factor.value = Math.abs((val-.5)*2)  
-	}
+	if(num==0 )this.voice[0].vco_1.width.value = Math.abs((val-.5)*2) 
+	else if(num==1)this.voice[1].vco_gain_2.factor.value = Math.abs((val-.5)*2)  
   }
   setVcoGain = function(num,val){
   	if(num <0 || num >2 ){ console.log("daisy vcos are 0 and 1"); return;}
@@ -295,5 +345,48 @@ export class Daisies {
     } else {
       this.output.connect(destination);
     }
+  }
+
+	updateVoiceParameters(voiceIndex, params, time = null) {
+	    const settings = this.voiceSettings;
+	    for (let [key, value] of Object.entries(settings)) {
+	    	if (key === "panner.pan") value =  this.calcPan(params.val, value)
+	        if (time) {
+	            const target = this.getNestedProperty(this.voice[voiceIndex], key);
+	            if (target && typeof target.setValueAtTime === 'function') {
+	                target.setValueAtTime(value, time);
+	            }
+	        } else {
+	            this.setNestedProperty(this.voice[voiceIndex], key, value);
+	        }
+	    }
+	}
+
+
+	getNestedProperty(obj, path) {
+		return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+	}
+
+	setNestedProperty(obj, path, value) {
+	    const parts = path.split('.');
+	    const last = parts.pop();
+	    const lastObj = parts.reduce((acc, part) => acc[part], obj); // Navigate to the last object
+
+	    if (lastObj !== undefined && last in lastObj) {
+	        if (lastObj[last] instanceof AudioParam || ("value" in lastObj[last])) {
+	            // If the property is an AudioParam or has a 'value' property, set it directly
+	            lastObj[last].value = value;
+	        } else {
+	            // Otherwise, set the property directly
+	            lastObj[last] = value;
+	        }
+	    }
+	}
+
+
+  calcPan(note,val){
+  	val = Math.sin(note/127*Math.PI*(val-(val/2)))
+  	//console.log(note, val )
+  	return val
   }
 }

@@ -3,6 +3,7 @@ import { useLocation, BrowserRouter as Router, Routes, Route } from 'react-route
 import Editor from './Editor.js';
 import Navbar from './Navbar.js';
 import Template from './Pages/Template.js';
+import Sandbox from './Pages/Sandbox.js';
 import TableOfContents from './Pages/TableOfContents.js';
 import { marked } from 'marked';
 
@@ -13,6 +14,7 @@ function App() {
   const [assignments, setAssignments] = useState({});
   const [examples, setExamples] = useState({});
   const [references, setReferences] = useState({});
+  const [sandboxes, setSandboxes] = useState({});
   const [markdownContent, setMarkdownContent] = useState("");
 
   const exampleFiles = [
@@ -67,14 +69,29 @@ function App() {
       return fetchedAssignments;
     };
 
+    const loadSandbox = async (sandboxCount) => {
+    const fetchedSandboxes = {};
+
+    for (let i = 0; i < sandboxCount; i++) {
+        const sandboxId = `sandbox${String.fromCharCode(65 + i)}`; // Convert i to corresponding alphabet letter (A, B, C, ...)
+        fetchedSandboxes[sandboxId] = {
+            canvases: ["Canvas1", "Canvas2", "Canvas3"], // Add any other default properties if needed
+        };
+    }
+
+    return fetchedSandboxes;
+};
+
     (async () => {
       const assignments = await importFiles(assignmentFiles, 'assignments');
       const examples = await importFiles(exampleFiles, 'examples');
       const references = await importFiles(referenceFiles, 'references');
-
+      const sandboxCount = 10; // Change this to the desired number of sandbox pages
+      const sandboxes = await loadSandbox(sandboxCount);
       setAssignments(assignments);
       setExamples(examples);
       setReferences(references);
+      setSandboxes(sandboxes)
       //console.log(references);
     })();
   }, []);
@@ -94,6 +111,9 @@ function App() {
         {Object.entries(references).map(([title, props]) => (
           <Route key={title} path={`/${title}`} element={<Template page={title} title={title} intro={props.intro} starterCode={props.starterCode} description={props.description} canvases={props.canvases} />} />
         ))}
+        {Object.entries(sandboxes).map(([title, props]) => (
+        <Route key={title} path={`/${title}`} element={<Sandbox page={title} title={title} canvases={props.canvases} />} />
+        ))}
       </Routes>
     </div>
   );
@@ -106,3 +126,7 @@ export default App;
   <link rel="stylesheet" type="text/css" href="../plugin/codemirror5/lib/codemirror.css">
   <script src="../plugin/codemirror5/mode/javascript/javascript.js"></script>
 */
+
+
+
+

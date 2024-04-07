@@ -1,6 +1,8 @@
 /*
 NoiseVoice
 
+noise->gain->waveshaper->hpf->lpf->vca->output
+
 basic noise oscillator with:
 * integrated HPF and LPF
 * VCA w/ env
@@ -37,10 +39,11 @@ export class NoiseVoice{
       this.gain = new Tone.Multiply(0.5)
       this.waveshaper = new Tone.WaveShaper((input) => {
         // thresholding
-        if (input < -0.5 || input > 0.5) {
-            // Apply some shaping outside the range -0.5 to 0.5
-            return (input);
-        } else return 0;
+        // if (input < -0.5 || input > 0.5) {
+        //     // Apply some shaping outside the range -0.5 to 0.5
+        //     return (input);
+        // } else return 0;
+        return Math.tanh(input*8)
       })  
       this.hpf =  new Tone.Filter({frequency: 200, type:'highpass', Q: 0})
       this.lpf = new Tone.Filter({frequency: 1000, type:'lowpass', Q: 0})
@@ -49,6 +52,8 @@ export class NoiseVoice{
       this.env = new Tone.Envelope({
         attack:0.01, decay:.1, sustain:0,release:.1
       })
+      this.velocity = new Tone.Signal(1)
+      this.velocity_depth = new Tone.Multiply(1)
       this.env_depth = new Tone.Multiply(1)
       this.direct = new Tone.Signal(1)
       this.baseCutoff = new Tone.Signal(0)
@@ -63,7 +68,9 @@ export class NoiseVoice{
       this.waveshaper.connect(this.hpf)
       this.hpf.connect(this.lpf)
       this.lpf.connect(this.vca)
-      this.env.connect(this.env_depth)
+      this.env.connect(this.velocity_depth)
+      this.velocity.connect(this.velocity_depth.factor)
+      this.velocity_depth.connect(this.env_depth)
       this.env_depth.connect( this.vca.factor)
       this.direct.connect(this.vca.factor)
       //filter cutoffs
@@ -104,20 +111,21 @@ export class NoiseVoice{
       if(which === 'both' || which === 'lpf') this.lpf_band.factor.value = 1-Math.pow(2,val)
     }
   }
-  triggerAttack (val, time=null){
+  triggerAttack (val, vel=100, time=null){
     if(time){
       this.env.triggerAttack(time)
       this.setCutoff(val, time)
     } else{
       this.env.triggerAttack()
       this.setCutoff(val)
+      console.log('att', val)
     }
   }
   triggerRelease (time=null){
     if(time) this.env.triggerRelease(time)
     else this.env.triggerRelease()
   }
-  triggerAttackRelease (val, dur=0.01, time=null){
+  triggerAttackRelease (val, vel=100, dur=0.01, time=null){
     if(time){
       this.env.triggerAttackRelease(dur, time)
       this.setCutoff(val, time)

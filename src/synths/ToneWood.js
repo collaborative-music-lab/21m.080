@@ -24,7 +24,7 @@ export class ToneWood {
     this.input = new Tone.Multiply(1);
     this.gain = new Tone.Multiply(1)
     this.waveShaper = new Tone.WaveShaper((x)=>{
-      return Math.tanh(x*4)
+      return Math.tanh(x)
     })
     this.convolver = new Tone.Convolver();
     this.output = new Tone.Multiply(1);

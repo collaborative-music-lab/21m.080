@@ -73,14 +73,18 @@ class DaisyVoice{
 
 	this.vca = new Tone.Multiply()
 	this.panner = new Tone.Panner(0)
-	this.output = new Tone.Multiply(1)
+	this.output = new Tone.Multiply(.5)
 	this.lpf.connect(this.vca)
 	this.vca.connect(this.panner)
 	this.panner.connect(this.output)
 
 	//envelopes
 	this.env = new Tone.Envelope()
-	this.env.connect(this.vca.factor)
+	this.velocity = new Tone.Signal(1)
+	this.velocity_depth = new Tone.Multiply(1)
+	this.env.connect(this.velocity_depth)
+	this.velocity_depth.connect(this.vca.factor)
+	this.velocity.connect(this.velocity_depth.factor)
 
 	//vcf
 	this.cutoff = new Tone.Signal(1000)
@@ -120,7 +124,7 @@ export class Daisies {
 	//audio
     this.voice = []
     for(let i=0;i<this.numVoices;i++) this.voice.push(new DaisyVoice())
-    this.output = new Tone.Multiply(0.25)
+    this.output = new Tone.Multiply(0.125)
     for(let i=0;i<this.numVoices;i++) this.voice[i].output.connect( this.output)
     //control
     this.decay_cv = 0
@@ -145,16 +149,18 @@ export class Daisies {
     this.noteOrder = [7,0,1,2,3,4,5,6]
   }
   // //trigger methods
-  triggerAttack = function(val, time=null){
+  triggerAttack = function(val, vel=100, time=null){
     this.v = this.getNewVoice(val)
     if(time){
       this.voice[this.v].frequency.setValueAtTime(Tone.Midi(val).toFrequency(),time)
       this.voice[this.v].env.triggerAttack(time)
       this.voice[this.v].vcf_env.triggerAttack(time)
+      this.voice[this.v].velocity_depth.factor.setValueAtTime(vel,time)
     } else{
       this.voice[this.v].frequency.value = Tone.Midi(val).toFrequency()
       this.voice[this.v].env.triggerAttack()
       this.voice[this.v].vcf_env.triggerAttack()
+      this.voice[this.v].velocity_depth.factor.value = vel
     }
 
     if (time) {
@@ -174,17 +180,19 @@ export class Daisies {
       this.voice[this.v].vcf_env.triggerRelease()
     }
   }
-  triggerAttackRelease = function(val, dur=0.01, time=null){
+  triggerAttackRelease = function(val, vel=100, dur=0.01, time=null){
     this.v = this.getNewVoice(val)
     val = Tone.Midi(val).toFrequency()
     if(time){
       this.voice[this.v].frequency.setValueAtTime(val,time)
       this.voice[this.v].env.triggerAttackRelease(dur,time)
       this.voice[this.v].vcf_env.triggerAttackRelease(dur,time)
+      this.voice[this.v].velocity_depth.factor.setValueAtTime(vel,time)
     } else{
       this.voice[this.v].frequency.value = val
       this.voice[this.v].env.triggerAttackRelease(dur)
       this.voice[this.v].vcf_env.triggerAttackRelease(dur)
+      this.voice[this.v].velocity_depth.factor.value = vel
     }
     if (time) {
       this.updateVoiceParameters(this.v, { val }, time);

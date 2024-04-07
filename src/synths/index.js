@@ -7,6 +7,7 @@ export { Rumble } from './Rumble.js';
 export { Daisies } from './Daisies.js';
 export { Stripe } from './Stripe.js';
 export { Diffuseur } from './Diffuseur.js';
+export { KP } from './KP.js';
 
 
 

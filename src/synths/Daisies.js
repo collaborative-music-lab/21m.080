@@ -2,12 +2,20 @@
 Daisies
 Polyphonic Subtractice Synthesizer
 
+Daisy:
 * 2 OmniOscillators(vco_1, vco_2)->mixer->lpf->hpf->panner->vca
 * frequency->frequency_scalar->(detune for vco_2)->vco_1.frequency
+* frequencyCV->frequency_scalar.factor
 * cutoff control: cutoff, cutoff_vc, keyTracking, lpf_env_depth
 * lfo->vca_lfo_depth-<output.factor, pitch_lfo_depth->
 * lfo->pitch_lfo_depth->frequency_scalar.factor
 
+Daisies:
+* daisy->hpf->output
+
+signal inputs:
+- frequency (signal, Hz)
+- frequency CV (multiplication factor)
 methods:
 - connect
 - panic()
@@ -27,6 +35,7 @@ methods:
 -  setTremoloDepth(val)
 -  setVibratoDepth(val)
 - setADSR
+- setHighpass(val)
 
 properties:
 - 
@@ -46,16 +55,18 @@ CC control of:
 import p5 from 'p5';
 import * as Tone from 'tone';
 
-class DaisyVoice{
+export class Daisy{
 	constructor(color = [200,200,200], gui = null){
 	this.gui = gui
 
 	this.frequency = new Tone.Signal(100)
+	this.frequencyCV = new Tone.Signal()
 	this.frequency_scalar = new Tone.Multiply(1)
 	this.detune = new Tone.Multiply(1)
 	this.vco_1 = new Tone.OmniOscillator({type:"pulse"}).start()
 	this.vco_2 = new Tone.OmniOscillator({type:"pulse"}).start()
 	this.frequency.connect(this.frequency_scalar)
+	this.frequencyCV.connect(this.frequency_scalar.factor)
 	this.frequency_scalar.connect(this.vco_1.frequency)
 	this.frequency_scalar.connect(this.detune)
 	this.detune.connect(this.vco_2.frequency)
@@ -65,11 +76,9 @@ class DaisyVoice{
 	this.vco_1.connect(this.mixer_1)
 	this.vco_2.connect(this.mixer_2)
 
-	this.hpf = new Tone.Filter({type:'highpass', rolloff:-12, Q:0, cutoff:20})
 	this.lpf = new Tone.Filter({type:'lowpass', rolloff:-24, Q:0, cutoff:3000})
-	this.mixer_1.connect(this.hpf)
-	this.mixer_2.connect(this.hpf)
-	this.hpf.connect(this.lpf)
+	this.mixer_1.connect(this.lpf)
+	this.mixer_2.connect(this.lpf)
 
 	this.vca = new Tone.Multiply()
 	this.panner = new Tone.Panner(0)
@@ -89,8 +98,8 @@ class DaisyVoice{
 	//vcf
 	this.cutoff = new Tone.Signal(1000)
 	this.cutoff.connect(this.lpf.frequency)
-	this.cutoff_cv = new Tone.Signal()
-	this.cutoff_cv.connect(this.lpf.frequency)
+	this.cutoffCV = new Tone.Signal()
+	this.cutoffCV.connect(this.lpf.frequency)
 	this.keyTracking = new Tone.Multiply(.1)
 	this.frequency.connect(this.keyTracking)
 	this.keyTracking.connect(this.lpf.frequency)
@@ -111,9 +120,10 @@ class DaisyVoice{
 	this.pitch_lfo_depth.connect(this.frequency_scalar.factor)
 	this.frequency_constant.connect(this.frequency_scalar.factor)
 	//no PWM to prevent errors when vco is not set to pulse
-	// this.pwm_lfo_depth = new Tone.Multiply()
-	// this.lfo.connect(this.pwm_lfo_depth.factor)
-	// this.pwm_lfo_depth.connect()
+	this.pwm_lfo_depth = new Tone.Multiply()
+	this.lfo.connect(this.pwm_lfo_depth)
+	this.pwm_lfo_depth.connect(this.vco_1.width)
+	this.pwm_lfo_depth.connect(this.vco_2.width)
   }
 }
 
@@ -123,9 +133,11 @@ export class Daisies {
 	this.numVoices = num
 	//audio
     this.voice = []
-    for(let i=0;i<this.numVoices;i++) this.voice.push(new DaisyVoice())
+    for(let i=0;i<this.numVoices;i++) this.voice.push(new Daisy())
     this.output = new Tone.Multiply(0.125)
-    for(let i=0;i<this.numVoices;i++) this.voice[i].output.connect( this.output)
+  	this.hpf = new Tone.Filter({type:'highpass', rolloff:-12, Q:0, cutoff:50})
+    for(let i=0;i<this.numVoices;i++) this.voice[i].output.connect( this.hpf)
+    this.hpf.connect(this.output)
     //control
     this.decay_cv = 0
 	this.adsr = [.01,.5,.5,2]
@@ -136,10 +148,12 @@ export class Daisies {
         "lpf_env_depth.factor": 0,
         "panner.pan": 0,
         "keyTracking.factor": 0,
-        "hpf.frequency": 0,
         "lfo.frequency": 0,
         "vca_lfo_depth.factor": 0,
         "pitch_lfo_depth.factor": 0,
+        "pwm_lfo_depth.factor": 0,
+        "vco_1.width": 0,
+        "vco_2.width": 0
     }
     //voice tracking
     this.prevNote = 0
@@ -270,20 +284,21 @@ export class Daisies {
   setDetune = function(val){this.voiceSettings["detune.factor"] = val}
   setResonance = function(val){for(let i=0;i<this.numVoices;i++) this.voice[i].lpf.Q.value = val}
   setCutoff = function(val){for(let i=0;i<this.numVoices;i++) this.voice[i].cutoff.value = val}
-  setCutoffCV = function(val){ for(let i=0;i<this.numVoices;i++) this.voice[i].cutoff_cv.value = val}
-  setHighpass = function(val){this.voiceSettings["hpf.frequency"] = val }
+  setCutoffCV = function(val){ for(let i=0;i<this.numVoices;i++) this.voice[i].cutoffCV.value = val}
   setKeyTracking = function(val){this.voiceSettings["keyTracking.factor"] = val }
   setFilterEnvDepth = function(val){this.voiceSettings["lpf_env_depth.factor"] =  val }
   setPanning(val){ this.voiceSettings["panner.pan"] = val }
   setLfoFrequency(val){this.voiceSettings["lfo.frequency"] = val }
   setTremoloDepth(val){this.voiceSettings["vca_lfo_depth.factor"] = val }
   setVibratoDepth(val){this.voiceSettings["pitch_lfo_depth.factor"] = val }
+  setPWMDepth(val){this.voiceSettings["pwm_lfo_depth.factor"] = val }
 
+  setHighpass = function(val){this.hpf.frequency.value = val }
   setPulseWidth = function(num,val){ //
   	if(num <0 || num >2 ){ console.log("daisy vcos are 0 and 1"); return;}
 	if(this.vco_type[num] !== 'pulse' ) return;
-	if(num==0 )this.voice[0].vco_1.width.value = Math.abs((val-.5)*2) 
-	else if(num==1)this.voice[1].vco_gain_2.factor.value = Math.abs((val-.5)*2)  
+	if(num==0 )this.voiceSettings["vco_1.width"] = Math.abs((val-.5)*2) //convert 0.5=50% to 0=50%
+	else if(num==1)this.voiceSettings["vco_2.width"] = Math.abs((val-.5)*2)  
   }
   setVcoGain = function(num,val){
   	if(num <0 || num >2 ){ console.log("daisy vcos are 0 and 1"); return;}

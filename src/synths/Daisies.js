@@ -50,6 +50,30 @@ CC control of:
 - setDetune
 - setLfoFrequency
 
+Main List of Parameters & how to set them:
+- detune: setDetune
+- detune_cv_depth.factor: setDetuneCV
+- resonance: setResonance
+- resonance_cv_depth.factor: setResonanceCV
+- cutoff: setCutoff
+- cutoff_cv_depth.factor: setCutoffCV
+- highpass_freq: setHighpass 
+- key_tracking_depth: setKeyTracking 
+- vcf_env_depth: setFilterEnvDepth = function(val){this.voiceSettings["lpf_env_depth.factor"] =  val }
+- panning: setPanning(val)
+- pulse_width[vco_1,vco_2]: setPulseWidth (num,val)
+- vco_gain[vco_1,vco_2]: setVcoGain(num,val)
+- vco_type[vco_1,vco_2]: setVcoType(num, type)
+- lfo_frequency: setLfoFrequency(val)
+- lfo_frequency_cv_depth.factor: setLfoFrequencyCV(val)
+- lfo_tremolo_cv_depth.factor: setTremoloCV(val)
+- lfo_tremolo_depth: setTremoloDepth(val)
+- lfo_vibrato_cv_depth.factor: setVibratoCV(val)
+- lfo_vibrato_depth: setVibratoDepth(val)
+- env
+
+- filter_env: same as env
+
 */
 
 import p5 from 'p5';
@@ -63,8 +87,8 @@ export class Daisy{
 	this.frequencyCV = new Tone.Signal()
 	this.frequency_scalar = new Tone.Multiply(1)
 	this.detune = new Tone.Multiply(1)
-	this.vco_1 = new Tone.OmniOscillator({type:"pulse"}).start()
-	this.vco_2 = new Tone.OmniOscillator({type:"pulse"}).start()
+	this.vco_1 = new Tone.Oscillator({type:"square"}).start()
+	this.vco_2 = new Tone.Oscillator({type:"square"}).start()
 	this.frequency.connect(this.frequency_scalar)
 	this.frequencyCV.connect(this.frequency_scalar.factor)
 	this.frequency_scalar.connect(this.vco_1.frequency)
@@ -73,8 +97,8 @@ export class Daisy{
 
 	this.mixer_1 = new Tone.Multiply(.5)
 	this.mixer_2 = new Tone.Multiply(.5)
-	this.vco_1.connect(this.mixer_1)
-	this.vco_2.connect(this.mixer_2)
+	this.vco_1.connect( this.mixer_1)
+	this.vco_2.connect( this.mixer_2)
 
 	this.lpf = new Tone.Filter({type:'lowpass', rolloff:-24, Q:0, cutoff:3000})
 	this.mixer_1.connect(this.lpf)
@@ -119,11 +143,12 @@ export class Daisy{
 	this.frequency_constant = new Tone.Signal(1)
 	this.pitch_lfo_depth.connect(this.frequency_scalar.factor)
 	this.frequency_constant.connect(this.frequency_scalar.factor)
+
 	//no PWM to prevent errors when vco is not set to pulse
 	this.pwm_lfo_depth = new Tone.Multiply()
 	this.lfo.connect(this.pwm_lfo_depth)
-	this.pwm_lfo_depth.connect(this.vco_1.width)
-	this.pwm_lfo_depth.connect(this.vco_2.width)
+	//this.pwm_lfo_depth.connect(this.vco_1.width)
+	//this.pwm_lfo_depth.connect(this.vco_2.width)
   }
 }
 
@@ -150,10 +175,10 @@ export class Daisies {
         "keyTracking.factor": 0,
         "lfo.frequency": 0,
         "vca_lfo_depth.factor": 0,
-        "pitch_lfo_depth.factor": 0,
-        "pwm_lfo_depth.factor": 0,
-        "vco_1.width": 0,
-        "vco_2.width": 0
+        "pitch_lfo_depth.factor": 0
+        //"pwm_lfo_depth.factor": 0,
+        //"vco_1.width": 0,
+        //"vco_2.width": 0
     }
     //voice tracking
     this.prevNote = 0
@@ -294,12 +319,12 @@ export class Daisies {
   setPWMDepth(val){this.voiceSettings["pwm_lfo_depth.factor"] = val }
 
   setHighpass = function(val){this.hpf.frequency.value = val }
-  setPulseWidth = function(num,val){ //
-  	if(num <0 || num >2 ){ console.log("daisy vcos are 0 and 1"); return;}
-	if(this.vco_type[num] !== 'pulse' ) return;
-	if(num==0 )this.voiceSettings["vco_1.width"] = Math.abs((val-.5)*2) //convert 0.5=50% to 0=50%
-	else if(num==1)this.voiceSettings["vco_2.width"] = Math.abs((val-.5)*2)  
-  }
+  // setPulseWidth = function(num,val){ //
+  // 	if(num <0 || num >2 ){ console.log("daisy vcos are 0 and 1"); return;}
+	// if(this.vco_type[num] !== 'pulse' ) return;
+	// if(num==0 )this.voiceSettings["vco_1.width"] = Math.abs((val-.5)*2) //convert 0.5=50% to 0=50%
+	// else if(num==1)this.voiceSettings["vco_2.width"] = Math.abs((val-.5)*2)  
+  // }
   setVcoGain = function(num,val){
   	if(num <0 || num >2 ){ console.log("daisy vcos are 0 and 1"); return;}
 	for(let i=0;i<this.numVoices;i++) {
@@ -329,7 +354,7 @@ export class Daisies {
   applyVcoType = function(num,val){
   	this.vco_type[num] = val
   	if(num==0) this.voice[0].vco_1.type = val 
-	else if(num==1) this.voice[1].vco_2.type = val 
+		else if(num==1) this.voice[1].vco_2.type = val 
   }
   
   //envelopes
@@ -405,7 +430,6 @@ export class Daisies {
 	        }
 	    }
 	}
-
 
   calcPan(note,val){
   	val = Math.sin(note/127*Math.PI*(val-(val/2)))

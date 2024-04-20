@@ -488,7 +488,7 @@ function Editor(props) {
 
     const handleFilenameChange = (e) => {
       setexportFileName( e.target.value );
-      console.log('export file name ', exportFileName)
+      //console.log('export file name ', exportFileName)
     };
 
 

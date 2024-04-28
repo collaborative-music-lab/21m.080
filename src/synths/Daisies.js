@@ -3,7 +3,7 @@ Daisies
 Polyphonic Subtractice Synthesizer
 
 Daisy:
-* 2 OmniOscillators(vco_1, vco_2)->mixer->lpf->hpf->panner->vca
+* 2 OmniOscillators(vco_1, vco_2)->shape->waveShapers->mixer->lpf->hpf->panner->vca
 * frequency->frequency_scalar->(detune for vco_2)->vco_1.frequency
 * frequencyCV->frequency_scalar.factor
 * cutoff control: cutoff, cutoff_vc, keyTracking, lpf_env_depth

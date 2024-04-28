@@ -5,6 +5,8 @@ import { javascript } from '@codemirror/lang-javascript';
 import {exportFiles} from './Export.js'
 import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
         Rumble, Daisies, Stripe, Diffuseur, KP} from './synths/index.js';
+import Bessel from 'bessel';
+
 
 
 import p5 from 'p5';
@@ -12,7 +14,7 @@ import * as Tone from 'tone';
 //import ml5 from 'ml5';
 import Canvas from "./Canvas.js";
 //import gui_sketch from "./gui.js";
-import { Oscilloscope, Spectroscope } from './oscilloscope';
+import { Oscilloscope, Spectroscope, PlotTransferFunction } from './oscilloscope';
 import MidiKeyboard from './MidiKeyboard.js';
 const midi = require('./Midi.js');
 //Save history in browser
@@ -28,6 +30,7 @@ function Editor(props) {
     //window.ml5 = ml5;
     window.Oscilloscope = Oscilloscope;
     window.Spectroscope = Spectroscope;
+    window.plotTransferFunction = PlotTransferFunction;
     //window.gui_sketch = gui_sketch;
     window.setMidiInput = midi.setMidiInput;
     window.setNoteOnHandler = midi.midiHandlerInstance.setNoteOnHandler.bind(midi.midiHandlerInstance);

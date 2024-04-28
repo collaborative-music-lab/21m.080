@@ -14,6 +14,7 @@
     "@uiw/react-codemirror": "^4.21.7",
     "acorn": "^8.10.0",
     "acorn-walk": "^8.2.0",
+    "bessel": "^1.0.2",
     "express": "^4.18.2",
     "jszip": "^3.10.1",
     "marked": "^9.0.0",

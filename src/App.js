@@ -23,8 +23,8 @@ function App() {
   ];
   const assignmentFiles = [
     'Lab1','JavaScript101', 'VCOMixer', 'Sequencer', 'FMOperator', 'WaveFolder', 'KarplusStrong',
-    'PhaseLab', 'PhaseLab2'
-    //,'MarkovChains', 'Perceptron'
+    'PhaseLab', 'PhaseLab2',
+    'MarkovChains', 'Perceptron'
   ];
   const referenceFiles = [
     'Oscillator', 'Filter', 'Multiply', 'Knob', 'GUI elements', 'Envelope', 'Oscilloscope', 'Spectroscope', 'Noise', 'Player', 'Convolver', 'Panner3D'

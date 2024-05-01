@@ -1,3 +1,8 @@
+// Run this block first to import the ml5 library
+let ml5 = import('https://unpkg.com/ml5@latest/dist/ml5.min.js');
+
+//all the rest of the code is in the block below
+//run it after ml5 is loaded
 /********** AUDIO **********/
 let frequency = new Tone.Signal(100)
 let vco = []
@@ -24,7 +29,7 @@ vcf.Q.value= 10
 env.release = 1
 env.decay = .2
 pwm_depth.factor.value = .5
-
+//
 /********** NEURAL NETWORK **********/
 const options = {
   inputs: ['x', 'y'],  // TODO: support ['x', 'y']
@@ -32,9 +37,8 @@ const options = {
   task:'regression',
   debug: true,
 }
-
 let brain = ml5.neuralNetwork(options);
-
+//
 // Add a data record
 function addData() {
   brain.addData(
@@ -55,7 +59,6 @@ function addData() {
   gui2.noFill();
   gui2.ellipse(gui2.mouseX, gui2.mouseY, 32);
 }
-
 // Train the model
 let trained = 0
 function trainModel() {
@@ -78,30 +81,29 @@ function gotFrequency(error, outputs) {
     return;
   }
 //
-  detune_knob.value = parseFloat(outputs[0].value)
-  cutoff_knob.value = parseFloat(outputs[1].value)
-  vcf_env_knob.value = parseFloat(outputs[2].value)
-  lfo_rate_knob.value = parseFloat(outputs[3].value)
-  env_slider.value = parseFloat(outputs[4].value)
+  detune_knob.set( parseFloat(outputs[0].value) )
+  cutoff_knob.set( parseFloat(outputs[1].value) )
+  vcf_env_knob.set( parseFloat(outputs[2].value) )
+  lfo_rate_knob.set( parseFloat(outputs[3].value) )
+  env_slider.set( parseFloat(outputs[4].value) )
 }
-
+//
 /********** GUI **********/
-const gui = new p5(gui_sketch, Perceptron);
-const gui2 = new p5(gui_sketch, Perceptron);
+const gui = new p5(sketch, Perceptron);
+const gui2 = new p5(sketch, Perceptron);
 gui2.noLoop()
-
+//
 gui2.Text({
   label:'click in this gui to store input/output pair',
   x:50, y:50, size:2
 })
-
+//
 gui2.mousePressed = () => {
   if(gui2.mouseX > 0 && gui2.mouseY > 0){
     console.log('addData, mouse:',gui2.mouseX,gui2.mouseY)
     addData()
   }
 };
-
 let detune_knob = gui.Knob({
   label:'detune',
   callback: function(x){
@@ -116,7 +118,6 @@ let detune_knob = gui.Knob({
   x: 10,
   y: 20,
 });
-
 let cutoff_knob = gui.Knob({
   label:'cutoff',
   mapto:'cutoff',
@@ -148,7 +149,6 @@ let lfo_rate_knob = gui.Knob({
   y: 20,
   size:.75
 });
-
 let env_slider = gui.Fader({
   label:'env shape',
   callback: function(x){
@@ -164,7 +164,6 @@ let env_slider = gui.Fader({
   x: 90,
   y: 50,
 })
-
 let trainButton = gui.Button({
   label: 'Train',
   mapto: '',
@@ -173,7 +172,7 @@ let trainButton = gui.Button({
   y: 80,
 });
 trainButton.callback = trainModel;
-
+//
 setNoteOnHandler( (note,vel)=>{
   frequency.value = Tone.Midi(note).toFrequency()
   env.triggerAttack()
@@ -181,7 +180,7 @@ setNoteOnHandler( (note,vel)=>{
 setNoteOffHandler( (note,vel)=>{
   env.triggerRelease()
 })
-
+//
 /********** SEQUENCER **********/
 let pent_scale = [0,3,5,7,10,12]
 let pitch_sequence = Array.from({length:32},(x,i)=> [0,2,3,5,7].includes(i%8%(8-Math.floor(i/5))) ? pent_scale[i%6] : -1)

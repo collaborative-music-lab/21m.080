@@ -5,6 +5,7 @@ let env = new Tone.Envelope()
 let output = new Tone.Multiply(0.1).toDestination()
 vco.connect(vca), vca.connect(output)
 env.connect(vca.factor)
+
 //
 //create a note array to analyze
 let myMelody = []

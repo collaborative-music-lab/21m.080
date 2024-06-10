@@ -1,0 +1,7 @@
+Example of frequency modulation.
+
+Try executing blocks A & B, and then adjusting the parameters in block C. This is setting the frequency and amplitude of the modulator directly.
+
+Then try executing block D and adjusting the parameters in block E - this lets you explore harmonicity and the index of modulation.
+
+Finally, try executing blocks F, G, and H to see the impact of using envelopes to control the index of modulation, and making a simple pitch sequence.  

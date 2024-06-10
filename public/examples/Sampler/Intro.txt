@@ -1,0 +1,6 @@
+Samples let you load in an audio and then play it faster or slower in order to change its pitch.
+
+There are several mp3 audio files included as part of this website:
+120bpm_beat, haugharp, kalimba, marimba, rhodes, ukulele, vocal
+
+You can load these by replacing 'vocal.mp3' with another file name. 

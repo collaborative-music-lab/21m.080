@@ -1,0 +1,29 @@
+[<img src="./examples/Drums/Kick_diagram.png" alt="Diagram of Kick drum synthesis" style="width:50%">](./examples/Drums/Kick_diagram.png)
+
+[<img src="./examples/Drums/Hihat_diagram.png" alt="Diagram of hihat synthesis" style="width:50%">](./examples/Drums/Hihat_diagram.png)
+
+# Kick Drum Synthesis
+
+The basic elements of a kick drum sound are:
+* a low frequency VCO, typically using a sine or triangle wave
+* a pitch env to emulate the pitch drop associated with a beater hitting a drum head
+* sometimes a tone shaping element to add higher harmonics at the beginning of the sound. Here we use a waveshaper to add soft clipping. The waveshaper is after the amplitude envelope, so there will be more clipping at the beginning of the note.
+
+## variations
+
+* Emulate a tom by changing the base oscillator frequency to be higher, and having a more pronounced pitch drop. 
+* There are lots of other ways to emulate the beater hitting the drum head: adding a short noise burst, using FM or AM to add harmonics, etc. 
+* In analog synthesis, it is also common to use a self-oscillating filter for the oscillator. Remember, a filter oscillating at its cutoff frequency is the easiest way to make a sine wave in analog synths!
+
+# Hihat Synthesis
+
+The basic elements of a hihat sound are a noise source going through a vca with a short envelope. You can experiment with different flavors of noise (blue noise, where the higher frequencies are accentuated, works well). I often just use white noise going through a highpass filter, tuned to taste.
+
+It is typical to use a single hihat circuit, and just change the decay time for open and closed hihats. 
+
+## variations
+
+* For a more 'metallic' sound, you can take the approach Roland did in the TR-606, using a bank of six square wave oscillators, carefully tuned to NOT be harmonic. They also often include a noise oscillator as well. 
+* You can also use multiple filters to further refine the sound. Adding a notch filter, for example, or a bandpass filter in parallel with the highpass filter.
+* You can also have the vcf frequency change depending on how hard the note is played, or for open vs closed notes.
+* To make a snare drum sound, try setting the filter frequency lower and using a longer decay. You can also add a pair of sine waves, tuned to be out-of-tune, in parallel with noise.

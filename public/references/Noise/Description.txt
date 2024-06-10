@@ -1,0 +1,17 @@
+### Optional Argument
+* Noise type (see property below)
+### Primary properties and methods:
+#### Properties [unit]:
+* type: [string] The type of noise generated. Options include “white”, “pink”, “brown”. Default: “white”
+#### Methods:
+* start(): begin generating the noise
+* stop(): begin generating the noise
+* connect( destination ): sends the output to the input of the specified destination 
+
+## Additional properties and methods:
+### Properties [unit]:
+* playbackRate: [positive] Affects the ‘playback rate’ of the noise generator. This will have a noticeable effect on the frequency content. Default 1:
+* volume: [decibel] Sets the output volume, in dBFS. 0 dBFS is full volume. Default: 0
+* 
+### Methods:
+* get(): gets the object attributes. Good for use with console.log()

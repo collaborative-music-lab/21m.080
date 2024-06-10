@@ -1,0 +1,9 @@
+Here are the basic steps involved in generating sound using Tone.js, and getting that sound to play from your computer.
+
+You execute code by typing option-enter (max) or alt-enter (windows).
+And you can execute a block of code by typing: 
+* windows/linux: shift-alt-enter
+* mac: shift-option-enter
+* (a block is sequential lines of code with no blank lines between them)
+
+You can also run all of the code in the codebox by clicking the 'Run' button.

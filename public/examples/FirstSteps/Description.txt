@@ -1,0 +1,4 @@
+### Notes
+
+* It is easy to lose track of what code is running - you can always refresh the webpage to reset everything
+* Note that your browser stores the code you enter in the browser cache. You can always reset this cache manually, or click 'starter code' to get back to the default code

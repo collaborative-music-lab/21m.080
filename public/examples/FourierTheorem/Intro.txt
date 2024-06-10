@@ -1,0 +1,7 @@
+# Fourier Theorem Example
+
+The Fourier theorem states that we can generate any complex periodic waveform just by adding up sine waves
+* The sine waves must have frequencies which are harmonics of the fundamental
+* Their amplitude and phase can be any values - phase will not be perceptible
+
+This example shows how to combine 8 sine waves to generate the first 8 harmonics of sawtooth and square waves

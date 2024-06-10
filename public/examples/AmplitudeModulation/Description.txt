@@ -1,0 +1,19 @@
+## Notes
+Amplitude modulation is pretty straightforward, and easy to calculate the frequency and amplitude of the sidebands. 
+* sideband frequencies: Fc +/- Fm
+	* where Fc: frequency of the carrier and Fm: frequency of the modulator
+* sideband amplitudes: modulator amplitude / 2
+
+### setting the amplitude of the carrier
+In the example above, the carrier signal's amplitude is set by the `car_amp` object. The factor of `car_amp` is the sum of the constant factor ( `car_amp.factor.value` ) and the modulator (modulator -> mod_amp).
+* Note: sometimes setting the factor of `car_amp` directly doesn't work as expected
+* In this case, it may be helpful to create a constant value as a signal, and connect that to `car_amp.factor` to sum with the output of `mod_amp`
+
+For example:
+```
+const car_amp_constant = new Tone.Signal()
+car_amp_constant.connect( car_amp.factor )
+mod_amp.connect( car_amp.factor )
+car_amp_constant.value = 1
+
+```

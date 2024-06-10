@@ -1,0 +1,11 @@
+### Primary Properties & Methods
+#### Properties
+* positionX: [meter?] Sets position of the sound source on the X (left-right) axis
+* positionY: [meter?] Sets position of the sound source on the Y (front-back) axis
+* positionZ: [meter?] Sets position of the sound source on the X (up-down) axis
+* panningModel: ["equalpower" or "HRTF"] equalpower only affects the amplitude of the sound; HRTF uses a head-related transfer function to also apply psychoacoustic filtering to the sound. HRTF is intended to be used with headphones. 
+* orientationX, orientationY, orientationZ: [degrees] Sets the orientation of the sound source, effectively rotating it.
+
+#### Methods
+* setPosition(x,y,z): allows for setting all three axes of position data at once
+* setOrientation(x,y,z): allows for setting all three axes of orientation data at once

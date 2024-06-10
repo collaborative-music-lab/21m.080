@@ -1,0 +1,3 @@
+Most oscillators in Tone.js filter out frequencies above Nyquist behind the scenes. So if we want to see an example of aliasing we have to do something a bit more advanced.
+
+This is an example of how modulation synthesis techniques can easily create aliasing when the sidebands go beyond Nyquist, and also what happens when sidebands go below 0. Specifically, this uses Ring Modulation to create two sidebands (Fc+Fm and Fc-Fm).

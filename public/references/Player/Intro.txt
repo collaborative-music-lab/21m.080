@@ -1,0 +1,5 @@
+Plays an audio file from an AudioBuffer or a URL. Several different file formats are supported, most notable mp3 and wav files.
+
+Audio files included with the 21M.080 framework are located at /audio. See the starter code for an example.
+
+API: https://tonejs.github.io/docs/14.7.77/Player.html

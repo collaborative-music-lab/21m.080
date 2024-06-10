@@ -1,0 +1,5 @@
+## Primary properties and methods:
+### Properties [unit]:
+Convolver() does not have any useful properties
+### Methods:
+* load( url ): loads a new impulse response.

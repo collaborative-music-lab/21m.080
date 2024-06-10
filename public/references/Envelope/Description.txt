@@ -1,0 +1,20 @@
+## Primary properties and methods:
+### Properties [unit]:
+* attack: [seconds] The amount of time it takes for the envelope to go from 0 to it's maximum value.
+* decay: [seconds] The amount of time after the attack that it takes for the envelope to fall to the sustain value. Decay must be greater than 0.
+* sustain: [amplitude] The percent of the maximum value that the envelope rests at until the release is triggered.
+* release: [seconds] The amount of time after the release is triggered it takes to reach 0. Value must be greater than 0.
+### Methods:
+* triggerAttack(): triggers the attack/decay/sustain portion of the envelope. 
+* triggerRelease(): triggers the release portion of the envelope.
+* triggerAttackRelease(sustainTime): triggers the attack/decay/sustain portion of the envelope, holds at the sustain level for sustainTime, then triggers the release portion of the envelope. sustainTime must be greater than 0.
+
+## Additional properties and methods:
+### Properties [unit]:
+* attackCurve: [string] The shape of the attack stage. Options include :“linear”, “exponential”, “sine”.
+* decayCurve: [string] The shape of the decay stage. Can be either “linear” or “exponential”.
+* releaseCurve: [string] The shape of the release stage. Same options as attackCurve.
+* value: returns the current value of the envelope. Good for use with console.log()
+
+### Methods:
+* get(): gets the object’s attributes. Good for use with console.log()

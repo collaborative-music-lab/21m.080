@@ -1,0 +1,4 @@
+Multiply()
+Allows for multiplying two audio signals together, or multiplying an audio signal by a constant. 
+
+API: https://tonejs.github.io/docs/14.7.77/Multiply.html

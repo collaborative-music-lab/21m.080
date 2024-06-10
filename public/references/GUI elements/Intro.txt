@@ -1,0 +1,6 @@
+Our GUI library provides 5 basic user elements you can use. They have a lot in common, but some have a few added properties:
+* *Knob()*: the primary control. 
+* *Fader()*: has an orientation that can be vertical or horizontal.
+* *Toggle()*: A button that toggles between on and off states.
+* *Button()*: A button that fires every time you click it.
+* *RadioButton()*: A set of toggle boxes that enable you to switch between settings. Has a radioOptions[] array to set the number and values for the boxes.

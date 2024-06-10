@@ -1,0 +1,28 @@
+# Primary properties and methods:
+## Primary Properties
+* label: [string] a unique label to identify the element.
+* mapto: [string] the audio parameter to control.
+* callback: [function] a function to call when the element is changed. 
+* min: [number] the minimum value of the element. Default: 0
+* max: [number] the maximum value of the element. Default: 1
+* curve: [exponent] an exponent used to allow for non-linear curves. A value of two creates an exponential curve. Default: 1
+
+## Appearance
+* size: [number] allows for scaling the graphical size of the element. Default: 1
+* x: [0-100] x location of the element
+* y: [0-100] y location of the element
+* border: [number] thickness of the lines drawing the element. Default: 6
+* borderColor: the color of the border. Can be one of the theme's defined colors ('border', 'accent', 'background' or 'text'), or an RGB array (e.g. [100,0,0]). Default: 'border'
+* accentColor: the color of the accent. Can be one of the theme's defined colors ('border', 'accent', 'background' or 'text'), or an RGB array (e.g. [100,0,0]). Default: 'accent'
+
+## Text
+* textColor: the color of the text. Can be one of the theme's defined colors ('border', 'accent', 'background' or 'text'), or an RGB array (e.g. [100,0,0]). Default: 'text'
+* labelFont: the font of the label. Can be one of the theme's defined fonts ('label', 'value', 'text' or 'title'), or any valid font. Default: 'label'.
+* valueFont: the font of the value. Can be one of the theme's defined fonts ('label', 'value', 'text' or 'title'), or any valid font. Default: 'value'.
+* labelX, valueX, textX, labelY, valueY, textY: fudge parameters for moving text relative to the main element. Default: 0.
+
+## Additional properties:
+* showLabel: [boolean] Whether to display the label of the element. Default: true
+* showValue: [boolean] Whether to display the value of the element. Default: true
+* orientation: ['horizontal' or 'vertical'] For faders and radioButtons, whether to display in vertical or horizontal orientation. Default: 'horizontal'.
+* bipolar: [boolean] Whether a knob is unipolar (0 to 1) or bipolar (-1 to 1).  Default: 'false'.

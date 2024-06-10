@@ -1,0 +1,16 @@
+### Primary properties and methods:
+#### Properties [unit]:
+* factor: [number] the value to multiply the input by
+  * this can be set directly: `multiply.factor.value = .5`
+  * or you can use rampTo: `multiply.factor.rampTo( .5, .1)`
+  * or you can connect a signal directly to factor: `vco.connect( multiply.factor )`
+
+#### Methods:
+* connect( destination ): sends the output of the filter to the input of the specified destination 
+
+### Additional properties and methods:
+#### Properties [unit]:
+* none: see API
+
+#### Methods:
+* none: API

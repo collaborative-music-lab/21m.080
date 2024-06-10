@@ -1,0 +1,11 @@
+A simple convolution engine. Useful for creating reverbs, or for running a sound through a resonant body like a guitar. 
+
+* Available IRs:
+	* reverbs: 'hall_reverb.mp3', 'plate_reverb.mp3', 'spring_reverb.mp3'
+	* amps: 'ampeg_amp.mp3', 'marshall_amp.mp3', 'voxAC30_amp.mp3'
+	* guitar bodies: 'dreadnought_guitar.mp3', 'taylor_guitar.mp3', 'custom_guitar.mp3'
+* to use amp and guitar IRs, set dry level to 0 and wet to 1
+	* you also might need to boost the output using the right radiobutton
+* signal path is:
+	* synth -> dry -> output
+	* synth -> wet -> convolver -> hpf -> lpf -> output

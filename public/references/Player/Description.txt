@@ -1,0 +1,26 @@
+### Primary properties and methods:
+#### Properties [unit]:
+* autostart: [boolean]
+* playbackRate: [positive number] The playback rate of the audio. A value of 1 plays the audio file at its original speed. Value must be greater than zero. Default: 1.
+* reverse: [boolean] If the sample should play back reversed.
+#### Methods:
+* start(): begin playing back the loaded soundfile. Optional arguments: ( how long to wait before playing, where in the soundfile to begin playing, how long the sample should play)
+* connect( destination ): sends the output of the oscillator to the input of the specified destination 
+* restart(): restart the sample from its beginning.
+* seek(): move to a specific time within the sample. If the sample is no longer playing, stops the player.
+
+
+## Additional properties and methods:
+### Properties [unit]:
+* buffer: [string] The audio buffer to play from.
+* fadeIn: [time]
+* fadeOut: [time]
+* loopStart: [time]
+* loopEnd: [time]
+* mute: [boolean]
+* 
+
+### Methods:
+* get(): gets the oscillators attributes. Good for use with console.log()
+* load(): Load the audio file as an audio buffer. Note: this does not need to be called if a url was passed in to the constructor. Only use this if you want to manually load a new url.
+* setLoopPoints( startTime, endTime ): causes the sample to loop between the start and end times.

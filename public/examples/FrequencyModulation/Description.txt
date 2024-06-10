@@ -1,0 +1,11 @@
+# Notes
+Frequency modulation isn't much more complex than amplitude modulation. The biggest difference is using *higher-level parameters* to determine the sidebands.
+
+* *harmonicity* is the ratio of the modulator oscillator to the carrier. Generally, this value will be an integer in order to guarantee a harmonic relationship. But non-integers can also be useful to generate inharmonic partials.
+	* Similar to amplitude modulation, the sideband frequencies are: Fc +/- N*Fm
+	* where Fc: frequency of the carrier, Fm: frequency of the modulator, and N: every positive integer
+	* This means that frequency modulation generates many pairs of sidebands.
+* The *index of modulation* sets the amplitude of the modulator, and therefore the amplitude (and de facto number) of sidebands. 
+	* The basic formula is that the index = Amplitude of the modulator (D) / Fm.
+	* Generally, we will use the index to determine the amplitude of the modulator (D), so D = Fm * index.
+	* The key here is that the index can be a relatively low number (from 0-10), but when multiplied by Fm the actual depth of modulation is 100s or 1000s of hertz!

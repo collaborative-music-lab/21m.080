@@ -1,0 +1,10 @@
+Example of different GUI objects. Available objects are:
+* Dial: a rotary dial
+* Slider: can be horizontal or vertical
+* Button: A momentary button for triggering events
+* Toggle: A toggle button
+* RadioButton: An array of buttons for selecting options
+* Line: To help organize your GUI. No output.
+* Text: for arbitrary text. Can be assigned a mapto or callback for use as a button.
+
+Note: most GUI objects work with either a 'mapto' Tone parameter, or a user-definable callback. See the reference for more information.

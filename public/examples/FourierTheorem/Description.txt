@@ -1,0 +1,22 @@
+## Notes
+
+Sawtooth waves:
+* all harmonics
+* frequency = fundamental * N
+* amplitude = 1/N
+
+Square waves:
+* odd harmonics
+* frequency = fundamental * 2*N
+* amplitude = 1/N
+
+Triangle waves:
+* odd harmonics, low amplitude harmonics
+* frequency = fundamental * 2*N
+* amplitude = 1/(N^2)
+
+To create an exponential value:
+* `vcas[i].factor.value = 1/ (i+1)**2`
+* the '**' is an exponential operator 
+* equivalent to Math.pow(i+1,2)
+* or just (i+1) * (i+1)

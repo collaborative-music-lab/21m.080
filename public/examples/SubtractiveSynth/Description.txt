@@ -1,0 +1,12 @@
+## Notes
+There are a few quirks when settings audio object parameters.
+
+### Filter frequency
+Setting an audio object's parameters directly may act differently once an audio signal is connected to that parameter.
+
+For example, setting `vcf.frequency.value = 1000` BEFORE connecting the envelope to the filter frequency works. But it doesn't do anything (vcf.frequency.value is actually set internally to 0) once we execute `filter_env_depth.connect( vcf.frequency )`.
+
+For this reason, we need to define a base filter frequency `cutoff`, and once both `cutoff` and `filter_env_depth` those two signals are added together.
+
+### ADSR parameters
+Also note, sometimes object parameters need to be called with `value`, and sometimes they get set directly. The envelope's ADSR values, for example, are set by simply calling `env.attack = .01` rather than using `env.attack.value` (which will throw on error in the javascript console).

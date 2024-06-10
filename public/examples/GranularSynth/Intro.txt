@@ -1,0 +1,1 @@
+Granular Synthesizers play multiple short snippets (grains) of a sample. 

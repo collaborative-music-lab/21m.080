@@ -1,0 +1,20 @@
+### Primary properties and methods:
+#### Properties [unit]:
+* frequency: [Hertz] the cutoff frequency for the filter.
+* Q: [around 0 to 40] The resonance or ‘Quality’ of the filter. 
+  * This reflects how much the filter amplifies incoming signals at the cutoff frequency.
+  * Be careful with Q values higher than 10 - it can get loud!
+
+#### Methods:
+* connect( destination ): sends the output of the filter to the input of the specified destination 
+
+### Additional properties and methods:
+#### Properties [unit]:
+* type: [string] filter type
+  * Available filter types are "lowpass", "highpass", "bandpass", "lowshelf", "highshelf", "notch", "allpass", or "peaking”
+* rolloff: [decibel] the slope of the filter.
+  * e.g., how quickly it attenuates frequencies past the cutoff frequency. Typical values are -12 or -24.
+
+#### Methods:
+* get(): gets the filter’s attributes. Good for use with console.log()
+  * e.g. console.log( vcf.get() )

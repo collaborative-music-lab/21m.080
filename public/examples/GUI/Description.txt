@@ -1,0 +1,49 @@
+# Notes
+The gui is created by defining elements on a canvas. Each gui object is an element, with lots of shared parameters and methods. See the `element` reference page for more details.
+
+# Themes
+There are several themes available, which combine presets for colors, appearances, and fonts. 
+* `gui.listThemes()` will post all available themes to the console.
+* `gui.setTheme( 'dark' )` will change the active theme to the 'dark' theme.
+* `gui.exportTheme()` will post the current theme's data to the console. You can copy and paste it to save/edit it.
+* `gui.setThemeParameters({name: value})` will update the current theme's values. You can provide multiple parameters in the argment, i.e.: 
+	* `gui.setThemeParameters({
+  		titleFont: 'Helvetica', 
+  		borderColor: [20,100,100]
+		})`
+
+## Setting Element locations
+Every object has an x and y position. The unit for these are percentages of the overall gui size. 
+* Note that changing the gui size may have a big effect, but you might need to refresh to see it. This is imperfect right now. . . .
+
+## Setting an element's output
+Elements are meant to be 'mapped' to Tone synthesizer parameters. Every object has a default range of 0-1, but you can change this by setting the `min` (def:0) and `max` (def:1) parameters. You can also set the value to be exponential by setting the `curve` (def:1) parameter, which determines the exponent.
+
+### mapto parameter
+Any Tone parameter which is set by using .value (e.g. frequency.value or factor.value) can be controlled by setting the mapto parameter. 
+
+### Callback
+Some parameters don't use the .value syntax. These can be easily mapped to by defining a custom callback for a gui object. See the waveform and rolloff RadioButton() examples above. The basic syntax is element.callback = function(){}
+
+# Styling
+There are a variety of ways you can change the look of your GUI.
+
+## Colors
+There are four color groups: backgroundColor, borderColor, accentColor, and textColor. 
+* You can change these: `gui.setColor(<name of color>, [r,g,b])`
+* for example, `gui.setColor( backgroundColor, [0,100,0])`
+* you can also set the color of each element directly, e.g. `myKnob.borderColor = [255,0,0]`
+
+## Appearance
+You can change some elements of how gui elements appear:
+* element.size scales the size of the element
+* element.border set show thick the lines drawing the element are
+* you can use showLabel/showValue to hide text, e.g. `myKnob.showLabel = 0`
+
+## Fonts
+There are parameters for setting fonts for labels, values, text, and title blocks independently.
+* gui.setFont( 'label', 'Arial' ) defines all labels in the gui to be Arial.
+* you can assign text styles when defining elements using the gui fonts, or set them independently.
+	* `myText = gui.Text({label:'mytitle', textFont: 'title' })` will set the font to the current theme's 'title' font
+	* `myText = gui.Text({label:'mytitle', textFont: 'Arial' })` will set the font for only this element's text to Arial.
+* You should be able to use any common font, e.g. Arial, Courier, Monaco, Georgia, Helvetica . . . search online to find other options.

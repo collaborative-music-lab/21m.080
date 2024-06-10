@@ -1,0 +1,3 @@
+Note the functions used to derive the three temperaments. 
+
+There are lots of different ratios used to generate the more complex ratios for just intonation. In addition, it is common to divide the octave into more than 12 parts to allow for even more nuance in terms of temperament!

@@ -1,0 +1,1 @@
+Physical Models mathematically approximate the physical behaviour of an acoustic system. The simplest physical model is the Karplus-Strong plucked string, which just uses a delay line with high feedback. The length of the delay line determines the frequency of the note, the feedback determines the length of a note, and damping in the feedback loop affects the timbre of the sound.

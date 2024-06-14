@@ -270,6 +270,7 @@ let prevYElementSize = 0;
 class Element {
     constructor(p, options) {
         this.p = p;
+        this.ch = window.ch;
         this.theme = activeTheme;
         this.label = options.label || "myElement";
         this.id = this.label;
@@ -336,7 +337,9 @@ class Element {
         //collab-hub sharing values
         this.sendName = options.send || null; // share params iff sendName is defined
         if (this.sendName) {
-            console.log('sending', window.ch);
+            this.ch.on(this.sendName, (from) => {      // set listener for updates from collab-hub
+                this.forceSet(this.ch.getControl(this.sendName));
+            })
         }
 
         this.mapValue(this.value, this.mapto);
@@ -448,17 +451,32 @@ class Element {
                 }
             }
         } else if( this.maptoDefined == 'false'){ console.log(this.label, 'no destination defined')}
+
+        // send updates to collab-hub
+        if (this.sendName) { 
+            this.ch.control(this.sendName, this.value);
+        }
     }
 
     set(value){
-        // TODO: send controls
         if(typeof(value) === 'string') this.value = value;
         else{
             this.value = value
             this.rawValue = unScaleOutput(value,0,1,this.min,this.max,this.curve) || 0.5;
             this.mapValue(this.value, this.mapto);
         }
+
         this.runCallBack()
+    }
+
+    forceSet(value){
+        // sets value without running callbacks or sending data to collab-hub
+        if(typeof(value) === 'string') this.value = value;
+        else{
+            this.value = value
+            this.rawValue = unScaleOutput(value,0,1,this.min,this.max,this.curve) || 0.5;
+            this.mapValue(this.value, this.mapto);
+        }
     }
 }
 

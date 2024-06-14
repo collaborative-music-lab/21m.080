@@ -82,6 +82,9 @@ function Editor(props) {
         // collab-hub socket instance
         window.ch = new CollabHubClient(); // needs to happen once (!)
 
+        // collab-hub join a room
+        window.ch.joinRoom('21m080-temp-room'); // TODO change this to the patch-specific room name
+
         const container = document.getElementById('container');
         if (container) {
             setHeight(`${container.clientHeight}px`);

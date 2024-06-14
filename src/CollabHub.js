@@ -10,7 +10,7 @@ Version v0.1.0 alpha | June 18, 2022
 import { io } from "socket.io-client";
 
 class CollabHubClient {
-  
+
     constructor() {
         this.socket = io("https://ch-server.herokuapp.com/hub");
         this.controls = {};
@@ -171,7 +171,6 @@ class CollabHubClient {
             target: target
         };
         this.socket.emit("control", outgoing);
-        console.log("Sending control...", outgoing);
     }
 
     event(...args) {

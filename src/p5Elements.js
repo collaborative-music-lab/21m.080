@@ -333,6 +333,12 @@ class Element {
         this.value = options.value || scaleOutput(0.5,0,1,this.min,this.max,this.curve);
         p.elements[this.id] = this;
 
+        //collab-hub sharing values
+        this.sendName = options.send || null; // share params iff sendName is defined
+        if (this.sendName) {
+            console.log('sending', window.ch);
+        }
+
         this.mapValue(this.value, this.mapto);
         this.runCallBack()
     }
@@ -445,6 +451,7 @@ class Element {
     }
 
     set(value){
+        // TODO: send controls
         if(typeof(value) === 'string') this.value = value;
         else{
             this.value = value

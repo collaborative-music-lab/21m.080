@@ -15,10 +15,15 @@ import * as Tone from 'tone';
 import Canvas from "./Canvas.js";
 //import gui_sketch from "./gui.js";
 import { Oscilloscope, Spectroscope, PlotTransferFunction } from './oscilloscope';
+
+// Collab-Hub features
+import CollabHubClient from './CollabHub.js';
+
 import MidiKeyboard from './MidiKeyboard.js';
 const midi = require('./Midi.js');
 //Save history in browser
 const stateFields = { history: historyField };
+
 
 // Initialize the Tone context
 let audioContext = new AudioContext();
@@ -74,6 +79,9 @@ function Editor(props) {
     const [exportFileName, setexportFileName] = useState('Enter filename...');
 
     useEffect(() => {
+        // collab-hub socket instance
+        window.ch = new CollabHubClient(); // needs to happen once (!)
+
         const container = document.getElementById('container');
         if (container) {
             setHeight(`${container.clientHeight}px`);

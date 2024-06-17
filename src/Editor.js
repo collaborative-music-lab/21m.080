@@ -4,7 +4,7 @@ import { historyField } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
 import {exportFiles} from './Export.js'
 import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
-        Rumble, Daisies, Stripe, Diffuseur, KP} from './synths/index.js';
+        Rumble, Daisies, Stripe, Diffuseur, KP, Sympathy} from './synths/index.js';
 import Bessel from 'bessel';
 
 
@@ -49,6 +49,7 @@ function Editor(props) {
     window.Stripe = Stripe
     window.Diffuseur = Diffuseur
     window.KP = KP
+    window.Sympathy = Sympathy
 
 
     var curLineNum = 0;

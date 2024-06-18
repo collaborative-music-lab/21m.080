@@ -340,6 +340,7 @@ class Element {
     getParam(param,val){ return val == 'theme' ? activeTheme[param] : val}
 
     isPressed(){
+        //console.log('isPressed', this.label, this.p.mouseX,this.cur_x , this.x_box);
         if( this.p.mouseX < (this.cur_x + this.x_box/2) &&
             this.p.mouseX > (this.cur_x - this.x_box/2) &&
             this.p.mouseY > (this.cur_y - this.y_box/2) &&
@@ -791,17 +792,19 @@ export class Button extends Element {
     }
 
     isPressed(){
-        if( this.p.mouseX < (this.cur_x + this.x_box/2) &&
-            this.p.mouseX > (this.cur_x - this.x_box/2) &&
-            this.p.mouseY > (this.cur_y - this.y_box/2) &&
-            this.p.mouseY < (this.cur_y + this.y_box/2) )
-        {
-            this.active = 1
-            this.rawValue = 1
-            this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
-            this.mapValue(this.value,this.mapto);
-            this.runCallBack();
-            if( this.maptoDefined == 'false') postButtonError('Buttons')
+        if(this.active == 0){
+            if( this.p.mouseX < (this.cur_x + this.x_box/2) &&
+                this.p.mouseX > (this.cur_x - this.x_box/2) &&
+                this.p.mouseY > (this.cur_y - this.y_box/2) &&
+                this.p.mouseY < (this.cur_y + this.y_box/2) )
+            {
+                this.active = 1
+                this.rawValue = 1
+                this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
+                this.mapValue(this.value,this.mapto);
+                this.runCallBack();
+                if( this.maptoDefined == 'false') postButtonError('Buttons')
+            }
         }
     }
 
@@ -833,6 +836,29 @@ callback: function(val){
     if(name === 'RadioButtons') console.log(`An example of defining a callback for a radio button is: 
 callback: function(val){ vco.type = val }`)
 }
+
+/**************************************** MOMENTARY ******************************************/
+export class Momentary extends Button {
+    constructor(p, options) {
+        super(p, options);
+        this.value = options.value || 0
+        this.rawValue = this.value
+    }
+
+    isReleased(){
+        if( this.active == 1 )  {
+            this.active = 0
+            this.rawValue = 0
+            this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
+            this.mapValue(this.value,this.mapto);
+            this.runCallBack();
+        }
+    }
+}
+
+p5.prototype.Momentary = function (options = {}) {
+    return new Momentary(this, options);
+};
 
 /**************************************** TOGGLE ******************************************/
 export class Toggle extends Button {

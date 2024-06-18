@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { historyField } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
-import {exportFiles} from './Export.js'
 import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
         Rumble, Daisies, Stripe, Diffuseur, KP, Sympathy} from './synths/index.js';
 import Bessel from 'bessel';
@@ -36,7 +35,6 @@ function Editor(props) {
     window.setNoteOnHandler = midi.midiHandlerInstance.setNoteOnHandler.bind(midi.midiHandlerInstance);
     window.setNoteOffHandler = midi.midiHandlerInstance.setNoteOffHandler.bind(midi.midiHandlerInstance);
     window.setCCHandler = midi.midiHandlerInstance.setCCHandler.bind(midi.midiHandlerInstance);
-    window.exportFiles = exportFiles
 
     //synths
     window.NoiseVoice = NoiseVoice
@@ -58,7 +56,7 @@ function Editor(props) {
     // Save history in browser
     const serializedState = localStorage.getItem(`${props.page}EditorState`);
     const value = localStorage.getItem(`${props.page}Value`) || props.starterCode;
-
+    //const value = 'let CHANNEL = 3'
     const [height, setHeight] = useState(false);
     const [code, setCode] = useState(value); //full string of user code
     var vars = {}; //current audioNodes
@@ -464,30 +462,33 @@ function Editor(props) {
 
     //Export webpage code
     const handleExportFile = (fileName) => {
-    const blob = new Blob([localStorage.getItem(`${props.page}Value`)], { type: 'text/plain' });
-    let tempName = 'mySynth';
-    if (exportFileName !== 'Enter filename...') {
-        tempName = exportFileName;
-    }
+        const blob = new Blob([localStorage.getItem(`${props.page}Value`)], { type: 'text/plain' });
+        let tempName = 'mySynth';
+        if (exportFileName !== 'Enter filename...') {
+            tempName = exportFileName;
+        }
+        console.log(localStorage.getItem(`${props.page}Value`))
 
-    const url = URL.createObjectURL(blob);
-    // Create an invisible anchor element
-    const a = document.createElement('a');
-    a.style.display = 'none';
-    // Set the anchor's href attribute to the URL
-    a.href = url;
-    // Set the anchor's download attribute to specify the filename
-    a.download = tempName; // Set the default filename
-    // Append the anchor element to the document
-    document.body.appendChild(a);
-    // Simulate a click event on the anchor to trigger the download
-    a.click();
-    // Remove the anchor element from the document
-    document.body.removeChild(a);
-    // Revoke the URL to free up resources
-    URL.revokeObjectURL(url);
-    console.log(`Exporting file with name: ${tempName}`);
-};
+        const url = URL.createObjectURL(blob);
+        // Create an invisible anchor element
+        //console.log(url)
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        // Set the anchor's href attribute to the URL
+        a.href = url;
+        // Set the anchor's download attribute to specify the filename
+        a.download = tempName; // Set the default filename
+        // Append the anchor element to the document
+        //console.log(a)
+        document.body.appendChild(a);
+        // Simulate a click event on the anchor to trigger the download
+        a.click();
+        // Remove the anchor element from the document
+        document.body.removeChild(a);
+        // Revoke the URL to free up resources
+        URL.revokeObjectURL(url);
+        console.log(`Exporting file with name: ${tempName}`);
+    };
       //end export dialog support
 
     const handleFilenameChange = (e) => {

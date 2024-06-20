@@ -9,13 +9,19 @@ Version v0.1.0 alpha | June 18, 2022
 
 import { io } from "socket.io-client";
 
-class CollabHubClient {
+export class CollabHubClient {
 
     constructor() {
         this.socket = io("https://ch-server.herokuapp.com/hub");
         this.controls = {};
         this.handlers = {};
         this.username = undefined;
+        this.roomJoined = undefined;
+
+        // Callbacks
+        this.controlsCallback = (incoming) => {};
+        this.eventsCallback = (incoming) => {};
+        this.chatCallback = (incoming) => {};
 
         // Setup event listeners
         this.initializeSocketEvents();
@@ -27,7 +33,7 @@ class CollabHubClient {
 
         this.socket.on("connected", () => {
             // TODO server-side, return the username on connection
-            console.info("Connected to Collab-Hub server.");
+            console.info("Connected to Collab-Hub server (Join a room w/ ch.joinRoom(x)!).");
             this.socket.emit();
 
             // TODO HACK sending chat message to receive my user name
@@ -53,6 +59,7 @@ class CollabHubClient {
                 console.info("My user name is: " + incoming.id);
             }
             console.log(`${incoming.id}: "${incoming.chat}"`);
+            this.chatCallback(incoming);
         });
 
         this.socket.on("otherUsers", (incoming) => {
@@ -67,14 +74,18 @@ class CollabHubClient {
         // controls
 
         this.socket.on("control", (incoming) => {
-            if (incoming.from !== this.username) {
-                let newHeader = incoming.header,
-                    newValues = incoming.values;
-                this.controls[newHeader] = newValues;
-                if (newHeader in this.handlers) {
-                    this.handlers[newHeader](incoming.from);
+            if (this.roomJoined) {                      // Kind of HACK, ignore controls before joining a room
+                if (incoming.from !== this.username) {  // TODO HACK ignore controls from self
+                    let newHeader = incoming.header,
+                        newValues = incoming.values;
+                    this.controls[newHeader] = newValues;
+                    if (newHeader in this.handlers) {
+                        this.handlers[newHeader](incoming.from);
+                    }
+                    console.log(incoming);
                 }
-                console.log(incoming);
+
+                this.controlsCallback(incoming);
             }
         });
 
@@ -108,12 +119,16 @@ class CollabHubClient {
         // events
 
         this.socket.on("event", (incoming) => {
-            if (incoming.from !== this.username) { // TODO HACK ignore events from self
-                let newHeader = incoming.header;
-                if (newHeader in this.handlers) {
-                    this.handlers[newHeader](incoming.from);
+            if (this.roomJoined) {                      // Kind of HACK, ignore events before joining a room
+                if (incoming.from !== this.username) {  // TODO HACK ignore events from self
+                    let newHeader = incoming.header;
+                    if (newHeader in this.handlers) {
+                        this.handlers[newHeader](incoming.from);
+                    }
+                    console.log("Incoming event", incoming);
                 }
-                console.log("Incoming event", incoming);
+
+                this.eventsCallback(incoming);
             }
         });
 
@@ -157,44 +172,63 @@ class CollabHubClient {
 
     }
 
+    // callbacks
+
+    setControlsCallback(f) { this.controlsCallback = f; }
+    setEventsCallback(f) { this.eventsCallback = f; }
+    setChatCallback(f) { this.chatCallback = f; }
+
     // sending data
 
     control(...args) {
-        let mode = args[0] === "publish" || args[0] === "pub" ? "publish" : "push",
-            header = mode === "publish" ? args[1] : args[0],
-            values = mode === "publish" ? args[2] : args[1],
-            target = mode === "publish" ? args[3] ? args[3] : "all" : args[2] ? args[2] : "all";
-        const outgoing = {
-            mode: mode,
-            header: header,
-            values: values,
-            target: target
-        };
-        this.socket.emit("control", outgoing);
+        if (this.roomJoined) {
+            let mode = args[0] === "publish" || args[0] === "pub" ? "publish" : "push",
+                header = mode === "publish" ? args[1] : args[0],
+                values = mode === "publish" ? args[2] : args[1],
+                target = mode === "publish" ? args[3] ? args[3] : this.roomJoined : args[2] ? args[2] : this.roomJoined;
+            const outgoing = {
+                mode: mode,
+                header: header,
+                values: values,
+                target: target
+            };
+            this.socket.emit("control", outgoing);
+        } else {
+            console.info("Join a room to send controls.");
+        }
     }
 
     event(...args) {
-        let mode = args[0] === "publish" || args[0] === "pub" ? "publish" : "push",
-            header = mode === "publish" ? args[1] : args[0],
-            target = mode === "publish" ? args[2] ? args[2] : "all" : args[1] ? args[1] : "all";
-        const outgoing = {
-            mode: mode,
-            header: header,
-            target: target
-        };
-        this.socket.emit("event", outgoing);
+        if (this.roomJoined) {
+            let mode = args[0] === "publish" || args[0] === "pub" ? "publish" : "push",
+                header = mode === "publish" ? args[1] : args[0],
+                target = mode === "publish" ? args[2] ? args[2] : this.roomJoined : args[1] ? args[1] : this.roomJoined;
+            const outgoing = {
+                mode: mode,
+                header: header,
+                target: target
+            };
+            this.socket.emit("event", outgoing);
+        } else {
+            console.info("Join a room to send events.");
+        }
     }
 
     chat(m, t) {
-        const outgoing = {
-            chat: m
-        };
-        t ? outgoing.target = t : outgoing.target = "all";
-        this.socket.emit("chat", outgoing);
+        if (this.roomJoined) {
+            const outgoing = {
+                chat: m
+            };
+            t ? outgoing.target = t : outgoing.target = this.roomJoined;
+            this.socket.emit("chat", outgoing);
+        } else {
+            console.info("Join a room to chat.");
+        }
     }
 
     username(u) {
         this.socket.emit("addUsername", { username: u });
+        this.username = u;
     }
 
     // requesting/using data
@@ -215,8 +249,14 @@ class CollabHubClient {
     // room management
 
     joinRoom(roomName) {
+        if (this.roomJoined) {
+            this.leaveRoom(this.roomJoined);
+        }
+
         let outgoing = { room: roomName };
         this.socket.emit("joinRoom", outgoing);
+
+        this.roomJoined = roomName;     // room joined, can start receiving controls/events
     }
 
     leaveRoom(roomName) {
@@ -275,8 +315,38 @@ class CollabHubClient {
         this.socket.emit("clearEvent", outgoing);
         this.socket.emit("getMyEvents");
     }
+  }  
+
+
+  export class CollabHubTracker {
+    constructor() {
+        if (window.ch === undefined) {
+            console.error("Collab-Hub client is not initiated yet! Can't run tracker.");
+        }
+
+        this.ch = window.ch;
+        this.recentControls = {};
+        this.recentEvents = {};
+        this.recentChat = [];
+
+        this.activityTimeOut = 20000;
+        this.chatMaxDisplay = 20;
+
+        // set callbacks
+
+    }
+
+
+    update() {
+
+    }
+
+    handleChat(incoming) {
+        this.recentChat.push(incoming);
+        if (this.recentChat.length > this.chatMaxDisplay) {
+            this.recentChat.shift();
+        }
+    }
+
+
   }
-  
-
-
-export default CollabHubClient;

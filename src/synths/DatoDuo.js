@@ -9,11 +9,9 @@ import * as Tone from 'tone';
 
 export class DatoDuo {
   constructor (gui = null) {
-    //Tone.start()
-    //console.log('start');
-
     this.gui = gui
-    this.toneSig = new Tone.Signal()
+    
+    this.masterFrequency = new Tone.Signal()
     this.tonePitchshift = new Tone.Multiply()
     this.sawPitchshift = new Tone.Multiply()
     this.pulseWav = new Tone.PulseOscillator().start()
@@ -35,16 +33,20 @@ export class DatoDuo {
 
     //connect the initial signal to multipliers for pitch shift
     //connect those to the oscillators
-    this.toneSig.connect(this.tonePitchshift), this.tonePitchshift.connect(this.pulseWav.frequency)
-    this.toneSig.connect(this.sawPitchshift), this.sawPitchshift.connect(this.sawWav.frequency)
+    this.masterFrequency.connect(this.tonePitchshift)
+    this.tonePitchshift.connect(this.pulseWav.frequency)
+    this.masterFrequency.connect(this.sawPitchshift)
+    this.sawPitchshift.connect(this.sawWav.frequency)
 
-    //this.toneSig.value = 500; //do I need this????????
+    //this.masterFrequency.value = 500; //do I need this????????
     this.tonePitchshift.factor.value = 1;
     this.sawPitchshift.factor.value = 1;
 
     //connect the oscillators to a mixer and add them together
-    this.pulseWav.connect(this.toneMixer), this.toneMixer.connect(this.filter)
-    this.sawWav.connect(this.sawMixer), this.sawMixer.connect(this.filter)
+    this.pulseWav.connect(this.toneMixer)
+    this.toneMixer.connect(this.filter)
+    this.sawWav.connect(this.sawMixer)
+    this.sawMixer.connect(this.filter)
 
     this.toneMixer.factor.value = 1
     this.sawMixer.factor.value = 1
@@ -90,12 +92,12 @@ export class DatoDuo {
     if(time){
       this.ampEnvelope.triggerAttack(time)
       this.filterEnvelope.triggerAttack(time)
-      this.toneSig.setValueAtTime(freq, time)
+      this.masterFrequency.setValueAtTime(freq, time)
       this.velocity.rampTo(amp,.03)
     } else{
       this.ampEnvelope.triggerAttack()
       this.filterEnvelope.triggerAttack()
-      this.toneSig.value = freq
+      this.masterFrequency.value = freq
       this.velocity.rampTo(amp,.03)
     }
   }
@@ -113,12 +115,12 @@ export class DatoDuo {
     if(time){
       this.ampEnvelope.triggerAttackRelease(dur, time)
       this.filterEnvelope.triggerAttackRelease(dur, time)
-      this.toneSig.setValueAtTime(freq, time)
+      this.masterFrequency.setValueAtTime(freq, time)
       this.velocity.rampTo(amp,.03)
     } else{
       this.ampEnvelope.triggerAttackRelease(dur)
       this.filterEnvelope.triggerAttackRelease(dur)
-      this.toneSig.value = freq
+      this.masterFrequency.value = freq
       this.velocity.rampTo(amp,.03)
     }
   }//attackRelease

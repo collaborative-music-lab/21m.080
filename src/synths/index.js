@@ -1,5 +1,6 @@
 export { NoiseVoice } from './NoiseVoice.js';
 export { Resonator } from './Resonator.js';
+export { DatoDuo } from './DatoDuo.js';
 export { ToneWood } from './ToneWood.js';
 export { DelayOp } from './DelayOp.js';
 export { Caverns } from './Caverns.js';

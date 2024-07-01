@@ -26,6 +26,7 @@ export class DatoDuo {
     this.filterDepth = new Tone.Multiply()
     this.filterMultiplier = new Tone.Multiply()
     this.filter = new Tone.Filter()
+    this.velocity = new Tone.Signal()
     this.ampEnvelope = new Tone.Envelope()
     this.amp = new Tone.Multiply()
     this.output = new Tone.Multiply(0.05).toDestination()
@@ -204,7 +205,7 @@ export class DatoDuo {
 
     this.glide_toggle =  this.gui.Toggle({
       label:'Glide',
-      callback: function(x){this.isGlide = x}, //IDK how to implemement this in class
+      callback: (x)=>{this.isGlide = x}, //IDK how to implemement this in class
       x: 15, y:10, size: 0.8,
       link: 'glide'
     })
@@ -212,7 +213,7 @@ export class DatoDuo {
 
     this.delay_knob = this.gui.Knob({
       label:'Delay Control',
-      callback: function(x){delayControl(x)},
+      callback: (x)=>{this.delayControl(x)},
       x: 10, y: 25, size:0.8,
       min:0.001, max: 1, curve: 1,
       //showValue: false,
@@ -221,11 +222,11 @@ export class DatoDuo {
     this.delay_knob.accentColor = [49,48,55]
     this.delay_knob.set( 0.0001 )
 
-    function delayControl(x) {
+    this.delayControl = function(x) {
       this.delay.feedback.value = stepper(x, 0 , 1 , [[0,0], [0.02, 0], [0.8,0.6], [1,1]])
       this.delay.wet.value = stepper(x , 0, 1, [[0,0], [0.02, 0], [0.04, 1], [1,1]])
       this.delaygain.factor.value = stepper(x , 0, 1, [[0,0], [0.02, 0], [0.04, 0.3], [0.4, 0.5], [1,1]])
-      this.lfo.amplitude = stepper(x , 0, 1, [[0,0], [0.5, 0], [0.7, 0.5], [1,1]])
+      this.lfo.amplitude.value = stepper(x , 0, 1, [[0,0], [0.5, 0], [0.7, 0.5], [1,1]])
     }
 
     this.wave_fader = this.gui.Slider({
@@ -233,7 +234,7 @@ export class DatoDuo {
       //mapto: pulseWav.width,
       x: 39, y: 5, size: 2,
       min:0, max: 1,
-      callback: function(x){this.pulseWav.width.value = stepper(x, 0, 1, [[0,0], [0.4, 0.6], [1,1]])},
+      callback: (x)=>{this.pulseWav.width.value = stepper(x, 0, 1, [[0,0], [0.4, 0.6], [1,1]])},
       orientation: 'vertical',
       //showValue: false, 
       link: 'wave'
@@ -244,9 +245,9 @@ export class DatoDuo {
 
     this.freq_fader = this.gui.Slider({
       label:'freq',
-      callback: function(x){this.cutoffSig.value = stepper(x, 500, 2000, [[0,0], [0.6, 0.8], [1,1]])},
+      callback: (x)=>{this.cutoffSig.value = stepper(x, 500, 2000, [[0,0], [0.6, 0.8], [1,1]])},
       x: 49, y: 5, size: 2,
-      min:500, max: 2000,
+      min:500, max: 2000, 
       orientation: 'vertical',
       //showValue: false,
       link: 'freq'
@@ -257,7 +258,7 @@ export class DatoDuo {
 
     this.release_fader = this.gui.Slider({
       label:'release',
-      callback: function(x){ this.filterEnvelope.release = stepper(x, 0.0001, 2, [[0,0], [0.8, 0.5], [1,1]])},
+      callback: (x)=>{ this.filterEnvelope.release = stepper(x, 0.0001, 2, [[0,0], [0.8, 0.5], [1,1]])},
       x: 59, y: 5, size: 2,
       min:0.0001, max: 2,
       orientation: 'vertical',
@@ -270,7 +271,7 @@ export class DatoDuo {
 
     this.resonance_knob = this.gui.Knob({
       label:'res',
-      callback: function(x){ this.filter.Q.value = x},
+      callback: (x)=>{ this.filter.Q.value = x},
       x: 49.5, y: 43, size:.25,
       min:0.99999, max: 30, curve: 2,
       //showValue: false,

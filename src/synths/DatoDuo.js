@@ -39,6 +39,7 @@ export class DatoDuo {
     this.tonePitchshift.connect(this.pulseWav.frequency)
     this.masterFrequency.connect(this.sawPitchshift)
     this.sawPitchshift.connect(this.sawWav.frequency)
+    this.rampTime = .2
 
     this.masterFrequency.value = 500;
     this.tonePitchshift.factor.value = 1;
@@ -120,7 +121,8 @@ export class DatoDuo {
     if(time){
       this.ampEnvelope.triggerAttack(time)
       this.filterEnvelope.triggerAttack(time)
-      this.masterFrequency.setValueAtTime(freq, time)
+      //this.masterFrequency.setValueAtTime(freq, time)
+      this.masterFrequency.exponentialRampToValueAtTime(freq,this.rampTime, time)
       this.velocity.rampTo(amp,.03)
     } else{
       this.ampEnvelope.triggerAttack()
@@ -143,12 +145,14 @@ export class DatoDuo {
     if(time){
       this.ampEnvelope.triggerAttackRelease(dur, time)
       this.filterEnvelope.triggerAttackRelease(dur, time)
-      this.masterFrequency.setValueAtTime(freq, time)
+      //this.masterFrequency.setValueAtTime(freq, time)
+      this.masterFrequency.exponentialRampToValueAtTime(freq,this.rampTime+time)
       this.velocity.rampTo(amp,.03)
     } else{
       this.ampEnvelope.triggerAttackRelease(dur)
       this.filterEnvelope.triggerAttackRelease(dur)
-      this.masterFrequency.value = freq
+      //this.masterFrequency.value = freq
+      this.masterFrequency.exponentialRamp(freq, this.rampTime)
       this.velocity.rampTo(amp,.03)
     }
   }//attackRelease

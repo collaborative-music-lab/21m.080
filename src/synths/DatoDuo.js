@@ -28,22 +28,26 @@ export class DatoDuo {
     this.filter = new Tone.Filter()
     this.ampEnvelope = new Tone.Envelope()
     this.amp = new Tone.Multiply()
-    this.masterOut = new Tone.Multiply(0.05).toDestination()
+    this.output = new Tone.Multiply(0.05).toDestination()
 
     //this.scope = new Oscilloscope('Canvas3')
 
     //connect the initial signal to multipliers for pitch shift
     //connect those to the oscillators
-    this.toneSig.connect(this.tonePitchshift), this.tonePitchshift.connect(this.pulseWav.frequency)
-    this.toneSig.connect(this.sawPitchshift), this.sawPitchshift.connect(this.sawWav.frequency)
+    this.masterFrequency.connect(this.tonePitchshift)
+    this.tonePitchshift.connect(this.pulseWav.frequency)
+    this.masterFrequency.connect(this.sawPitchshift)
+    this.sawPitchshift.connect(this.sawWav.frequency)
 
-    this.toneSig.value = 500;
+    this.masterFrequency.value = 500;
     this.tonePitchshift.factor.value = 1;
     this.sawPitchshift.factor.value = 1;
 
     //connect the oscillators to a mixer and add them together
-    this.pulseWav.connect(this.toneMixer), this.toneMixer.connect(this.filter)
-    this.sawWav.connect(this.sawMixer), this.sawMixer.connect(this.filter)
+    this.pulseWav.connect(this.toneMixer)
+    this.toneMixer.connect(this.filter)
+    this.sawWav.connect(this.sawMixer)
+    this.sawMixer.connect(this.filter)
 
     this.toneMixer.factor.value = 1
     this.sawMixer.factor.value = 1
@@ -107,7 +111,7 @@ export class DatoDuo {
     this.delay.connect(this.delayFilter)
     this.lfo.connect(this.delayFilter.frequency)
     this.delayFilter.connect(this.delayout)
-    this.delayout.connect(this.masterOut)
+    this.delayout.connect(this.output)
   }
 
   //envelopes
@@ -200,7 +204,7 @@ export class DatoDuo {
 
     this.glide_toggle =  this.gui.Toggle({
       label:'Glide',
-      callback: function(x){}, //isGlide = x IDK how to implemement this in class
+      callback: function(x){this.isGlide = x}, //IDK how to implemement this in class
       x: 15, y:10, size: 0.8,
       link: 'glide'
     })
@@ -288,7 +292,7 @@ export class DatoDuo {
 
     this.speaker_knob = this.gui.Knob({
       label:'gain',
-      mapto: this.masterOut.factor,
+      mapto: this.output.factor,
       x: 78, y: 25, size:.25,
       min:0, max: 0.1, curve: 2,
       //showValue: false,
@@ -339,20 +343,20 @@ export class DatoDuo {
     */
 
     function stepper(input, min, max, steps) {
-      this.range = max - min
-      this.rawval = (input - min) / range
+      let range = max - min
+      let rawval = (input - min) / range
       const gui_values = []
       const internal_values = []
-      for (this.i = 0; i < steps.length ; i++) {
-        this.gui_values.push(steps[i][0])
+      for (let i = 0; i < steps.length ; i++) {
+        gui_values.push(steps[i][0])
         internal_values.push(steps[i][1])
       }
-      this.index = 0
+      let index = 0
       while(index < gui_values.length) {
         if (rawval < gui_values[index]) {
-          this.slope = (internal_values[index] - internal_values[index - 1])/(gui_values[index] - gui_values[index-1])
-          this.rawCurved = internal_values[index-1] + slope * (rawval - gui_values[index - 1]) 
-          this.realCurved = (rawCurved * range) + min
+          let slope = (internal_values[index] - internal_values[index - 1])/(gui_values[index] - gui_values[index-1])
+          let rawCurved = internal_values[index-1] + slope * (rawval - gui_values[index - 1]) 
+          let realCurved = (rawCurved * range) + min
           //console.log('input value', input)
           //console.log('curved value', realCurved)
           return realCurved

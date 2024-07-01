@@ -88,7 +88,7 @@ export class DatoDuo {
     this.crushgain = new Tone.Multiply(1)
     this.delaygain = new Tone.Multiply(1)
     this.delayFilter = new Tone.Filter()
-    this.lfo = new Tone.LFO("8n", 1000, 4000)
+    this.lfo = new Tone.LFO("8n", 400, 2000)
 
     this.distout = new Tone.Add()
     this.crushout = new Tone.Add()
@@ -121,8 +121,12 @@ export class DatoDuo {
     if(time){
       this.ampEnvelope.triggerAttack(time)
       this.filterEnvelope.triggerAttack(time)
-      //this.masterFrequency.setValueAtTime(freq, time)
-      this.masterFrequency.exponentialRampToValueAtTime(freq,this.rampTime, time)
+      if (this.isGlide) {
+        this.masterFrequency.exponentialRampToValueAtTime(freq,this.rampTime, time)
+      }
+      else {
+        this.masterFrequency.setValueAtTime(freq, time)
+      }
       this.velocity.rampTo(amp,.03)
     } else{
       this.ampEnvelope.triggerAttack()
@@ -145,14 +149,23 @@ export class DatoDuo {
     if(time){
       this.ampEnvelope.triggerAttackRelease(dur, time)
       this.filterEnvelope.triggerAttackRelease(dur, time)
-      //this.masterFrequency.setValueAtTime(freq, time)
-      this.masterFrequency.exponentialRampToValueAtTime(freq,this.rampTime+time)
+      if (this.isGlide) {
+        this.masterFrequency.exponentialRampToValueAtTime(freq,this.rampTime+time)
+      }
+      else {
+        this.masterFrequency.setValueAtTime(freq, time)
+      }
       this.velocity.rampTo(amp,.03)
+      
     } else{
       this.ampEnvelope.triggerAttackRelease(dur)
       this.filterEnvelope.triggerAttackRelease(dur)
-      //this.masterFrequency.value = freq
-      this.masterFrequency.exponentialRamp(freq, this.rampTime)
+      if (this.isGlide) {
+        this.masterFrequency.exponentialRamp(freq, this.rampTime)
+      }
+      else {
+        this.masterFrequency.value = freq
+      }
       this.velocity.rampTo(amp,.03)
     }
   }//attackRelease
@@ -192,7 +205,7 @@ export class DatoDuo {
     this.distortion_toggle =  this.gui.Toggle({
       label:'Accent',
       mapto: this.dist.wet,
-      x: 85, y:10, size: 0.8,
+      x: 85, y:20, size: 0.8,
       link: 'dist'
     })
     this.distortion_toggle.accentColor = [51,145,219]
@@ -201,7 +214,7 @@ export class DatoDuo {
     this.crusher_toggle =  this.gui.Toggle({
       label:'bitcrusher',
       mapto: this.crusher.wet,
-      x: 90, y:25, size: 0.8,
+      x: 90, y:50, size: 0.8,
       link: 'crusher'
     })
     this.crusher_toggle.accentColor = [46,152,99]
@@ -210,21 +223,10 @@ export class DatoDuo {
     this.glide_toggle =  this.gui.Toggle({
       label:'Glide',
       callback: (x)=>{this.isGlide = x}, //IDK how to implemement this in class
-      x: 15, y:10, size: 0.8,
+      x: 15, y:20, size: 0.8,
       link: 'glide'
     })
     this.glide_toggle.accentColor = [51,145,219]
-
-    this.delay_knob = this.gui.Knob({
-      label:'Delay Control',
-      callback: (x)=>{this.delayControl(x)},
-      x: 10, y: 25, size:0.8,
-      min:0.001, max: 1, curve: 1,
-      //showValue: false,
-      link: 'delayknob'
-    })
-    this.delay_knob.accentColor = [49,48,55]
-    this.delay_knob.set( 0.0001 )
 
     this.delayControl = function(x) {
       this.delay.feedback.value = stepper(x, 0 , 1 , [[0,0], [0.02, 0], [0.8,0.6], [1,1]])
@@ -233,14 +235,24 @@ export class DatoDuo {
       this.lfo.amplitude.value = stepper(x , 0, 1, [[0,0], [0.5, 0], [0.7, 0.5], [1,1]])
     }
 
+    this.delay_knob = this.gui.Knob({
+      label:'Delay Control',
+      callback: (x)=>{this.delayControl(x)},
+      x: 10, y: 50, size:0.8,
+      min:0.001, max: 1, curve: 1,
+      showValue: false,
+      link: 'delayknob'
+    })
+    this.delay_knob.accentColor = [49,48,55]
+    this.delay_knob.set( 0.0001 )
+
     this.wave_fader = this.gui.Slider({
       label:'wave',
-      //mapto: pulseWav.width,
-      x: 39, y: 5, size: 2,
+      x: 39, y: 10, size: 2,
       min:0, max: 1,
       callback: (x)=>{this.pulseWav.width.value = stepper(x, 0, 1, [[0,0], [0.4, 0.6], [1,1]])},
       orientation: 'vertical',
-      //showValue: false, 
+      showValue: false, 
       link: 'wave'
     })
     this.wave_fader.accentColor = [247, 5, 5]
@@ -249,36 +261,36 @@ export class DatoDuo {
 
     this.freq_fader = this.gui.Slider({
       label:'freq',
-      callback: (x)=>{this.cutoffSig.value = stepper(x, 500, 2000, [[0,0], [0.6, 0.8], [1,1]])},
-      x: 49, y: 5, size: 2,
-      min:500, max: 2000, 
+      callback: (x)=>{this.cutoffSig.value = stepper(x, 200, 1200, [[0,0], [0.6, 0.8], [1,1]])},
+      x: 49, y: 10, size: 2,
+      min:200, max: 1200, 
       orientation: 'vertical',
-      //showValue: false,
+      showValue: false,
       link: 'freq'
     })
     this.freq_fader.accentColor = [247, 5, 5]
     this.freq_fader.borderColor = [20, 20, 20]
-    this.freq_fader.set(1250)
+    this.freq_fader.set(700)
 
     this.release_fader = this.gui.Slider({
       label:'release',
-      callback: (x)=>{ this.filterEnvelope.release = stepper(x, 0.0001, 2, [[0,0], [0.8, 0.5], [1,1]])},
-      x: 59, y: 5, size: 2,
-      min:0.0001, max: 2,
+      callback: (x)=>{ this.filterEnvelope.release = stepper(x, 0.1, 1.5, [[0,0], [0.8, 0.5], [1,1]])},
+      x: 59, y: 10, size: 2,
+      min:0.1, max: 1.5,
       orientation: 'vertical',
-      //showValue: false,
+      showValue: false,
       link: 'release'
     })
     this.release_fader.accentColor = [247, 5, 5]
     this.release_fader.borderColor = [20, 20, 20]
-    this.release_fader.set(1)
+    this.release_fader.set(0.8)
 
     this.resonance_knob = this.gui.Knob({
       label:'res',
       callback: (x)=>{ this.filter.Q.value = x},
-      x: 49.5, y: 43, size:.25,
+      x: 49.5, y: 86, size:.25,
       min:0.99999, max: 30, curve: 2,
-      //showValue: false,
+      showValue: false,
       link: 'res'
     })
     this.resonance_knob.accentColor = [49,48,55]
@@ -287,9 +299,9 @@ export class DatoDuo {
     this.detune_knob = this.gui.Knob({
       label:'detune',
       mapto: this.tonePitchshift.factor,
-      x: 22, y: 25, size:.25,
+      x: 22, y: 50, size:.25,
       min:0.99999, max: 2, curve: 1,
-      //showValue: false,
+      showValue: false,
       link: 'detune'
     })
     this.detune_knob.accentColor = [49,48,55]
@@ -298,9 +310,9 @@ export class DatoDuo {
     this.speaker_knob = this.gui.Knob({
       label:'gain',
       mapto: this.output.factor,
-      x: 78, y: 25, size:.25,
+      x: 78, y: 50, size:.25,
       min:0, max: 0.1, curve: 2,
-      //showValue: false,
+      showValue: false,
       link: 'gain'
     })
     this.speaker_knob.accentColor = [49,48,55]
@@ -319,18 +331,18 @@ export class DatoDuo {
 
     this.kick_trigger = this.gui.Button({
       label:'kick',
-      callback: function(){ this.kickPlayer.start()},
+      callback: ()=>{ this.kickPlayer.start()},
       size: 1, border: 20,
-      x:30, y:40, size: 1,
+      x:30, y:80, size: 1,
       link: 'kick'
     })
     this.kick_trigger.accentColor = [20,20,20]
 
     this.snare_trigger = this.gui.Button({
       label:'snare',
-      callback: function(){ this.snarePlayer.start()},
+      callback: ()=>{ this.snarePlayer.start()},
       size: 1, border: 20,
-      x:70, y:40, size: 1,
+      x:70, y:80, size: 1,
       link: 'snare',
     })
     this.snare_trigger.accentColor = [20,20,20]

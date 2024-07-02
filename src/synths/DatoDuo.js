@@ -261,9 +261,11 @@ export class DatoDuo {
 
     this.freq_fader = this.gui.Slider({
       label:'freq',
-      callback: (x)=>{this.cutoffSig.value = stepper(x, 200, 1200, [[0,0], [0.6, 0.8], [1,1]])},
+      //callback: (x)=>{this.cutoffSig.value = stepper(x, 200, 1200, [[0,0], [0.6, 0.8], [1,1]])},
+      callback: (x)=>{this.filterDepth.value = x},
+      mapto: this.cutoffSig,
       x: 49, y: 10, size: 2,
-      min:200, max: 1200, 
+      min:50, max: 2500, curve: 2,
       orientation: 'vertical',
       showValue: false,
       link: 'freq'

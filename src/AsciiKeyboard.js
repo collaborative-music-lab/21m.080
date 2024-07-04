@@ -65,6 +65,16 @@ function AsciiKeyboard() {
     }, [midiOn]);
     
 
+    /*
+    Goal is to have ASCII object which has keydown/up handler
+    enable / disable
+    converts ASCII to x/y
+    export into editor.js
+
+    rename things so I don't go insane
+    
+    */
+
     function handleKeyDown(event) {
         const midiOn = midiOnRef.current;
         if( midiOn ){

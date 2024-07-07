@@ -1,22 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
 import keyboard from './Icons/keyboard.png';
-const midi = require('./Midi.js');
+//const midi = require('./Midi.js');
 function AsciiKeyboard() {
     const [midiOn, setMidiOn] = useState(false);
     const [notesOn, setNotesOn] = useState(new Set());
     const midiOnRef = useRef(midiOn); // Mutable reference to hold the latest value of midiOn
 
     let activeKeys = {};
-    var octave = 4;
 
     useEffect(() => {
-        document.addEventListener('keydown', handleKeyDown);
-        document.addEventListener('keyup', handleKeyUp);
+        document.addEventListener('keydown', keyDown);
+        document.addEventListener('keyup', keyUp);
 
         // Cleanup: Remove the event listeners when the component unmounts
         return () => {
-            document.removeEventListener('keydown', handleKeyDown);
-            document.removeEventListener('keyup', handleKeyUp);
+            document.removeEventListener('keydown', keyDown);
+            document.removeEventListener('keyup', keyUp);
         };
     },[]);
 
@@ -40,22 +39,14 @@ function AsciiKeyboard() {
         const midiOn = midiOnRef.current;
         if( midiOn ){
             const keyCode = event.keyCode;
+            let note = keyCode
             if (!activeKeys[keyCode]) {
                 activeKeys[keyCode] = true;
                 try {
-                    let note = keyToNote[keyCode];
-                    let midiNote = note["midi"] + (octave - 4) * 12;
-                    if (midiNote <= 127) {
-                        setNotesOn(new Set(notesOn).add(midiNote));
-                        midi.midiHandlerInstance.handleNoteOn(midiNote, 100);
-                    }
+                    setNotesOn(new Set(notesOn).add(note));
+                    asciiHandlerInstance.asciiHandler(note, 'down');
                 } catch (error) {
-                    if (keyCode === 37) {
-                        decreaseOctave();
-                    } else if (keyCode === 39) {
-                        increaseOctave();
-                    }
-                    //console.log(octave)
+                    console.log(note)
                 }
             }
         }
@@ -64,29 +55,16 @@ function AsciiKeyboard() {
         const midiOn = midiOnRef.current;
         if( midiOn ){
             const keyCode = event.keyCode;
+            let note = keyCode
             activeKeys[keyCode] = false;
             try {
-                let note = keyToNote[keyCode];
-                let midiNote = note["midi"] + (octave - 4) * 12;
-                if (midiNote <= 127) {
-                    setNotesOn(new Set(notesOn).delete(midiNote));
-                    midi.midiHandlerInstance.handleNoteOff(midiNote, 0);
-                }
+                setNotesOn(new Set(notesOn).delete(note));
+                asciiHandlerInstance.asciiHandler(note, 'up');
             } catch (error) {
             }
         }
     }
 
-    function increaseOctave() {
-        if (octave < 7) {
-            octave++;
-        }
-    }
-    function decreaseOctave() {
-        if (octave > 1) {
-            octave--;
-        }
-    }
     const midiClicked = () => {
         setMidiOn(midiOn === false ? true : false);          
     }
@@ -103,3 +81,21 @@ function AsciiKeyboard() {
     );
 }
 export default AsciiKeyboard;
+
+class AsciiHandler {
+    constructor() {
+        this.asciiHandler = (key, upOrDown) => {
+            console.log('Default ASCII Handler:', key);
+            console.log(`Define your own note ${upOrDown} handler like this:\nsetASCIIHandler(( note, upOrDown) => { <your code here> }) `)
+        };
+    }
+
+    handleAscii(note, velocity) {
+        this.asciiHandler(note, velocity);
+    }
+
+    setAsciiHandler(func) {
+        this.asciiHandler = func;
+    }
+}
+export const asciiHandlerInstance = new AsciiHandler();

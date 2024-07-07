@@ -187,7 +187,9 @@ export class Daisies {
     this.activeNotes = [-1,-1,-1,-1, -1,-1,-1,-1]
     this.noteOrder = [7,0,1,2,3,4,5,6]
   }
-  // //trigger methods
+  /**************** 
+   * trigger methods
+  ***************/
   triggerAttack = function(val, vel=100, time=null){
     this.v = this.getNewVoice(val)
     if(time){
@@ -244,20 +246,17 @@ export class Daisies {
 	  if (this.voiceCounter >= this.numVoices) {
 	    this.voiceCounter = 0; // Reset voice counter if it exceeds the number of voices
 	  }
-	  //console.log('new voice ', num, this.voiceCounter);
 
 	  //keep track of note order
 	  this.prevNote = this.noteOrder.shift();
 	  this.noteOrder.push(num);
 
-	  // Look for free notes
+	  //if note is already playing free it
 	  for (let i = 0; i < this.numVoices; i++) {
-	  	//if note is already playing free it
-	  	if(this.activeNotes[i] == num ) this.triggerRelease(num)
-	  	
+	  	if(this.activeNotes[i] == num ) this.triggerRelease(num)	
 	  }
+		//look for free voice
 	  for (let i = 0; i < this.numVoices; i++) {
-	  //look for free voice
 	    const index = (i + this.voiceCounter) % this.numVoices;
 	    if (this.activeNotes[index] < 0) {
 	      this.activeNotes[index] = num;
@@ -267,26 +266,17 @@ export class Daisies {
 	    }
 	  }
 
-	    this.voiceCounter = (this.voiceCounter + 1) % this.numVoices; // Prepare for the next voice
-	    return this.voiceCounter
+    this.voiceCounter = (this.voiceCounter + 1) % this.numVoices; // Prepare for the next voice
+    return this.voiceCounter
 	  
-	  // // If no inactive voice, replace the oldest note
-	  // if (this.prevNote !== undefined) {
-	  //   const oldestNoteIndex = this.activeNotes.indexOf(this.prevNote);
-	  //   if (oldestNoteIndex !== -1) {
-	  //     this.activeNotes[oldestNoteIndex] = num;
-	  //     this.voiceCounter = (oldestNoteIndex + 1) % this.numVoices; // Update for the next voice
-	  //     console.log('steal voice', this.voiceCounter)
-	  //     return oldestNoteIndex;
-	  //   }
-	  // }
-
 	  // Fallback if the above logic didn't return
 	  //console.log('fallback', this.voiceCounter)
 	  const returnValue = this.voiceCounter;
 	  this.voiceCounter = (this.voiceCounter + 1) % this.numVoices;
 	  return returnValue;
-	}
+	}//getNewVoice
+
+	//returns the voice playing the selected note
   getActiveVoice= function(num){    
     for(let i=0;i<this.numVoices;i++){
       if(this.activeNotes[i]==num){
@@ -297,6 +287,7 @@ export class Daisies {
     }
     return -1
   }//getActiveVoice
+
   panic = function(){
     for(let i=0;i<this.numVoices;i++){
       this.voice[i].env.triggerRelease()
@@ -392,6 +383,14 @@ export class Daisies {
       this.output.connect(destination.input);
     } else {
       this.output.connect(destination);
+    }
+  }
+
+	disconnect(destination) {
+    if (destination.input) {
+      this.output.disconnect(destination.input);
+    } else {
+      this.output.disconnect(destination);
     }
   }
 

@@ -471,7 +471,7 @@ function Editor(props) {
                 exportAsLink();
                 break;
             case 'textFile':
-                handleExportFile();
+                exportAsTextFile();
                 break;
             case 'webPage':
                 exportAsWebPage();
@@ -494,41 +494,8 @@ function Editor(props) {
         URL.revokeObjectURL(url);
     }
 
-    function exportAsTextFile(code) {
-        let filename = prompt('Enter the filename:', 'mySynth.txt');
-        if (!filename) {
-            filename = 'mySynth.txt';  // Default filename if the user cancels the prompt
-        }
-        const blob = new Blob([code], { type: 'text/plain' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = filename;
-        a.click();
-    }
-
-    function exportAsWebPage(code) {
-        const htmlContent = `
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Exported Code</title>
-            </head>
-            <body>
-                <pre>${code}</pre>
-            </body>
-            </html>
-        `;
-        const blob = new Blob([htmlContent], { type: 'text/html' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'code.html';
-        a.click();
-    }
-
     //Export webpage code
-    const handleExportFile = () => {
+    const exportAsTextFile = () => {
         const blob = new Blob([localStorage.getItem(`${props.page}Value`)], { type: 'text/plain' });
         let filename = prompt('Enter the filename:', 'mySynth.txt');
         if (!filename) {
@@ -558,10 +525,26 @@ function Editor(props) {
     };
       //end export dialog support
 
-    const handleFilenameChange = (e) => {
-      setexportFileName( e.target.value );
-      //console.log('export file name ', exportFileName)
-    };
+    function exportAsWebPage(code) {
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Exported Code</title>
+            </head>
+            <body>
+                <pre>${code}</pre>
+            </body>
+            </html>
+        `;
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'code.html';
+        a.click();
+    }
 
     /**** RESIZE CANVAS ****/
     const codeMinClicked = () => {

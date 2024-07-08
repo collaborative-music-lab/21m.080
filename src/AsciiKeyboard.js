@@ -64,15 +64,6 @@ function AsciiKeyboard() {
             }
         }
     }
-
-    const enableAsciiKeyboard = () => {
-        setAsciiOn(true);          
-    }
-    //return
-    const disableAsciiKeyboard = () => {
-        setAsciiOn(false);         
-    }
-    //return;
 }
 export default AsciiKeyboard;
 
@@ -91,5 +82,16 @@ class AsciiHandler {
     setAsciiHandler(func) {
         this.asciiHandler = func;
     }
+
+    enableAsciiInput() {
+        //setAsciiOn(true);    
+        console.log(AsciiKeyboard)      
+    }
+
+    disableAsciiInput() {
+        //setAsciiOn(false); 
+        //console.log("disable ascii in")            
+    }
+
 }
 export const asciiHandlerInstance = new AsciiHandler();

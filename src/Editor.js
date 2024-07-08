@@ -33,8 +33,8 @@ function Editor(props) {
     window.plotTransferFunction = PlotTransferFunction;
     //window.gui_sketch = gui_sketch;
 
-    window.enableAsciiInput = ascii.enableAsciiInput;
-    window.disableAsciiInput = ascii.disableAsciiInput;
+    window.enableAsciiInput = ascii.asciiHandlerInstance.enableAsciiInput;
+    window.disableAsciiInput = ascii.asciiHandlerInstance.disableAsciiInput;
     window.setAsciiHandler = ascii.asciiHandlerInstance.setAsciiHandler.bind(ascii.asciiHandlerInstance);
     
     

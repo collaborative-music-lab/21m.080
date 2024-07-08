@@ -1,8 +1,8 @@
 class KickDrum{
   constructor(freq=60,decay=.4,tone=.2) {
     this.vco = new Tone.Oscillator().start()
-    this. shaperGain = new Tone.Multiply(tone)
-    this. waveShaper = new Tone.WaveShaper((x)=>{
+    this.shaperGain = new Tone.Multiply(tone)
+    this.waveShaper = new Tone.WaveShaper((x)=>{
       return Math.tanh(x*16) *.9
     })
     this.vca = new Tone.Multiply()

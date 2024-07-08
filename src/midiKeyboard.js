@@ -25,7 +25,27 @@ function MidiKeyboard() {
         76: { "midi": 73, "pitch": "C#/Db" }, // L
         190: { "midi": 74, "pitch": "D" },     // . (or > depending on keyboard)
         186: { "midi": 75, "pitch": "D#/Eb" }, // ; (or : depending on keyboard)
-        191: { "midi": 76, "pitch": "E" }      // / (or ? depending on keyboard)
+        191: { "midi": 76, "pitch": "E" },      // / (or ? depending on keyboard)
+
+        //second octave
+        
+        81: { "midi": 72, "pitch": "C" },     // Q
+        50: { "midi": 73, "pitch": "C#/Db" }, // 2
+        87: { "midi": 74, "pitch": "D" },     // W
+        51: { "midi": 75, "pitch": "D#/Eb" }, // 3
+        69: { "midi": 76, "pitch": "E" }, // E
+        82: { "midi": 77, "pitch": "F" }, // R
+        53: { "midi": 78, "pitch": "F#/Gb" }, // 5
+        84: { "midi": 79, "pitch": "G" }, // T
+        54: { "midi": 80, "pitch": "G#/Ab" }, // 6
+        89: { "midi": 81, "pitch": "A" }, // Y
+        55: { "midi": 82, "pitch": "A#/Bb" }, // 7
+        85: { "midi": 83, "pitch": "B" }, // U
+        73: { "midi": 84, "pitch": "C" }, // I
+        57: { "midi": 85, "pitch": "C#/Db" }, // 9
+        79: { "midi": 86, "pitch": "D" }, // O
+        48: { "midi": 87, "pitch": "D#/Eb" }, // 0
+        80: { "midi": 88, "pitch": "E" }, // P
     };
 
     useEffect(() => {

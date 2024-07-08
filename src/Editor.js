@@ -3,7 +3,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import { historyField } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
 import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
-        Rumble, Daisies, Stripe, Diffuseur, KP, Sympathy} from './synths/index.js';
+        Rumble, Daisies, DatoDuo, Stripe, Diffuseur, KP, Sympathy} from './synths/index.js';
 import Bessel from 'bessel';
 
 
@@ -15,6 +15,7 @@ import Canvas from "./Canvas.js";
 //import gui_sketch from "./gui.js";
 import { Oscilloscope, Spectroscope, PlotTransferFunction } from './oscilloscope';
 import MidiKeyboard from './MidiKeyboard.js';
+import { asciiHandlerInstance } from './AsciiHandler.js';
 const midi = require('./Midi.js');
 //Save history in browser
 const stateFields = { history: historyField };
@@ -31,6 +32,13 @@ function Editor(props) {
     window.Spectroscope = Spectroscope;
     window.plotTransferFunction = PlotTransferFunction;
     //window.gui_sketch = gui_sketch;
+
+    window.asciiHandlerInstance = asciiHandlerInstance;
+    window.enableAsciiInput = asciiHandlerInstance.enableAsciiInput.bind(asciiHandlerInstance);
+    window.disableAsciiInput = asciiHandlerInstance.disableAsciiInput.bind(asciiHandlerInstance);
+    window.setAsciiHandler = asciiHandlerInstance.setAsciiHandler.bind(asciiHandlerInstance);
+    
+    
     window.setMidiInput = midi.setMidiInput;
     window.setNoteOnHandler = midi.midiHandlerInstance.setNoteOnHandler.bind(midi.midiHandlerInstance);
     window.setNoteOffHandler = midi.midiHandlerInstance.setNoteOffHandler.bind(midi.midiHandlerInstance);
@@ -38,6 +46,7 @@ function Editor(props) {
 
     //synths
     window.NoiseVoice = NoiseVoice
+    window.DatoDuo = DatoDuo
     window.Resonator = Resonator
     window.ToneWood = ToneWood
     window.DelayOp = DelayOp
@@ -461,12 +470,45 @@ function Editor(props) {
         localStorage.setItem(`${props.page}Value`, props.starterCode);
     }
 
+    /******** EXPORT DATA ******/
+    function exportCode() {
+        const selectedOption = document.getElementById('exportOptions').value;
+        //const codeContent = document.getElementById('codeContent').innerText;
+
+        switch (selectedOption) {
+            case 'link':
+                exportAsLink();
+                break;
+            case 'textFile':
+                exportAsTextFile();
+                break;
+            case 'webPage':
+                exportAsWebPage();
+                break;
+            default:
+                alert('Please select an export option.');
+        }
+        document.getElementById('exportOptions').value = "default";
+    }
+
+    function exportAsLink(code) {
+        const blob = new Blob([code], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'code.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
     //Export webpage code
-    const handleExportFile = (fileName) => {
+    const exportAsTextFile = () => {
         const blob = new Blob([localStorage.getItem(`${props.page}Value`)], { type: 'text/plain' });
-        let tempName = 'mySynth';
-        if (exportFileName !== 'Enter filename...') {
-            tempName = exportFileName;
+        let filename = prompt('Enter the filename:', 'mySynth.txt');
+        if (!filename) {
+            filename = 'mySynth.txt';  // Default filename if the user cancels the prompt
         }
         console.log(localStorage.getItem(`${props.page}Value`))
 
@@ -478,7 +520,7 @@ function Editor(props) {
         // Set the anchor's href attribute to the URL
         a.href = url;
         // Set the anchor's download attribute to specify the filename
-        a.download = tempName; // Set the default filename
+        a.download = filename; // Set the default filename
         // Append the anchor element to the document
         //console.log(a)
         document.body.appendChild(a);
@@ -488,16 +530,32 @@ function Editor(props) {
         document.body.removeChild(a);
         // Revoke the URL to free up resources
         URL.revokeObjectURL(url);
-        console.log(`Exporting file with name: ${tempName}`);
+        console.log(`Exporting file with name: ${filename}`);
     };
       //end export dialog support
 
-    const handleFilenameChange = (e) => {
-      setexportFileName( e.target.value );
-      //console.log('export file name ', exportFileName)
-    };
+    function exportAsWebPage(code) {
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Exported Code</title>
+            </head>
+            <body>
+                <pre>${code}</pre>
+            </body>
+            </html>
+        `;
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'code.html';
+        a.click();
+    }
 
-
+    /**** RESIZE CANVAS ****/
     const codeMinClicked = () => {
         setCodeMinimized(!codeMinimized);
         for (let id of canvases) {
@@ -529,6 +587,7 @@ function Editor(props) {
         }
     }
 
+    /**** CREATE HTML ******/
     const liveCSS = liveMode ? 'button-container active' : 'button-container';
 
     return (
@@ -545,9 +604,14 @@ function Editor(props) {
                         </span>
                         <span className="span-container">
                             
-                            <input  type="text" value={exportFileName} id="filenameInput"
-                                placeholder="Enter filename..." onChange={handleFilenameChange} />
-                            <button className="button-container" onClick={handleExportFile}>Export</button>
+
+                            <select id="exportOptions" onChange={exportCode} defaultValue="default">
+                                <option value="default" disabled>Export Code</option>
+                                <option value="link">Link to Code</option>
+                                <option value="textFile">Text File</option>
+                                <option value="webPage">Web Page</option>
+                            </select>
+
                             {!p5Minimized &&
                                 <button className="button-container" onClick={codeMinClicked}>-</button>
                             }

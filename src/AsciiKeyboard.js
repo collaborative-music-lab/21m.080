@@ -69,6 +69,7 @@ export default AsciiKeyboard;
 
 class AsciiHandler {
     constructor() {
+        console.log("ASCII handler instantiated")
         this.asciiHandler = (key, upOrDown) => {
             console.log('Default ASCII Handler:', key);
             console.log(`Define your own note ${upOrDown} handler like this:\nsetASCIIHandler(( note, upOrDown) => { <your code here> }) `)
@@ -84,13 +85,13 @@ class AsciiHandler {
     }
 
     enableAsciiInput() {
-        //setAsciiOn(true);    
+        //this.setAsciiOn(true);    
         console.log(AsciiKeyboard)      
     }
 
     disableAsciiInput() {
-        //setAsciiOn(false); 
-        //console.log("disable ascii in")            
+        //this.setAsciiOn(false); 
+        console.log("disable ascii in")            
     }
 
 }

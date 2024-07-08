@@ -15,7 +15,7 @@ import Canvas from "./Canvas.js";
 //import gui_sketch from "./gui.js";
 import { Oscilloscope, Spectroscope, PlotTransferFunction } from './oscilloscope';
 import MidiKeyboard from './MidiKeyboard.js';
-const ascii = require('./AsciiKeyboard.js');
+import { asciiHandlerInstance } from './AsciiHandler.js';
 const midi = require('./Midi.js');
 //Save history in browser
 const stateFields = { history: historyField };
@@ -33,9 +33,10 @@ function Editor(props) {
     window.plotTransferFunction = PlotTransferFunction;
     //window.gui_sketch = gui_sketch;
 
-    window.enableAsciiInput = ascii.asciiHandlerInstance.enableAsciiInput;
-    window.disableAsciiInput = ascii.asciiHandlerInstance.disableAsciiInput;
-    window.setAsciiHandler = ascii.asciiHandlerInstance.setAsciiHandler.bind(ascii.asciiHandlerInstance);
+    window.asciiHandlerInstance = asciiHandlerInstance;
+    window.enableAsciiInput = asciiHandlerInstance.enableAsciiInput.bind(asciiHandlerInstance);
+    window.disableAsciiInput = asciiHandlerInstance.disableAsciiInput.bind(asciiHandlerInstance);
+    window.setAsciiHandler = asciiHandlerInstance.setAsciiHandler.bind(asciiHandlerInstance);
     
     
     window.setMidiInput = midi.setMidiInput;

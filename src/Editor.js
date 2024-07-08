@@ -14,7 +14,7 @@ import * as Tone from 'tone';
 import Canvas from "./Canvas.js";
 //import gui_sketch from "./gui.js";
 import { Oscilloscope, Spectroscope, PlotTransferFunction } from './oscilloscope';
-import MidiKeyboard from './MidiKeyboard.js';
+import MidiKeyboard from './midiKeyboard.js';
 const midi = require('./Midi.js');
 //Save history in browser
 const stateFields = { history: historyField };
@@ -56,6 +56,7 @@ function Editor(props) {
 
     // Save history in browser
     const serializedState = localStorage.getItem(`${props.page}EditorState`);
+
     const value = localStorage.getItem(`${props.page}Value`) || props.starterCode;
     //const value = 'let CHANNEL = 3'
     const [height, setHeight] = useState(false);
@@ -483,15 +484,11 @@ function Editor(props) {
     }
 
     function exportAsLink(code) {
-        const blob = new Blob([code], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'code.txt';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        const liveCode = localStorage.getItem(`${props.page}Value`);
+        const encodedCode = btoa(liveCode);
+        const url = `${window.location.origin}${window.location.pathname}?code=${encodedCode}`;
+        navigator.clipboard.writeText(url);
+        console.log('copy');
     }
 
     //Export webpage code

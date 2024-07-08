@@ -57,7 +57,19 @@ function Editor(props) {
     // Save history in browser
     const serializedState = localStorage.getItem(`${props.page}EditorState`);
 
-    const value = localStorage.getItem(`${props.page}Value`) || props.starterCode;
+    // Decoding the URL
+    const URLParams = new URLSearchParams(window.location.search);
+    const encodedContent = URLParams.get('code');
+    let value;
+    if (encodedContent) {
+        value = atob(encodedContent);
+        // const url = window.location.origin + window.location.pathname;
+        // window.location.assign(url);
+    } else {
+        value = localStorage.getItem(`${props.page}Value`) || props.starterCode;
+    }
+    
+
     //const value = 'let CHANNEL = 3'
     const [height, setHeight] = useState(false);
     const [code, setCode] = useState(value); //full string of user code

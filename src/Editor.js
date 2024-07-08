@@ -7,7 +7,7 @@ import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
 import Bessel from 'bessel';
 
 
-
+import {Sequencer} from './Sequencer.js';
 import p5 from 'p5';
 import * as Tone from 'tone';
 //import ml5 from 'ml5';
@@ -48,6 +48,7 @@ function Editor(props) {
     window.Diffuseur = Diffuseur
     window.KP = KP
     window.Sympathy = Sympathy
+    window.Sequencer = Sequencer
 
 
     var curLineNum = 0;

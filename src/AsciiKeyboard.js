@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import keyboard from './Icons/keyboard.png';
 //const midi = require('./Midi.js');
 function AsciiKeyboard() {
-    const [midiOn, setMidiOn] = useState(false);
+    const [asciiOn, setAsciiOn] = useState(false);
     const [notesOn, setNotesOn] = useState(new Set());
-    const midiOnRef = useRef(midiOn); // Mutable reference to hold the latest value of midiOn
+    const asciiOnRef = useRef(asciiOn); // Mutable reference to hold the latest value of asciiOn
 
     let activeKeys = {};
 
@@ -19,10 +19,10 @@ function AsciiKeyboard() {
         };
     },[]);
 
-    // Update the mutable reference whenever midiOn changes
+    // Update the mutable reference whenever asciiOn changes
     useEffect(() => {
-        midiOnRef.current = midiOn;
-    }, [midiOn]);
+        asciiOnRef.current = asciiOn;
+    }, [asciiOn]);
     
 
     /*
@@ -36,8 +36,8 @@ function AsciiKeyboard() {
     */
 
     function keyDown(event) {
-        const midiOn = midiOnRef.current;
-        if( midiOn ){
+        const asciiOn = asciiOnRef.current;
+        if( asciiOn ){
             const keyCode = event.keyCode;
             let note = keyCode
             if (!activeKeys[keyCode]) {
@@ -52,8 +52,8 @@ function AsciiKeyboard() {
         }
     }
     function keyUp(event) {
-        const midiOn = midiOnRef.current;
-        if( midiOn ){
+        const asciiOn = asciiOnRef.current;
+        if( asciiOn ){
             const keyCode = event.keyCode;
             let note = keyCode
             activeKeys[keyCode] = false;
@@ -65,20 +65,14 @@ function AsciiKeyboard() {
         }
     }
 
-    const midiClicked = () => {
-        setMidiOn(midiOn === false ? true : false);          
+    const enableAsciiKeyboard = () => {
+        setAsciiOn(true);          
     }
-    const keyboardCSS = midiOn ? 'icon active' : 'icon inactive';
-    return (
-        <div className='span-container'>
-            {Array.from(notesOn).map((midiNote) => (
-                <div key={midiNote}>{midiNote}</div>
-            ))}
-            <button className="invisible-button" onClick={midiClicked} >
-                <img className={keyboardCSS} src={keyboard} alt="Keyboard" />
-            </button>
-        </div>
-    );
+    //return
+    const disableAsciiKeyboard = () => {
+        setAsciiOn(false);         
+    }
+    //return;
 }
 export default AsciiKeyboard;
 

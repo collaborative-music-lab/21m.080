@@ -17,9 +17,12 @@ class AsciiCallback {
         if (!this.asciiOn) return;
 
         const keyCode = event.keyCode;
-        if (!this.activeKeys[keyCode]) {
-            this.activeKeys[keyCode] = true;
-            this.handler(keyCode, 'down');
+        let key = keyCode
+        if( keyCode == 32 ) key = 'Space'
+        else key = event.key;
+        if (!this.activeKeys[key]) {
+            this.activeKeys[key] = true;
+            this.handler(key, 'down');
         }
     }
 
@@ -27,9 +30,12 @@ class AsciiCallback {
         if (!this.asciiOn) return;
 
         const keyCode = event.keyCode;
-        if (this.activeKeys[keyCode]) {
-            this.activeKeys[keyCode] = false;
-            this.handler(keyCode, 'up');
+        let key = keyCode
+        if( keyCode == 32 ) key = 'Space'
+        else key = event.key;
+        if (this.activeKeys[key]) {
+            this.activeKeys[key] = false;
+            this.handler(key, 'up');
         }
     }
 

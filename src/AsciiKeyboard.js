@@ -4,7 +4,8 @@ class AsciiCallback {
     constructor() {
         this.asciiOn = false;
         this.handler = (key, upOrDown) => {
-            console.log('Default Handler:', key, upOrDown);
+            console.log('Ascii', key, upOrDown,
+                '\nadd a new handler like: \nsetAsciiHandler((num,state)=>{\nconsole.log(num, state)})');
         };
         this.activeKeys = {};
         

@@ -1,3 +1,5 @@
+//Sometimes you have to ask chatGPT to start from scratch :-)
+
 class AsciiCallback {
     constructor() {
         this.asciiOn = false;

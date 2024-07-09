@@ -15,7 +15,7 @@ import Canvas from "./Canvas.js";
 //import gui_sketch from "./gui.js";
 import { Oscilloscope, Spectroscope, PlotTransferFunction } from './oscilloscope';
 import MidiKeyboard from './MidiKeyboard.js';
-import { asciiHandlerInstance } from './AsciiHandler.js';
+import { asciiHandlerInstance } from './AsciiKeyboard.js';
 const midi = require('./Midi.js');
 //Save history in browser
 const stateFields = { history: historyField };

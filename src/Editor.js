@@ -4,25 +4,19 @@ import { historyField } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
 import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
         Rumble, Daisies, DatoDuo, Stripe, Diffuseur, KP, Sympathy} from './synths/index.js';
-import Bessel from 'bessel';
-
 
 import {Sequencer} from './Sequencer.js';
 import p5 from 'p5';
 import * as Tone from 'tone';
 //import ml5 from 'ml5';
 import Canvas from "./Canvas.js";
-//import gui_sketch from "./gui.js";
 import { Oscilloscope, Spectroscope, PlotTransferFunction } from './oscilloscope';
 import MidiKeyboard from './MidiKeyboard.js';
-import { asciiHandlerInstance } from './AsciiKeyboard.js';
+import { asciiCallbackInstance } from './AsciiKeyboard.js';
 const midi = require('./Midi.js');
+
 //Save history in browser
 const stateFields = { history: historyField };
-
-// Initialize the Tone context
-let audioContext = new AudioContext();
-// Tone.setContext(audioContext);
 
 function Editor(props) {
     window.p5 = p5;
@@ -31,13 +25,10 @@ function Editor(props) {
     window.Oscilloscope = Oscilloscope;
     window.Spectroscope = Spectroscope;
     window.plotTransferFunction = PlotTransferFunction;
-    //window.gui_sketch = gui_sketch;
 
-    window.asciiHandlerInstance = asciiHandlerInstance;
-    window.enableAsciiInput = asciiHandlerInstance.enableAsciiInput.bind(asciiHandlerInstance);
-    window.disableAsciiInput = asciiHandlerInstance.disableAsciiInput.bind(asciiHandlerInstance);
-    window.setAsciiHandler = asciiHandlerInstance.setAsciiHandler.bind(asciiHandlerInstance);
-    
+    window.enableAsciiInput = asciiCallbackInstance.enable.bind(asciiCallbackInstance);
+    window.disableAsciiInput = asciiCallbackInstance.disable.bind(asciiCallbackInstance);
+    window.setAsciiHandler = asciiCallbackInstance.setHandler.bind(asciiCallbackInstance);
     
     window.setMidiInput = midi.setMidiInput;
     window.setNoteOnHandler = midi.midiHandlerInstance.setNoteOnHandler.bind(midi.midiHandlerInstance);
@@ -59,9 +50,7 @@ function Editor(props) {
     window.Sympathy = Sympathy
     window.Sequencer = Sequencer
 
-
     var curLineNum = 0;
-    let p5Elements = ["p5", "Knob", "Fader", "Button", "Toggle", "RadioButton"];
 
     // Save history in browser
     const serializedState = localStorage.getItem(`${props.page}EditorState`);
@@ -72,15 +61,12 @@ function Editor(props) {
     var vars = {}; //current audioNodes
     var innerScopeVars = {}; //maps vars inside scope to a list of its instances
     window.innerScopeVars = innerScopeVars;
-    const [liveMode, setLiveMode] = useState(true); //live mode is on by default
     const [refresh, setRefresh] = useState(false);
 
     const canvases = props.canvases;
     const [codeMinimized, setCodeMinimized] = useState(false);
     const [p5Minimized, setP5Minimized] = useState(false);
     const [maximized, setMaximized] = useState('');
-
-    const [exportFileName, setexportFileName] = useState('Enter filename...');
 
     useEffect(() => {
         const container = document.getElementById('container');
@@ -134,7 +120,6 @@ function Editor(props) {
                     string = string.substring(0, node.start + incr) + string.substring(node.start + incr + kind.length);
                     incr -= kind.length;
                 }
-                ///console.log('2',string)
                 //Continue walk to search for identifiers
                 for (const declaration of node.declarations) {
                     let name = declaration.id.name;
@@ -160,7 +145,6 @@ function Editor(props) {
                             innerScopeVars[name] = [];
                         }
                     }
-                    //console.log('4',string)
                     //In case of no assignment, set to var to null
                     let init = declaration.init;
                     if (!init && !state.forLoop) {
@@ -169,14 +153,6 @@ function Editor(props) {
                         incr += length2;
                     }
                     else if (init) {
-                        let val = string.substring(init.start + incr, init.end + incr);
-                        for (let canvas of canvases) {
-                            //console.log('6',canvas, canvases, val)
-                            // if (val.includes(canvas) && !p5Elements.some(word => val.includes(word))) {
-                            //     p5Code += `${canvas}.elements[${name}]="${val}"\n`;
-                            //     console.log('p5 code', p5Code)
-                            // }
-                        }
                         if (init.body) {
                             let newState = {
                                 innerScope: true,
@@ -287,7 +263,7 @@ function Editor(props) {
             catch(e){console.log(e)}
         }
         for (const [key, instances] of Object.entries(innerScopeVars)) {
-            if (liveMode && !cleanedCode.includes(key)) {
+            if (!cleanedCode.includes(key)) {
                 for (const instance of instances) {
                     try {
                         instance.stop();
@@ -309,19 +285,17 @@ function Editor(props) {
         }
 
         //Remove all vars that have been deleted from full code
-        if (liveMode) {
-            for (const [key, val] of Object.entries(vars)) {
-                if (!(key in vars)) {
-                    if (!(cleanedCode.includes(key.substring(0, key.length - 4)))) {
-                        try {
-                            val.stop();
-                        } catch (error) {
-                            //val not playing sound
-                        }
+        for (const [key, val] of Object.entries(vars)) {
+            if (!(key in vars)) {
+                if (!(cleanedCode.includes(key.substring(0, key.length - 4)))) {
+                    try {
+                        val.stop();
+                    } catch (error) {
+                        //val not playing sound
                     }
-                    else {
-                        vars[key] = val;
-                    }
+                }
+                else {
+                    vars[key] = val;
                 }
             }
         }
@@ -402,20 +376,18 @@ function Editor(props) {
 
     //Handle Live Mode Key Funcs
     const handleKeyDown = (event) => {
-        if (liveMode) {
-            if (event.altKey && event.shiftKey && event.key === 'Enter') {
-                // if (prevLineNum !== curLineNum) {
-                //     setRemoveEnter(true);
-                // }
-                evaluateBlock();
-            }
-            // else if (event.ctrlKey) {
-            //     setPrevLineNum(curLineNum);
+        if (event.altKey && event.shiftKey && event.key === 'Enter') {
+            // if (prevLineNum !== curLineNum) {
+            //     setRemoveEnter(true);
             // }
-            else if (event.altKey && event.key === 'Enter') {
-                evaluateLine();
-            }
+            evaluateBlock();
         }
+        // else if (event.ctrlKey) {
+        //     setPrevLineNum(curLineNum);
+        // }
+        else if (event.altKey && event.key === 'Enter') {
+            evaluateLine();
+        }   
     };
 
 
@@ -427,10 +399,6 @@ function Editor(props) {
     const playClicked = () => {
         stopClicked();
         traverse(code);
-
-    }
-    const liveClicked = () => {
-        setLiveMode(!liveMode);
     }
     const stopClicked = () => {
         clearCanvases();
@@ -588,8 +556,6 @@ function Editor(props) {
     }
 
     /**** CREATE HTML ******/
-    const liveCSS = liveMode ? 'button-container active' : 'button-container';
-
     return (
         <div id="flex" className="flex-container" >
             {!codeMinimized &&

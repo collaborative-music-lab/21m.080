@@ -8,6 +8,7 @@ import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
 import {Sequencer} from './Sequencer.js';
 import p5 from 'p5';
 import * as Tone from 'tone';
+import * as Theory from './Theory.js';
 //import ml5 from 'ml5';
 import Canvas from "./Canvas.js";
 import { Oscilloscope, Spectroscope, PlotTransferFunction } from './oscilloscope';
@@ -21,6 +22,7 @@ const stateFields = { history: historyField };
 function Editor(props) {
     window.p5 = p5;
     window.Tone = Tone;
+    window.Theory = Theory;
     //window.ml5 = ml5;
     window.Oscilloscope = Oscilloscope;
     window.Spectroscope = Spectroscope;

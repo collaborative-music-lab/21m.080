@@ -106,7 +106,7 @@ export class Daisy{
 
 	this.vca = new Tone.Multiply()
 	this.panner = new Tone.Panner(0)
-	this.output = new Tone.Multiply(.5)
+	this.output = new Tone.Multiply(.25)
 	this.lpf.connect(this.vca)
 	this.vca.connect(this.panner)
 	this.panner.connect(this.output)
@@ -390,6 +390,7 @@ export class Daisies {
     if (destination.input) {
       this.output.disconnect(destination.input);
     } else {
+
       this.output.disconnect(destination);
     }
   }

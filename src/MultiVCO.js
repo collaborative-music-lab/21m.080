@@ -11,8 +11,8 @@ import * as Tone from 'tone';
 export class MultiVCO{
     constructor(vcos = ['triangle','sawtooth','square'], pitchshift = [1,1,1]){
         this.numInputs = vcos.length
-        this.input = new Tone.Multiply(1)
-        this.output = new Tone.Multiply(.05)
+        this.frequency = new Tone.Multiply(1)
+        this.output = new Tone.Multiply(.1)
 
         this.freqScalars= []
         this.gainStages = []
@@ -23,7 +23,7 @@ export class MultiVCO{
             this.vco.push(new Tone.Oscillator({type:vcos[this.i]}).start())
             this.gainStages.push(new Tone.Multiply(1))
 
-            this.input.connect(this.freqScalars[this.i])
+            this.frequency.connect(this.freqScalars[this.i])
             this.freqScalars[this.i].connect(this.vco[this.i].frequency)
             this.vco[this.i].connect(this.gainStages[this.i])
             this.gainStages[this.i].connect(this.output)

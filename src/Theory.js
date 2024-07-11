@@ -88,7 +88,7 @@ export const chordIntervals = {
 
 //takes a roman number chord and returns an array of intervals
 //interval array is based on key and current octave
-export function getChord(name){
+export function getChord(name, lowNote = null){
   const romanNumeralMatch = name.match(/[iIvVb#]+/);
   const suffix = name.replace(/[iIvVb#]+/, '');
 
@@ -113,16 +113,18 @@ export function getChord(name){
   const romanNumeralMatch2 = name.match(/[iIvV]+/);
   let type = getChordType(romanNumeralMatch2[0], suffix);
   let chord = chordIntervals[type].map(x=>x+degree+octave*12)
-  //console.log(chord)
+  // console.log(chord,lowNote)
   // Adjust the chord tones based on the voicing type
   chord = applyVoicing(chord);
 
+  //console.log(chord,lowNote)
   //console.log(chord, previousChord)
   // Adjust the chord tones to be as close as possible to the previous chord
   if (previousChord.length > 0) {
+    if(lowNote){ previousChord[0] = lowNote}
     chord = minimizeMovement(chord, previousChord);
   }
-  //console.log("post", chord)
+  //console.log("post", chord, lowNote)
   previousChord = chord;
   return chord
 
@@ -180,25 +182,29 @@ function applyVoicing(chord) {
 }
 
 function minimizeMovement(chord, previousChord) {
-  const lowerOctave = chord.map(note => note - 12);
-  const upperOctave = chord.map(note => note + 12);
-  chord = lowerOctave.concat(chord).concat(upperOctave)
-  //console.log(chord)
-  let distance = 100
-  let lowNote = 0
   for(let i=0;i<chord.length;i++){
-    const curDistance = Math.abs(chord[i]-previousChord[0])
-    if(curDistance<distance){
-      distance = curDistance
-      lowNote = i
-    }
+    while(chord[i]<previousChord[0])chord[i]+=12
   }
-  let newVoicing = Array.from({length:chord.length/3},(x,i)=>chord[i+lowNote])
-  for(let i=1;i<newVoicing.length;i++){
-    if(newVoicing[i]<newVoicing[i-1])newVoicing[i]+=12
-  }
+  // const lowerOctave = chord.map(note => note - 12);
+  // const upperOctave = chord.map(note => note + 12);
+  // chord = lowerOctave.concat(chord).concat(upperOctave)
+  // console.log(chord,previousChord)
+  // let distance = 100
+  // let lowNote = 0
+  // for(let i=0;i<chord.length;i++){
+  //   const curDistance = Math.abs(chord[i]-previousChord[0])
+  //   if(curDistance<distance){
+  //     distance = curDistance
+  //     lowNote = i
+  //   }
+  // }
+  // let newVoicing = Array.from({length:chord.length/3},(x,i)=>chord[i+lowNote])
+  // console.log(chord,newVoicing)
+  // for(let i=1;i<newVoicing.length;i++){
+  //   if(newVoicing[i]<newVoicing[i-1])newVoicing[i]+=12
+  // }
   //console.log('new', newVoicing)
-  return newVoicing
+  return chord.sort((a, b) => a - b);
 }
 
 

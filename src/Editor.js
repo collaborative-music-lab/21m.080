@@ -6,7 +6,6 @@ import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
         Rumble, Daisies, DatoDuo, Stripe, Diffuseur, KP, Sympathy} from './synths/index.js';
 
 import {Sequencer} from './Sequencer.js';
-import {MultiVCO} from './MultiVCO.js';
 import p5 from 'p5';
 import * as Tone from 'tone';
 import * as Theory from './Theory.js';
@@ -52,7 +51,6 @@ function Editor(props) {
     window.KP = KP
     window.Sympathy = Sympathy
     window.Sequencer = Sequencer
-    window.MultiVCO = MultiVCO
 
     var curLineNum = 0;
 

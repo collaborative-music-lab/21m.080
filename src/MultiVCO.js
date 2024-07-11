@@ -31,19 +31,19 @@ export class MultiVCO{
     }
     setPitchshift(index, shift) {
         if (index >= this.numInputs || index < 0) {
-            this.freqScalars[index] = shift
+            console.log("Index out of range")
         }
         else {
-            console.log("Index out of range")
+            this.freqScalars[index].factor = shift
         }
     }
 
     setGain(index, level) {
         if (index >= this.numInputs || index < 0) {
-            this.gainStages[index] = level
+            console.log("Index out of range")
         }
         else {
-            console.log("Index out of range")
+            this.gainStages[index].factor = level
         }
     }
 
@@ -52,6 +52,14 @@ export class MultiVCO{
             this.output.connect(destination.input);
         } else {
             this.output.connect(destination);
+        }
+    }
+
+    disconnect(destination) {
+        if (destination.input) {
+            this.output.disconnect(destination.input);
+        } else {
+            this.output.disconnect(destination);
         }
     }
 }

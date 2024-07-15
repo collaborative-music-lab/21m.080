@@ -5,6 +5,38 @@ as Roman numerals.
 
 Includes the classes 'chord', and 'progression'
 
+Variables:
+- tonic: tonic as string
+- tonicNumber: tonic as MIDI number
+- keytype: major or minor depending on tonic capital
+- octave: default octave for chords/scales
+
+- progression: chord progression (array of strings ['i','iv','V7','VII7'])
+- chords: array of Chord objects
+
+- voicing: default voicing
+- voicings[]: array for voicing types [open,closed,drop2,drop3]
+- notes[12]: array of alphabet note names
+- noteToInterval{}: maps alphabetic names to intervals (with b/#)
+-chordIntervals[]: interval patterns for chords, e.g. [0,2,4]
+-chordScale[]: scales associated with chords, e.g. '7':[0,2,4,5,7,9,10]
+-MajorScaleDegrees[]: 'I': 0, 'bII': 1, etc.
+-MinorScaleDegrees[]: 'i': 0, 'bII': 1, etc.
+
+functions:
+setProgression(str): progression as single string or array of strings
+  - setProgression('i i iv V7') or setProgression('i', 'i', 'iv', 'V7')
+setVoicing(str)
+export function rotateVoicing(steps)
+setTonic(str/num): updates tonic, tonicNumber,octave, keyType
+getChordTones(root, quality, scale): returns array of MIDI notes, either triad or 7th
+getChord(name, lowNote, voicing) //roman number and returns MIDI note array
+getChordType(name): return chord quality, e.b. minorMajor7
+function applyVoicing(chord, _voicing)
+minimizeMovement(chord, previousChord): shifts chord so lowest note is higher than previousChord[0]
+getChordRoot(name): returns midi note of root %12
+getInterval(num,scale): returns MIDI note number of scale degree (from 0)
+
 */
 
 let tonic = 'C';
@@ -14,11 +46,15 @@ let octave = 4;
 let voicing = 'closed'
 let previousChord = [];
 
+let progression = ['I']
+let pulsePerChord = 16
+let progressionChords = []
+
 const voicings = { 
-  "closed": [0,1,2,3],
-  "open": [0,2,3,1],
-  "drop2": [-2,0,1,3],
-  "drop3": [-3,0,1,2]
+  "closed": [0,2,4,6],
+  "open": [0,4,6,9],
+  "drop2": [-3,0,2,6],
+  "drop3": [-1,0,3,4]
 }
 
 const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -51,14 +87,19 @@ export const chordIntervals = {
 
 export const chordScales = {
   "major": [0, 2, 4, 5, 7, 9, 11],
-  "minor": [0, 2, 3, 5, 7, 9, 10], //dorian
-  "dominant7": [0, 2, 4, 6, 7, 9, 10], //lydian dominant
+  "minor": [0, 2, 3, 5, 7, 8, 10], //aeolian
+  "lydianDominant": [0, 2, 4, 6, 7, 9, 10], //lydian dominant?
+  "mixolydian": [0,2,4,5,7,9,10], //for V7
   "minor7": [0, 2, 3, 5, 7, 9, 10], //dorian
   "major7": [0, 2, 4, 5, 7, 9, 11],
   "minorMaj7": [0, 2, 3, 5, 7, 9, 11], //melodic minor
   "diminished": [0, 2, 3, 5, 6, 8, 9, 11],
   "diminished7": [0, 2, 3, 5, 6, 8, 9, 11],
   "add9": [0, 2, 4, 5, 7, 9, 11],
+  "dorian": [0,2,3,5,7,9,10], //minor natural-6
+  "phrygian": [0,1,3,5,7,8,10], //minor flat-2
+  "lydian": [0,2,4,6,7,9,11], //major sharp-4
+  "locrian": [0,1,3,5,6,8,10], //half-diminished
 };
 
 const MajorScaleDegrees = {
@@ -81,17 +122,57 @@ export function setVoicing(name){
 console.log('current voicing: ', voicing)
 }
 
+export function setProgression(val){
+  let newProgression = []
+  let error = -1
+
+  //convert progressions in a single string to an array of strings
+  if( val.constructor !== Array ){
+    val = val.replace(',', ' ')
+    val = val.split(' ')
+  }
+
+  //iteratate through array, check for errors
+  for(let i=0;i<val.length;i++){
+    let chord = val[i]
+    try{
+      if(val[i] !== ''){ //remove empty strings
+        const romanNumeral = chord.match(/[iIvVb#]+/)[0];
+        const quality = getChordType(chord);
+        if( typeof MajorScaleDegrees[romanNumeral] !== "number") error = i
+        if( chordScales[quality].constructor !== Array) error = i
+        if( error < 0 ) newProgression.push(chord)
+      } 
+    } catch{
+      console.log("error with element ", val[i])
+      error = 0
+    }
+  }
+
+  if(error < 0) {
+    progression = newProgression
+    progressionChords = []
+    for(let i=0;i<progression.length;i++) progressionChords.push(new Chord(progression[i]))
+  }
+  else console.log("error in progression element", val[error])
+}
+
+export function getCurChord(index){
+  index = index % (pulsePerChord * progression.length)
+  return progressionChords[Math.floor( index/pulsePerChord )]
+}
+
 //sets the tonic for the key, keytype, and octave
 export function setTonic(val) {
-  const noteRegex = /[A-Ga-g][#b]?/; // Regular expression to detect musical notes including sharps and flats
-  const numberRegex = /\d+/; // Regular expression to detect numbers
-
   if (typeof val === 'string') {
+    const noteRegex = /[A-Ga-g][#b]?/; // Regular expression to detect musical notes including sharps and flats
+    const numberRegex = /\d+/; // Regular expression to detect numbers
+
     const noteMatch = val.match(noteRegex);
     const numberMatch = val.match(numberRegex);
 
     if (noteMatch) {
-      tonic = noteMatch[0]; // Set the tonic and convert to uppercase
+      tonic = noteMatch[0].toUpperCase(); // Set the tonic and convert to uppercase
       keyType = noteMatch[0] === noteMatch[0].toUpperCase() ? 'major' : 'minor'; // Set the key type based on case
     }
 
@@ -113,7 +194,13 @@ export function setTonic(val) {
 
 //takes a roman number chord and returns an array of intervals
 //interval array is based on key and current octave
-export function getChord(name, lowNote = null){
+export function getChord(name,  lowNote = null, _voicing = null){
+  //get the type of chord based on chord name
+  const type = getChordType(name);
+  const scale = chordScales[type];
+  //console.log(type,scale)
+
+  if(_voicing == null) _voicing = voicing
   //parse chord name
   const romanNumeralMatch = name.match(/[iIvVb#]+/);
   const suffix = name.replace(/[iIvVb#]+/, '');
@@ -129,26 +216,18 @@ export function getChord(name, lowNote = null){
   if (keyType == 'major') {
     degree =  MajorScaleDegrees[romanNumeral];
     if(degree == undefined) degree = MinorScaleDegrees[romanNumeral];
-    if(degree == undefined) degree = 0
   }
   else {
     degree =  MinorScaleDegrees[romanNumeral];
     if(degree == undefined) degree = MajorScaleDegrees[romanNumeral];
-    if(degree == undefined) degree = 0
   }
   if(degree == undefined) degree = 0
 
-  //get the type of chord based on chord name
-  const romanNumeralMatch2 = name.match(/[iIvV]+/);
-  let type = getChordType(romanNumeralMatch2[0], suffix);
-  let chord = chordIntervals[type].map(x=>x+degree+octave*12 + tonicNumber)
-  // console.log(chord,lowNote)
-
   // Adjust the chord tones based on the voicing type
-  chord = applyVoicing(chord);
+  let chord = applyVoicing(_voicing, scale);
+  //console.log(octave, degree, tonicNumber)
+  chord = chord.map(x=>x+octave*12+degree + tonicNumber)
 
-  //console.log(chord,lowNote)
-  //console.log(chord, previousChord)
   // Adjust the chord tones to be as close as possible to the previous chord
   if (previousChord.length > 0) {
     if(lowNote){ previousChord[0] = lowNote}
@@ -171,195 +250,183 @@ export function rotateVoicing(steps){
     return x
   })
   
-  //previousChord.push(...previousChord.splice(0, (-steps % len + len) % len))
-  //console.log(newChord)
   previousChord = newChord
 }
 
+//returns chord quality
+function getChordType(name) {
+  const suffix = name.replace(/[iIvVb#]+/, '');
+  let majorMinor = name.match(/[iIvV]+/)[0];
+  if(!majorMinor) majorMinor = 'I'
 
-function getChordType(romanNumeral, suffix) {
-  //console.log(romanNumeral,suffix)
-  if (suffix.includes('Maj7')) {
-    return romanNumeral === romanNumeral.toUpperCase() ? 'major7' : 'minorMaj7';
-  }
-  if (suffix.includes('7')) {
-    return romanNumeral === romanNumeral.toUpperCase() ? 'dominant7' : 'minor7';
-  }
-  if (suffix.includes('dim7'))  return 'diminished7';
   if (suffix.includes('dim'))  return 'diminished';
-  if (suffix.includes('2')) return 'major9';
+  else if (suffix.includes('7b5'))  return 'locrian';
+  else if (suffix.includes('Maj7')) return majorMinor === majorMinor.toUpperCase() ? 'major7' : 'minorMaj7';
+  else if (suffix.includes('7')) return majorMinor === majorMinor.toUpperCase() ? 'mixolydian' : 'minor7';
+  else if (suffix.includes('2')) return 'major9';
 
-  return romanNumeral === romanNumeral.toUpperCase() ? 'major' : 'minor';
+  return majorMinor === majorMinor.toUpperCase() ? 'major' : 'minor';
 }
 
-function applyVoicing(chord) {
+function applyVoicing(_voicing,scale) {
+  //console.log(_voicing, scale)
   // Apply different voicings (closed, drop2, drop3, etc.)
-  let voicedChord = Array(chord.length)
-  
-  //get current voicing and make sure it is long enough
-  let cVoicing = voicings[voicing]
-  while(cVoicing.length < chord.length) cVoicing.push(cVoicing.length)
-  cVoicing = cVoicing.filter(x=> Math.abs(x)<chord.length)
+  let cVoicing = voicings[_voicing]
+  let voicedChord = Array(cVoicing.length)
 
-  for(let i=0;i<chord.length;i++){
-    let index = cVoicing[i]
-    let note = index
-    voicedChord[i] = chord[Math.abs(note)]
-    if(i>0 && cVoicing[i] < cVoicing[i-1]) voicedChord[i]+=12
-    if(index < 0) voicedChord[i] -= 12
+  for(let i=0;i<cVoicing.length;i++){
+    voicedChord[i] = getInterval(cVoicing[i],scale)
   }
+  //console.log(voicedChord)
   return voicedChord
 }
 
 function minimizeMovement(chord, previousChord) {
   let distance = Math.abs(chord[0]%12-previousChord[0]%12)
   let lowNote = 0
+
   for(let i=1;i<chord.length;i++){
     if(Math.abs(chord[i]%12-previousChord[0]%12) < distance){
       distance = Math.abs(chord[i]%12-previousChord[0]%12)
         lowNote = i
     }
   }
-  //console.log("lownote", lowNote, chord, previousChord[0])
+
   while(chord[lowNote] < previousChord[0]-2)chord = chord.map(x=>x+12)
-  //console.log( chord, previousChord[0])
+ 
   for(let i=0;i<chord.length;i++){
     if(chord[i] < previousChord[0])chord[i]+=12
   }
-//console.log( chord, previousChord[0])
-  //while(chord[lowNote]<previousChord[0])chord[i]+=12
-  // const lowerOctave = chord.map(note => note - 12);
-  // const upperOctave = chord.map(note => note + 12);
-  // chord = lowerOctave.concat(chord).concat(upperOctave)
-  // console.log(chord,previousChord)
-  // let distance = 100
-  // let lowNote = 0
-  // for(let i=0;i<chord.length;i++){
-  //   const curDistance = Math.abs(chord[i]-previousChord[0])
-  //   if(curDistance<distance){
-  //     distance = curDistance
-  //     lowNote = i
-  //   }
-  // }
-  // let newVoicing = Array.from({length:chord.length/3},(x,i)=>chord[i+lowNote])
-  // console.log(chord,newVoicing)
-  // for(let i=1;i<newVoicing.length;i++){
-  //   if(newVoicing[i]<newVoicing[i-1])newVoicing[i]+=12
-  // }
-  //console.log('new', newVoicing)
+
   return chord.sort((a, b) => a - b);
 }
 
+/****************** 
+ * CHORD Class
+ * Methods
+ * - constructor(name,octave,voicing)
+ * - getChordTones(lowNote): gets array of MIDI notes
+ * - getInterval(degree): midi note number of scale degree
+ * - setChord: set custom chord
+ * 
+ * Parameters
+ * - notes: midi note numbers of current chord degrees
+ * - root: midi note
+ * - octave
+ * - voicing: name 'closed' or interval pattern [0,2,4]
+ * - scale: name 'major' or custom e.g. [0,2,4,5,7,9,11]
+ *  * ******************/
 
-// export class Chord {
-//   constructor(romanNumeral) {
-//     this.romanNumeral = romanNumeral;
-//     this.quality = this.getQuality(romanNumeral);
-//     this.tonic = this.gettonic(romanNumeral);
-//     this.intervals = chordIntervals[this.quality];
-//   }
+export class Chord {
+  constructor(name, _octave = octave, _voicing = voicing) {
+    this.name = name;
+    this.octave = _octave;
+    this.voicing = _voicing;
+    this.root = getChordRoot(name); //integer 0-11
+    this.quality = getChordType(name) //'Maj7'
+    this.scale = chordScales[this.quality];
+    if(this.name == 'V7') this.scale = chordScales['mixolydian']
+    this.chordTones = this.getChordTones(this.root,this.quality,this.scale);
+    this.length = this.chordTones.length
+  }
 
-//   getQuality(romanNumeral) {
-//     // Determine the chord quality based on the Roman numeral
-//     if (romanNumeral.includes('Maj7')) return 'major7';
-//     if (romanNumeral.includes('7')) return 'dominant7';
-//     if (romanNumeral.includes('dim7')) return 'diminished7';
-//     if (romanNumeral.includes('dim')) return 'diminished';
-//     if (romanNumeral.includes('2')) return 'add9';
-//     if (romanNumeral.toUpperCase() === romanNumeral) return 'major';
-//     if (romanNumeral.toLowerCase() === romanNumeral) return 'minor';
-//     if (romanNumeral.includes('m')) return 'minor';
-//     return 'major';
-//   }
+  getInterval(num){ 
+    return getInterval(num,this.scale) + this.root + this.octave*12 
+  }
 
-//   gettonic(romanNumeral) {
+  getChordTones(lowNote) {
+    const chordTones = this.getChord(this.name, lowNote, this.voicing)
+    //console.log(chordTones)
+    return chordTones;
+  }
 
-//     let degree = []
-//     if (tonic === tonic.toUpperCase()) degree =  MajorScaleDegrees[romanNumeral.replace(/[^a-zA-Z]/g, '')];
-//     else degree =  MinorScaleDegrees[romanNumeral.replace(/[^a-zA-Z]/g, '')];
-//     return (this.getNoteFromDegree(degree, tonic) + 12) % 12;
-//   }
+  setChord(customChord) {
+    this.notes = customChord;
+  }
 
-//   getNoteFromDegree(degree, key) {
-//     // Map scale degrees to notes in the given key
-//     const keyMap = {
-//       'C': 0, 'C#': 1, 'D': 2, 'D#': 3, 'E': 4, 'F': 5, 'F#': 6, 'G': 7,
-//       'G#': 8, 'A': 9, 'A#': 10, 'B': 11
-//     };
-//     return (keyMap[key] + degree) % 12;
-//   }
+  applyVoicing(chordTones) {
+    const voicingOffsets = voicings[this.voicing];
+    return chordTones.map((tone, index) => tone + (voicingOffsets[index] || 0));
+  }
 
-//   getChordTones() {
-//     // Generate the chord tones based on the root and intervals
-//     return this.intervals.map(interval => (this.tonic + interval) % 12);
-//   }
-// }
+  getChord(name,  lowNote = null, _voicing = null){
 
-// // Example usage:
-// let chord = new Chord('V7', 'C');
-// console.log(chord.getChordTones()); // Output: [7, 11, 2, 5]
+    if(_voicing == null) _voicing = voicing
 
-// export function genVoicing(prevVoicing, chord) {
-//   const intervals = chord.intervals;
-//   let newVoicing = [];
+    // Adjust the chord tones based on the voicing type
+    let chord = applyVoicing(_voicing, this.scale);
+    //console.log(octave, this.scale, tonicNumber)
+    chord = chord.map(x=> x+ this.octave*12 + this.root + tonicNumber)
+    //console.log(chord)
+    // Adjust the chord tones to be as close as possible to the previous chord
+    if (previousChord.length > 0) {
+      if(lowNote){ previousChord[0] = lowNote}
+      chord = minimizeMovement(chord, previousChord);
+    }
+    //console.log("post", chord, lowNote)
+    previousChord = chord;
+    return chord
+  }
+}
+
+/************************************
+ * Helper functions
+ * ************************************/
+
+export function getChordRoot(name){
+  //parse chord name
+  const romanNumeral = name.match(/[iIvVb#]+/)[0];
+
+  //set keyType
+  if (!romanNumeral) {
+    console.log('incorrent chord name ${name}')
+    return tonicNumber
+  }
+  let degree = 0
   
-//   // Get the lowest note of the previous voicing
-//   const lowestNote = Math.min(...prevVoicing);
-  
-//   // Generate the new voicing based on the lowest note and intervals
-//   for (let interval of intervals) {
-//     newVoicing.push(lowestNote + interval);
-//   }
-  
-//   // Ensure good voice leading by keeping the new voicing close to the previous one
-//   for (let i = 0; i < newVoicing.length; i++) {
-//     while (newVoicing[i] < prevVoicing[i] - 12) {
-//       newVoicing[i] += 12;
-//     }
-//     while (newVoicing[i] > prevVoicing[i] + 12) {
-//       newVoicing[i] -= 12;
-//     }
-//   }
-  
-//   return newVoicing;
-// }
+  if (keyType == 'major') {
+    degree =  MajorScaleDegrees[romanNumeral];
+    if(degree == undefined) degree = MinorScaleDegrees[romanNumeral];
+    if(degree == undefined) degree = 0
+  }
+  else {
+    degree =  MinorScaleDegrees[romanNumeral];
+    if(degree == undefined) degree = MajorScaleDegrees[romanNumeral];
+    if(degree == undefined) degree = 0
+  }
+  if(degree == undefined) degree = 0
 
-// export class Progression {
-//   constructor(progressions) {
-//     this.progressions = progressions.split(',').map(chord => chord.trim());
-//     this.voicingType = 'closedVoicing';
-//     this.currentVoicing = [];
-//     this.currentBeat = 0;
-//   }
+  return degree % 12
+}
 
-//   get(beat) {
-//     this.currentBeat = beat;
-//     const chordSymbol = this.progressions[beat % this.progressions.length];
-//     return new Chord(chordSymbol); // Assuming C major key for simplicity
-//   }
+//return midi note numbers for current chord
+function getChordTones(root, quality, scale){
+  let chord = []
+  let len = 3
+  if( /\d/.test(quality)) len = 4
+  for(let i=0;i<len;i++) chord[i] = scale[i*2]+root
+}
 
-//   set voicing(type) {
-//     this.voicingType = type;
-//   }
-//
-//   shiftVoicing(amount) {
-//     const newVoicings = this.progressions.map((chordSymbol, index) => {
-//       const chord = new Chord(chordSymbol, 'C'); // Assuming C major key for simplicity
-//       if (index === 0) {
-//         this.currentVoicing = chord.getChordTones();
-//       } else {
-//         this.currentVoicing = genVoicing(this.currentVoicing, chord);
-//       }
-//       return this.currentVoicing;
-//     });
+function getInterval(num,scale){
+  let len = scale.length
+  if (typeof num === 'number') {
+    let _octave = Math.floor(num/len)
+    if(num<0) num = 7+num%7 //check negative numbers
+    return scale[num%len] + _octave*12
+  } else if (typeof num === 'string') {
+    //parse num to look for # and b notes
+    const match = num.match(/^([^\d]+)?(\d+)$/);
 
-//     this.currentVoicing = newVoicings.map(voicing => voicing.map(note => note + amount));
-//   }
-// }
+    //get scale degree
+    num = Number(match[2])
+    let _octave = Math.floor(num/len)
+    if(num<0) num = 7+num%7
+    num = scale[num%len] + _octave*12
 
-
-// // Example usage:
-// let previousVoicing = [60, 64, 67]; // C major triad in root position
-// let chord = new Chord('V7', 'C');
-// let newVoicing = genVoicing(previousVoicing, chord);
-// console.log(newVoicing);
+    //apply accidentals
+    if(match[1]== '#')num+=1
+    else if (match[1] == 'b') num-=1
+    return num
+  }
+  return 0
+}

@@ -354,7 +354,7 @@ export class Daisies {
     this.updateEnv()
   }
   setFilterADSR = function(a,d,s,r){
-  	this.adsr = [a,d,s,r]
+  	this.vcf_adsr = [a,d,s,r]
     this.updateFilterEnv()
   }
   setDecayCV = function(val){

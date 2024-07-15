@@ -20,11 +20,17 @@ export class MultiVCO{
 
         for(this.i=0;this.i<this.numInputs;this.i++) {
             this.freqScalars.push(new Tone.Multiply(pitchshift[this.i]))
-            this.vco.push(new Tone.Oscillator({type:vcos[this.i]}).start())
+            if (vcos[this.i] === 'noise') {
+                this.vco.push(new Tone.Noise("white").start())
+            }
+            else {
+                this.vco.push(new Tone.Oscillator({type:vcos[this.i]}).start())
+            }
             this.gainStages.push(new Tone.Multiply(1))
-
             this.frequency.connect(this.freqScalars[this.i])
-            this.freqScalars[this.i].connect(this.vco[this.i].frequency)
+            if (vcos[this.i] !== 'noise') {
+                this.freqScalars[this.i].connect(this.vco[this.i].frequency)
+            }
             this.vco[this.i].connect(this.gainStages[this.i])
             this.gainStages[this.i].connect(this.output)
         }

@@ -139,6 +139,8 @@ export class Rumble {
 
   //envelopes
   triggerAttack (freq, amp, time=null){
+    freq = Tone.Midi(freq).toFrequency()
+    amp = amp/127
     if(time){
       this.env.triggerAttack(time)
       this.vcf_env.triggerAttack(time)
@@ -162,6 +164,8 @@ export class Rumble {
     }
   }
   triggerAttackRelease (freq, amp, dur=0.01, time=null){
+    freq = Tone.Midi(freq).toFrequency()
+    amp = amp/127
     if(time){
       this.env.triggerAttackRelease(dur, time)
       this.vcf_env.triggerAttackRelease(dur, time)

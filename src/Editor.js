@@ -523,6 +523,8 @@ function Editor(props) {
       //end export dialog support
 
     function exportAsWebPage(code) {
+        alert("exporting as web page will happen, eventually. . . . :-)")
+        /*
         const htmlContent = `
             <!DOCTYPE html>
             <html lang="en">
@@ -541,6 +543,7 @@ function Editor(props) {
         a.href = URL.createObjectURL(blob);
         a.download = 'code.html';
         a.click();
+        */
     }
 
     /**** RESIZE CANVAS ****/

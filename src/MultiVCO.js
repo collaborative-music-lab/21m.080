@@ -49,7 +49,7 @@ export class MultiVCO{
             console.log("Index out of range")
         }
         else {
-            this.gainStages[index].factor = level
+            this.gainStages[index].factor.value = level
         }
     }
 

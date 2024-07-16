@@ -3,7 +3,8 @@ import CodeMirror from '@uiw/react-codemirror';
 import { historyField } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
 import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
-        Rumble, Daisies, DatoDuo, Stripe, Diffuseur, KP, Sympathy} from './synths/index.js';
+        Rumble, Daisies, DatoDuo, Stripe, Diffuseur, KP, Sympathy,
+        Kick} from './synths/index.js';
 
 import {Sequencer} from './Sequencer.js';
 import {MultiVCO} from './MultiVCO.js'
@@ -53,6 +54,7 @@ function Editor(props) {
     window.Sympathy = Sympathy
     window.Sequencer = Sequencer
     window.MultiVCO = MultiVCO
+    window.Kick = Kick
 
     var curLineNum = 0;
 

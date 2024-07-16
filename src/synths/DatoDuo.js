@@ -10,8 +10,6 @@ import * as Tone from 'tone';
 export class DatoDuo {
   constructor (gui = null) {
     this.gui = gui
-
-    this.player = 'synth' //synth or seq
     this.isGlide = false
 
     this.masterFrequency = new Tone.Signal()

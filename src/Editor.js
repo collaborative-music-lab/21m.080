@@ -17,6 +17,8 @@ import { Oscilloscope, Spectroscope, PlotTransferFunction } from './oscilloscope
 import MidiKeyboard from './MidiKeyboard.js';
 import { asciiCallbackInstance } from './AsciiKeyboard.js';
 const midi = require('./Midi.js');
+const LZString = require('lz-string');
+
 
 //Save history in browser
 const stateFields = { history: historyField };
@@ -60,7 +62,22 @@ function Editor(props) {
 
     // Save history in browser
     const serializedState = localStorage.getItem(`${props.page}EditorState`);
-    const value = localStorage.getItem(`${props.page}Value`) || props.starterCode;
+    
+    // Decoding the URL
+    const URLParams = new URLSearchParams(window.location.search);
+    const compressedCode = URLParams.get('code');
+    const encodedContent =  LZString.decompressFromEncodedURIComponent(compressedCode);
+    //const encodedContent = URLParams.get('code');
+    let value;
+    if (encodedContent) {
+        value = encodedContent;
+        // const url = window.location.origin + window.location.pathname;
+        // window.location.assign(url);
+    } else {
+        value = localStorage.getItem(`${props.page}Value`) || props.starterCode;
+    }
+
+
     //const value = 'let CHANNEL = 3'
     const [height, setHeight] = useState(false);
     const [code, setCode] = useState(value); //full string of user code
@@ -465,16 +482,13 @@ function Editor(props) {
         document.getElementById('exportOptions').value = "default";
     }
 
-    function exportAsLink(code) {
-        const blob = new Blob([code], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'code.txt';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+    function exportAsLink() {
+        const liveCode = localStorage.getItem(`${props.page}Value`);
+        const compressedCode = LZString.compressToEncodedURIComponent(liveCode);
+        //const encodedCode = btoa(liveCode);
+        const url = `${window.location.origin}${window.location.pathname}?code=${compressedCode}`;
+        navigator.clipboard.writeText(url);
+        console.log('URL copied to clipboard');
     }
 
     //Export webpage code

@@ -3,7 +3,8 @@ import CodeMirror from '@uiw/react-codemirror';
 import { historyField } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
 import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
-        Rumble, Daisies, DatoDuo, Stripe, Diffuseur, KP, Sympathy} from './synths/index.js';
+        Rumble, Daisies, DatoDuo, Stripe, Diffuseur, KP, Sympathy,
+        Kick} from './synths/index.js';
 
 import {Sequencer} from './Sequencer.js';
 import {MultiVCO} from './MultiVCO.js'
@@ -16,6 +17,8 @@ import { Oscilloscope, Spectroscope, PlotTransferFunction } from './oscilloscope
 import MidiKeyboard from './MidiKeyboard.js';
 import { asciiCallbackInstance } from './AsciiKeyboard.js';
 const midi = require('./Midi.js');
+const LZString = require('lz-string');
+
 
 //Save history in browser
 const stateFields = { history: historyField };
@@ -53,12 +56,28 @@ function Editor(props) {
     window.Sympathy = Sympathy
     window.Sequencer = Sequencer
     window.MultiVCO = MultiVCO
+    window.Kick = Kick
 
     var curLineNum = 0;
 
     // Save history in browser
     const serializedState = localStorage.getItem(`${props.page}EditorState`);
-    const value = localStorage.getItem(`${props.page}Value`) || props.starterCode;
+    
+    // Decoding the URL
+    const URLParams = new URLSearchParams(window.location.search);
+    const compressedCode = URLParams.get('code');
+    const encodedContent =  LZString.decompressFromEncodedURIComponent(compressedCode);
+    //const encodedContent = URLParams.get('code');
+    let value;
+    if (encodedContent) {
+        value = encodedContent;
+        // const url = window.location.origin + window.location.pathname;
+        // window.location.assign(url);
+    } else {
+        value = localStorage.getItem(`${props.page}Value`) || props.starterCode;
+    }
+
+
     //const value = 'let CHANNEL = 3'
     const [height, setHeight] = useState(false);
     const [code, setCode] = useState(value); //full string of user code
@@ -463,16 +482,13 @@ function Editor(props) {
         document.getElementById('exportOptions').value = "default";
     }
 
-    function exportAsLink(code) {
-        const blob = new Blob([code], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'code.txt';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+    function exportAsLink() {
+        const liveCode = localStorage.getItem(`${props.page}Value`);
+        const compressedCode = LZString.compressToEncodedURIComponent(liveCode);
+        //const encodedCode = btoa(liveCode);
+        const url = `${window.location.origin}${window.location.pathname}?code=${compressedCode}`;
+        navigator.clipboard.writeText(url);
+        console.log('URL copied to clipboard');
     }
 
     //Export webpage code
@@ -507,6 +523,8 @@ function Editor(props) {
       //end export dialog support
 
     function exportAsWebPage(code) {
+        alert("exporting as web page will happen, eventually. . . . :-)")
+        /*
         const htmlContent = `
             <!DOCTYPE html>
             <html lang="en">
@@ -525,6 +543,7 @@ function Editor(props) {
         a.href = URL.createObjectURL(blob);
         a.download = 'code.html';
         a.click();
+        */
     }
 
     /**** RESIZE CANVAS ****/

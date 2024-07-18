@@ -128,10 +128,9 @@ export function setProgression(val){
 
   //convert progressions in a single string to an array of strings
   if( val.constructor !== Array ){
-    val = val.replace(',', ' ')
+    val = val.replaceAll(',', ' ')
     val = val.split(' ')
   }
-
   //iteratate through array, check for errors
   for(let i=0;i<val.length;i++){
     let chord = val[i]
@@ -155,6 +154,7 @@ export function setProgression(val){
     for(let i=0;i<progression.length;i++) progressionChords.push(new Chord(progression[i]))
   }
   else console.log("error in progression element", val[error])
+  //console.log(progression)
 }
 
 export function getCurChord(index){
@@ -198,7 +198,7 @@ export function getChord(name,  lowNote = null, _voicing = null){
   //get the type of chord based on chord name
   const type = getChordType(name);
   const scale = chordScales[type];
-  //console.log(type,scale)
+  //console.log(type,scale,progression)
 
   if(_voicing == null) _voicing = voicing
   //parse chord name
@@ -330,8 +330,19 @@ export class Chord {
     this.length = this.chordTones.length
   }
 
-  getInterval(num){ 
-    return getInterval(num,this.scale) + this.root + this.octave*12 
+  getInterval(num, min = 0, max = 127){ 
+    num = getInterval(num, this.scale) + this.root + this.octave*12 
+    if(num<min) {
+      const count = Math.floor((min-num)/12)+1
+      for(let i=0;i<count;i++)num += 12
+        console.log('min', count)
+    }
+    else if(num>max) {
+      const count = Math.floor((num-max)/12)+1
+      for(let i=0;i<count;i++)num -= 12
+        console.log('max', count)
+    }
+    return num
   }
 
   getChordTones(lowNote) {
@@ -412,7 +423,8 @@ function getInterval(num,scale){
   if (typeof num === 'number') {
     let _octave = Math.floor(num/len)
     if(num<0) num = 7+num%7 //check negative numbers
-    return scale[num%len] + _octave*12
+    num = scale[num%len] + _octave*12
+    return num
   } else if (typeof num === 'string') {
     //parse num to look for # and b notes
     const match = num.match(/^([^\d]+)?(\d+)$/);
@@ -426,6 +438,7 @@ function getInterval(num,scale){
     //apply accidentals
     if(match[1]== '#')num+=1
     else if (match[1] == 'b') num-=1
+
     return num
   }
   return 0

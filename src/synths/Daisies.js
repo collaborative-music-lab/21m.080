@@ -1,6 +1,6 @@
 /*
 Daisies
-Polyphonic Subtractice Synthesizer
+Polyphonic Subtractive Synthesizer
 
 Daisy:
 * 2 OmniOscillators(vco_1, vco_2)->shape->waveShapers->mixer->lpf->hpf->panner->vca
@@ -152,6 +152,10 @@ export class Daisy{
   }
 }
 
+/********************
+ * polyphony
+ ********************/
+
 export class Daisies {
   constructor(num = 8, gui = null){
 	this.gui = gui
@@ -196,12 +200,12 @@ export class Daisies {
       this.voice[this.v].frequency.setValueAtTime(Tone.Midi(val).toFrequency(),time)
       this.voice[this.v].env.triggerAttack(time)
       this.voice[this.v].vcf_env.triggerAttack(time)
-      this.voice[this.v].velocity_depth.factor.setValueAtTime(vel,time)
+      this.voice[this.v].velocity.setValueAtTime(Math.pow(vel,2),time)
     } else{
       this.voice[this.v].frequency.value = Tone.Midi(val).toFrequency()
       this.voice[this.v].env.triggerAttack()
       this.voice[this.v].vcf_env.triggerAttack()
-      this.voice[this.v].velocity_depth.factor.value = vel
+      this.voice[this.v].velocity.value =Math.pow(vel,2) 
     }
 
     if (time) {
@@ -228,12 +232,12 @@ export class Daisies {
       this.voice[this.v].frequency.setValueAtTime(val,time)
       this.voice[this.v].env.triggerAttackRelease(dur,time)
       this.voice[this.v].vcf_env.triggerAttackRelease(dur,time)
-      this.voice[this.v].velocity_depth.factor.setValueAtTime(vel,time)
+      this.voice[this.v].velocity.setValueAtTime(Math.pow(vel,2),time)
     } else{
       this.voice[this.v].frequency.value = val
       this.voice[this.v].env.triggerAttackRelease(dur)
       this.voice[this.v].vcf_env.triggerAttackRelease(dur)
-      this.voice[this.v].velocity_depth.factor.value = vel
+      this.voice[this.v].velocity.value =Math.pow(vel,2) 
     }
     if (time) {
       this.updateVoiceParameters(this.v, { val }, time);

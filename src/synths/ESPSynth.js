@@ -13,7 +13,7 @@ import {stepper} from  '../Utilities.js'
 export class ESPSynth {
     constructor (gui = null) {
         this.gui = gui
-        this.inputSignal = new Tone.Signal()
+        this.frequency = new Tone.Signal()
         this.pitchshift = new Tone.Multiply()
         this.multiOsc = new MultiVCO(['triangle', 'sawtooth', 'square', 'square', 'square', 'noise'], [1, 1, 1, 0.5, 0.25, 1])
         this.lfo = new Tone.LFO().start()
@@ -33,7 +33,7 @@ export class ESPSynth {
         this.output = new Tone.Multiply(0.05).toDestination()
 
         //connect input signal to multiVCO
-        this.inputSignal.connect(this.pitchshift)
+        this.frequency.connect(this.pitchshift)
         this.pitchshift.connect(this.multiOsc.frequency)
         this.pitchshift.value = 1
 
@@ -111,14 +111,14 @@ export class ESPSynth {
         amp = amp/127
         if(time){
             this.env.triggerAttack(time)
-            this.inputSignal.setValueAtTime(freq, time)
+            this.frequency.setValueAtTime(freq, time)
             //console.log('raw vcf', amp, 'adjusted vcf', stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]))
             //console.log('raw vca', amp, 'adjusted vca', stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]))
             this.vcfVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.03)
             this.vcaVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]),.03)
         } else{
             this.env.triggerAttack()
-            this.inputSignal.value = freq
+            this.frequency.value = freq
             //console.log('raw vcf', amp, 'adjusted vcf', stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]))
             //console.log('raw vca', amp, 'adjusted vca', stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]))
             this.vcfVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.03)
@@ -138,14 +138,14 @@ export class ESPSynth {
     triggerAttackRelease (freq, amp, dur=0.01, time=null){
     if(time){
         this.env.triggerAttackRelease(dur, time)
-        this.inputSignal.setValueAtTime(freq, time)
+        this.frequency.setValueAtTime(freq, time)
         //console.log('raw vcf', amp, 'adjusted vcf', stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]))
         //console.log('raw vca', amp, 'adjusted vca', stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]))
         this.vcfVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.03)
         this.vcaVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]),.03)
     } else{
         this.env.triggerAttackRelease(dur)
-        this.inputSignal.value = freq
+        this.frequency.value = freq
         //console.log('raw vcf', amp, 'adjusted vcf', stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]))
         //console.log('raw vca', amp, 'adjusted vca', stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]))
         this.vcfVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.03)

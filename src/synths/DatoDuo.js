@@ -12,7 +12,7 @@ export class DatoDuo {
     this.gui = gui
     this.isGlide = false
 
-    this.masterFrequency = new Tone.Signal()
+    this.frequency = new Tone.Signal()
     this.tonePitchshift = new Tone.Multiply()
     this.sawPitchshift = new Tone.Multiply()
     this.pulseWav = new Tone.PulseOscillator().start()
@@ -33,13 +33,13 @@ export class DatoDuo {
 
     //connect the initial signal to multipliers for pitch shift
     //connect those to the oscillators
-    this.masterFrequency.connect(this.tonePitchshift)
+    this.frequency.connect(this.tonePitchshift)
     this.tonePitchshift.connect(this.pulseWav.frequency)
-    this.masterFrequency.connect(this.sawPitchshift)
+    this.frequency.connect(this.sawPitchshift)
     this.sawPitchshift.connect(this.sawWav.frequency)
     this.rampTime = .2
 
-    this.masterFrequency.value = 500;
+    this.frequency.value = 500;
     this.tonePitchshift.factor.value = 1;
     this.sawPitchshift.factor.value = 1;
 
@@ -120,16 +120,16 @@ export class DatoDuo {
       this.ampEnvelope.triggerAttack(time)
       this.filterEnvelope.triggerAttack(time)
       if (this.isGlide) {
-        this.masterFrequency.exponentialRampToValueAtTime(freq,this.rampTime, time)
+        this.frequency.exponentialRampToValueAtTime(freq,this.rampTime, time)
       }
       else {
-        this.masterFrequency.setValueAtTime(freq, time)
+        this.frequency.setValueAtTime(freq, time)
       }
       this.velocity.rampTo(amp,.03)
     } else{
       this.ampEnvelope.triggerAttack()
       this.filterEnvelope.triggerAttack()
-      this.masterFrequency.value = freq
+      this.frequency.value = freq
       this.velocity.rampTo(amp,.03)
     }
   }
@@ -148,10 +148,10 @@ export class DatoDuo {
       this.ampEnvelope.triggerAttackRelease(dur, time)
       this.filterEnvelope.triggerAttackRelease(dur, time)
       if (this.isGlide) {
-        this.masterFrequency.exponentialRampToValueAtTime(freq,this.rampTime+time)
+        this.frequency.exponentialRampToValueAtTime(freq,this.rampTime+time)
       }
       else {
-        this.masterFrequency.setValueAtTime(freq, time)
+        this.frequency.setValueAtTime(freq, time)
       }
       this.velocity.rampTo(amp,.03)
       
@@ -159,10 +159,10 @@ export class DatoDuo {
       this.ampEnvelope.triggerAttackRelease(dur)
       this.filterEnvelope.triggerAttackRelease(dur)
       if (this.isGlide) {
-        this.masterFrequency.exponentialRamp(freq, this.rampTime)
+        this.frequency.exponentialRamp(freq, this.rampTime)
       }
       else {
-        this.masterFrequency.value = freq
+        this.frequency.value = freq
       }
       this.velocity.rampTo(amp,.03)
     }

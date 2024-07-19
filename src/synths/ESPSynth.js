@@ -101,7 +101,7 @@ export class ESPSynth {
         if (x !== undefined) {
             if (x === '4') return 2;
             else if (x === '8') return 1;
-            else if (x == '16') return 0.5;
+            else if (x === '16') return 0.5;
         }
         else return 1
     }
@@ -257,21 +257,24 @@ export class ESPSynth {
         this.noise_fader.set(1)
         
         function lfoControl(x) {
-            let controlVal = Math.abs(x-0.5) * 2
-            let lfoDepth = 100
-            this.lfo.min = stepper(controlVal, 0, 1, [[0,0],[1,1]])
-            this.lfo.max = lfoDepth * stepper(controlVal, 0, 1, [[0,0],[1,1]])
-            if (x < 0.47) {
-                this.vibratoSwitch.value = 1
-                this.wahSwitch.value = 0
-            }
-            else if (x >= 0.47 && x <= 0.49) {
-                this.vibratoSwitch.value = 0
-                this.wahSwitch.value = 0
-            }
-            else if (x > 0.49) {
-                this.vibratoSwitch.value = 0
-                this.wahSwitch.value = 50 * stepper(controlVal, 0, 1, [[0,0],[1,1]])
+            if (x !== undefined) {
+                let controlVal = Math.abs(x-0.5) * 2
+                let lfoDepth = 100
+                //console.log('stepper input', x, 'stepper output', stepper(controlVal, 0, 1, [[0,0],[1,1]]))
+                this.lfo.min = stepper(controlVal, 0, 1, [[0,0],[1,1]])
+                this.lfo.max = lfoDepth * stepper(controlVal, 0, 1, [[0,0],[1,1]])
+                if (x < 0.47) {
+                    this.vibratoSwitch.value = 1
+                    this.wahSwitch.value = 0
+                }
+                else if (x >= 0.47 && x <= 0.49) {
+                    this.vibratoSwitch.value = 0
+                    this.wahSwitch.value = 0
+                }
+                else if (x > 0.49) {
+                    this.vibratoSwitch.value = 0
+                    this.wahSwitch.value = 50 * stepper(controlVal, 0, 1, [[0,0],[1,1]])
+                }
             }
         }
         
@@ -283,7 +286,7 @@ export class ESPSynth {
             min:0.0001, max: 0.95
         })
         this.lfo_intensity_knob.set( 0.48 )
-        lfoControl(0.48)
+        //lfoControl(0.48)
         this.lfo_intensity_knob.borderColor = [178,192,191]
         this.lfo_intensity_knob.accentColor = [255,162,1]
         this.lfo_intensity_knob.border = 5
@@ -301,6 +304,7 @@ export class ESPSynth {
         this.lfo_speed_knob.accentColor = [255,162,1]
         this.lfo_speed_knob.border = 5
         
+
         this.cutoff_frequency_knob = this.gui.Knob({
             label:'frequency',
             callback: (x)=>{this.filterCutoffFrequency.value = stepper(x, 50, 2500, [[0,0], [1,1]])},

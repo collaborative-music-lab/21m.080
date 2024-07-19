@@ -3,7 +3,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import { historyField } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
 import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
-        Rumble, Daisies, DatoDuo, Stripe, Diffuseur, KP, Sympathy,
+        Rumble, Daisies, DatoDuo, ESPSynth, Stripe, Diffuseur, KP, Sympathy,
         Kick} from './synths/index.js';
 
 import {Sequencer} from './Sequencer.js';
@@ -44,6 +44,7 @@ function Editor(props) {
     //synths
     window.NoiseVoice = NoiseVoice
     window.DatoDuo = DatoDuo
+    window.ESPSynth = ESPSynth
     window.Resonator = Resonator
     window.ToneWood = ToneWood
     window.DelayOp = DelayOp

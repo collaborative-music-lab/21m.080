@@ -9,7 +9,8 @@ Daisy:
 * cutoff control: cutoff, cutoff_vc, keyTracking, lpf_env_depth
 * lfo->vca_lfo_depth-<output.factor, pitch_lfo_depth->
 * lfo->pitch_lfo_depth->frequency_scalar.factor
-
+* env->velocity_depth(Multiply)->vca.factor
+* velocity(Signal)->velocity_depth.factor
 Daisies:
 * daisy->hpf->output
 
@@ -150,6 +151,43 @@ export class Daisy{
 	//this.pwm_lfo_depth.connect(this.vco_1.width)
 	//this.pwm_lfo_depth.connect(this.vco_2.width)
   }
+
+  //TRIGGER METHODS
+  triggerAttack = function(val, vel=1, time=null){
+    if(time){
+      this.frequency.setValueAtTime(Tone.Midi(val).toFrequency(),time)
+      this.env.triggerAttack(time)
+      this.vcf_env.triggerAttack(time)
+      this.velocity.setValueAtTime(Math.pow(vel,2),time)
+    } else{
+      this.frequency.value = Tone.Midi(val).toFrequency()
+      this.env.triggerAttack()
+      this.vcf_env.triggerAttack()
+      this.velocity.value =Math.pow(vel,2) 
+    }
+  }
+  triggerRelease = function(val, time=null){
+    if(time){
+      this.env.triggerRelease(time)
+      this.vcf_env.triggerRelease(time)
+    } else{
+      this.env.triggerRelease()
+      this.vcf_env.triggerRelease()
+    }
+  }
+  triggerAttackRelease = function(val, vel=1, dur=0.01, time=null){
+    if(time){
+      this.frequency.setValueAtTime(val,time)
+      this.env.triggerAttackRelease(dur,time)
+      this.vcf_env.triggerAttackRelease(dur,time)
+      //this.velocity.setValueAtTime(Math.pow(vel,2),time)
+    } else{
+      this.frequency.value = val
+      this.env.triggerAttackRelease(dur)
+      this.vcf_env.triggerAttackRelease(dur)
+      //this.velocity.value =Math.pow(vel,2) 
+    }
+  }//attackRelease
 }
 
 /********************
@@ -173,16 +211,22 @@ export class Daisies {
 	this.vcf_adsr = [.01,.5,.5,2]
 	this.vco_type = ["pulse","pulse"]
 	this.voiceSettings = {
-        "detune.factor": 0,
+				//vco
+				"vco_1.type": "square",
+				"vco_2.type": "square",
+				"detune.factor": 0,
+				"mixer_1.factor": .5,
+				"mixer_2.factor": .5,
+				"pitch_lfo_depth.factor": 0,
+        //vcf
         "lpf_env_depth.factor": 0,
+        "keyTracking.factor": 0,
         "panner.pan": 0,
         "keyTracking.factor": 0,
+        //vca
         "lfo.frequency": 0,
         "vca_lfo_depth.factor": 0,
-        "pitch_lfo_depth.factor": 0
-        //"pwm_lfo_depth.factor": 0,
-        //"vco_1.width": 0,
-        //"vco_2.width": 0
+        "velocity": 1
     }
     //voice tracking
     this.prevNote = 0
@@ -190,61 +234,75 @@ export class Daisies {
     this.voiceCounter = 0
     this.activeNotes = [-1,-1,-1,-1, -1,-1,-1,-1]
     this.noteOrder = [7,0,1,2,3,4,5,6]
+    this.x = 0
+    this.y = 0
   }
   /**************** 
    * trigger methods
   ***************/
   triggerAttack = function(val, vel=100, time=null){
     this.v = this.getNewVoice(val)
-    if(time){
-      this.voice[this.v].frequency.setValueAtTime(Tone.Midi(val).toFrequency(),time)
-      this.voice[this.v].env.triggerAttack(time)
-      this.voice[this.v].vcf_env.triggerAttack(time)
-      this.voice[this.v].velocity.setValueAtTime(Math.pow(vel,2),time)
-    } else{
-      this.voice[this.v].frequency.value = Tone.Midi(val).toFrequency()
-      this.voice[this.v].env.triggerAttack()
-      this.voice[this.v].vcf_env.triggerAttack()
-      this.voice[this.v].velocity.value =Math.pow(vel,2) 
-    }
+    vel = vel/127
+    if (time) this.voice[this.v].triggerAttack(val,vel,time)
+		else this.voice[this.v].triggerAttack(val,vel)
 
-    if (time) {
-      this.updateVoiceParameters(this.v, { val }, time);
-    } else {
-      this.updateVoiceParameters(this.v, { val });
-    }
+    // if (time) {
+    //   this.updateVoiceParameters(this.v, { val }, time);
+    // } else {
+    //   this.updateVoiceParameters(this.v, { val });
+    // }
   }
   triggerRelease = function(val, time=null){
     this.v = this.getActiveVoice(val)
     if(this.v < 0) return
     if(time){
-      this.voice[this.v].env.triggerRelease(time)
-      this.voice[this.v].vcf_env.triggerRelease(time)
+      this.voice[this.v].triggerRelease(time)
     } else{
-      this.voice[this.v].env.triggerRelease()
-      this.voice[this.v].vcf_env.triggerRelease()
+      this.voice[this.v].triggerRelease()
     }
   }
   triggerAttackRelease = function(val, vel=100, dur=0.01, time=null){
     this.v = this.getNewVoice(val)
     val = Tone.Midi(val).toFrequency()
-    if(time){
-      this.voice[this.v].frequency.setValueAtTime(val,time)
-      this.voice[this.v].env.triggerAttackRelease(dur,time)
-      this.voice[this.v].vcf_env.triggerAttackRelease(dur,time)
-      this.voice[this.v].velocity.setValueAtTime(Math.pow(vel,2),time)
-    } else{
-      this.voice[this.v].frequency.value = val
-      this.voice[this.v].env.triggerAttackRelease(dur)
-      this.voice[this.v].vcf_env.triggerAttackRelease(dur)
-      this.voice[this.v].velocity.value =Math.pow(vel,2) 
-    }
-    if (time) {
-      this.updateVoiceParameters(this.v, { val }, time);
-    } else {
-      this.updateVoiceParameters(this.v, { val });
-    }
+    vel = vel/127
+    if (time) this.voice[this.v].triggerAttackRelease(val,vel, dur, time) 
+    else this.voice[this.v].triggerAttackRelease(val,vel,dur)
+
+    // if (time) {
+    //   this.updateVoiceParameters(this.v, { val }, time);
+    // } else {
+    //   this.updateVoiceParameters(this.v, { val });
+    // }
   }//attackRelease
+
+  set(param, value) {
+  	console.log('set', param, value)
+  	let keys = param.split('.');
+  	console.log('keys', keys)
+    for (let i = 0; i < this.numVoices; i++) {
+      let target = this.voice[i];
+
+      for (let j = 0; j < keys.length - 1; j++) {
+        if (target[keys[j]] === undefined) {
+          console.error(`Parameter ${keys[j]} does not exist on voice ${i}`);
+          return;
+        }
+        target = target[keys[j]];
+      }
+      
+      const lastKey = keys[keys.length - 1];
+      
+      if (target[lastKey] !== undefined) {
+        if (target[lastKey]?.value !== undefined) {
+          target[lastKey].value = value;
+        } else {
+          target[lastKey] = value;
+        }
+      } else {
+        console.error(`Parameter ${lastKey} does not exist on voice ${i}`);
+      }
+    }//for
+  }//set
 
   getNewVoice(num) {
 	  if (this.voiceCounter >= this.numVoices) {
@@ -382,6 +440,32 @@ export class Daisies {
       this.voice[i].vcf_env.release = this.vcf_adsr[3] + this.decay_cv
     }
   }
+  initGui(gui, x=10,	y=10){
+  	this.gui = gui
+  	this.x = x
+  	this.y = y
+  	this.mix1_knob = this.createKnob('vco1', 5, 5, 0, 1, 0.75, [200,50,0],x=>this.set('mixer_1.factor',x));
+  	this.mix2_knob = this.createKnob('vco2', 15, 5, 0, 1, 0.75, [200,50,0],x=>this.set('mixer_2.factor',x));
+  	this.detune_knob = this.createKnob('detune', 25, 5, 1, 2, 0.75, [200,50,0],x=>this.set('detune',x));
+  	this.cutoff_knob = this.createKnob('cutoff', 35, 5, 0, 10000, 0.75, [200,50,0],x=>this.set('cutoff',x));
+  	this.vcf_env_knob = this.createKnob('vcf env', 45, 5, 0, 5000, 0.75, [200,50,0],x=>this.set('lpf_env_depth.factor',x));
+  	this.keyTracking_knob = this.createKnob('key vcf', 55, 5, 0, 1, 0.75, [200,50,0],x=>this.set('keyTracking.factor',x));
+  	this.attack_knob = this.createKnob('a', 5, 45, 0.005, .5, 0.75, [200,50,0],x=>this.set('env.attack',x));
+  	this.decay_knob = this.createKnob('d', 15, 45, 0.01, .5, 0.75, [200,50,0],x=>this.set('env.decay',x));
+  	this.sustain_knob = this.createKnob('s', 25, 45, 0, 1, 0.75, [200,50,0],x=>this.set('env.sustain',x));
+  	this.release_knob = this.createKnob('r', 35, 45, 0, 1, 0.75, [200,50,0],x=>this.set('env.release',x));
+  }
+  createKnob(_label, _x, _y, _min, _max, _size, _accentColor, callback) {
+    console.log(_label)
+    return this.gui.Knob({
+      label:_label, min:_min, max:_max, size:_size, accentColor:_accentColor,
+      x: _x + this.x, y: _y + this.y,
+      callback: callback,
+      showLabel: 1, showValue: 1, // Assuming these are common settings
+      curve: 2, // Adjust as needed
+      border: 2 // Adjust as needed
+    });
+  }
   connect(destination) {
     if (destination.input) {
       this.output.connect(destination.input);
@@ -389,7 +473,6 @@ export class Daisies {
       this.output.connect(destination);
     }
   }
-
 	disconnect(destination) {
     if (destination.input) {
       this.output.disconnect(destination.input);

@@ -238,13 +238,13 @@ export class Rumble {
       mapto: this.vco_gain_1.factor });
     
 
-    this.vco2_oct_knob = this.gui.Knob('freq', vco_knob_x[1], 20, -2, 1, 0.75, [200,50,0], /* callback */);
-    this.vco2_detune_knob = this.gui.Knob('detune', vco_knob_x[1], 50, -.2, .2, 0.75, [50,150,100], /* callback */);
-    this.vco2_gain_knob = this.gui.Knob('gain', vco_knob_x[1], 80, 0, 1, 0.75, [200,50,0] /* mapto: vco_gain_1.factor */);
+    this.vco2_oct_knob = this.createKnob('freq', vco_knob_x[1], 20, -2, 1, 0.75, [200,50,0], /* callback */);
+    this.vco2_detune_knob = this.createKnob('detune', vco_knob_x[1], 50, -.2, .2, 0.75, [50,150,100], /* callback */);
+    this.vco2_gain_knob = this.createKnob('gain', vco_knob_x[1], 80, 0, 1, 0.75, [200,50,0] /* mapto: vco_gain_1.factor */);
 
-    this.vco3_oct_knob = this.gui.Knob('freq', vco_knob_x[2], 20, -2, 1, 0.75, [200,50,0], /* callback */);
-    this.vco3_detune_knob = this.gui.Knob('detune', vco_knob_x[2], 50, -.2, .2, 0.75, [50,150,100], /* callback */);
-    this.vco3_gain_knob = this.gui.Knob('gain', vco_knob_x[2], 80, 0, 1, 0.75, [200,50,0], /* mapto: vco_gain_1.factor */);
+    this.vco3_oct_knob = this.createKnob('freq', vco_knob_x[2], 20, -2, 1, 0.75, [200,50,0], /* callback */);
+    this.vco3_detune_knob = this.createKnob('detune', vco_knob_x[2], 50, -.2, .2, 0.75, [50,150,100], /* callback */);
+    this.vco3_gain_knob = this.createKnob('gain', vco_knob_x[2], 80, 0, 1, 0.75, [200,50,0], /* mapto: vco_gain_1.factor */);
 
 
     // VCF and VCA Knobs

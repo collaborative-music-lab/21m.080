@@ -24,7 +24,7 @@ const sequence = new Tone.Sequence( (time, note) => {
 Tone.Transport.start();
 
 //define GUI
-const gui  = new p5(sketch, 'Canvas1')
+const gui  = new p5(sketch, ASCII)
 
 for (let i = 0; i < pitches.length ; i++) {
   noteToggles.push(gui.Toggle({

@@ -68,6 +68,36 @@ export class Polyphony{
 	    }
 	  }//attackRelease
 
+	  //SET PARAMETERS
+	  set(param, value) {
+	  	console.log('set', param, value)
+	  	let keys = param.split('.');
+	  	console.log('keys', keys)
+	    for (let i = 0; i < this.numVoices; i++) {
+	      let target = this.voice[i];
+
+	      for (let j = 0; j < keys.length - 1; j++) {
+	        if (target[keys[j]] === undefined) {
+	          console.error(`Parameter ${keys[j]} does not exist on voice ${i}`);
+	          return;
+	        }
+	        target = target[keys[j]];
+	      }
+	      
+	      const lastKey = keys[keys.length - 1];
+	      
+	      if (target[lastKey] !== undefined) {
+	        if (target[lastKey]?.value !== undefined) {
+	          target[lastKey].value = value;
+	        } else {
+	          target[lastKey] = value;
+	        }
+	      } else {
+	        console.error(`Parameter ${lastKey} does not exist on voice ${i}`);
+	      }
+	    }//for
+	  }//set
+
 	  //VOICE MANAGEMENT
 	  getNewVoice(num) {
 		  if (this.voiceCounter >= this.numVoices) {

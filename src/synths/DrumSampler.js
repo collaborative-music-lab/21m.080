@@ -105,6 +105,7 @@ export class DrumSampler {
     voice.start( time )
   }
   sequence(arr, subdivision) {
+  	arr = arr.replace(" ","")
     // Initialize arrays for each drum voice
     if(subdivision) this.subdivision = subdivision
     //this.loop.playbackRate = subdivision

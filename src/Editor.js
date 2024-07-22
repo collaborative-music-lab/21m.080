@@ -16,8 +16,9 @@ import Canvas from "./Canvas.js";
 //import gui_sketch from "./gui.js";
 import { Oscilloscope, Spectroscope, PlotTransferFunction } from './oscilloscope';
 
+
 // Collab-Hub features
-import CollabHubClient from './CollabHub.js';
+import { CollabHubClient, CollabHubTracker, CollabHubDisplay } from './CollabHub.js';
 
 import MidiKeyboard from './MidiKeyboard.js';
 const midi = require('./Midi.js');
@@ -35,6 +36,7 @@ function Editor(props) {
     //window.ml5 = ml5;
     window.Oscilloscope = Oscilloscope;
     window.Spectroscope = Spectroscope;
+    window.CollabHub = CollabHubDisplay;
     window.plotTransferFunction = PlotTransferFunction;
     //window.gui_sketch = gui_sketch;
     window.setMidiInput = midi.setMidiInput;
@@ -80,10 +82,11 @@ function Editor(props) {
 
     useEffect(() => {
         // collab-hub socket instance
-        window.ch = new CollabHubClient(); // needs to happen once (!)
+        window.chClient = new CollabHubClient(); // needs to happen once (!)
+        window.chTracker = new CollabHubTracker(window.chClient);
 
         // collab-hub join a room
-        window.ch.joinRoom('21m080-temp-room'); // TODO change this to the patch-specific room name
+        window.chClient.joinRoom('21m080-temp-room'); // TODO change this to the patch-specific room name
 
         const container = document.getElementById('container');
         if (container) {

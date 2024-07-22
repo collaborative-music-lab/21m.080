@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { historyField } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
 import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
         Rumble, Daisies, DatoDuo, ESPSynth, Stripe, Diffuseur, KP, Sympathy,
-        Kick} from './synths/index.js';
+        Kick, DrumSampler} from './synths/index.js';
 
 import {Sequencer} from './Sequencer.js';
 import {MultiVCO} from './MultiVCO.js'
@@ -35,6 +35,16 @@ function Editor(props) {
     window.enableAsciiInput = asciiCallbackInstance.enable.bind(asciiCallbackInstance);
     window.disableAsciiInput = asciiCallbackInstance.disable.bind(asciiCallbackInstance);
     window.setAsciiHandler = asciiCallbackInstance.setHandler.bind(asciiCallbackInstance);
+    // window.enableRecording = asciiCallbackInstance.enableLogging.bind(asciiCallbackInstance);
+    // window.disableRecording = asciiCallbackInstance.disableLogging.bind(asciiCallbackInstance);
+    // window.loadRecording = asciiCallbackInstance.loadLogs.bind(asciiCallbackInstance);
+    // window.playbackRecording = asciiCallbackInstance.replayPerformance.bind(asciiCallbackInstance);
+    // window.printLogs = asciiCallbackInstance.printLogs.bind(asciiCallbackInstance);
+    // //const fileInputRef = useRef(null);
+    // Set the file input reference to the AsciiCallback instance
+    //asciiCallbackInstance.fileInput = fileInputRef.current;
+    //asciiCallbackInstance.fileInput.addEventListener('change', asciiCallbackInstance.handleFileChange);
+
     
     window.setMidiInput = midi.setMidiInput;
     window.setNoteOnHandler = midi.midiHandlerInstance.setNoteOnHandler.bind(midi.midiHandlerInstance);
@@ -58,6 +68,7 @@ function Editor(props) {
     window.Sequencer = Sequencer
     window.MultiVCO = MultiVCO
     window.Kick = Kick
+    window.DrumSampler = DrumSampler
 
     var curLineNum = 0;
 
@@ -601,6 +612,7 @@ function Editor(props) {
                                 <option value="textFile">Text File</option>
                                 <option value="webPage">Web Page</option>
                             </select>
+                            { /* <input type="file" ref={fileInputRef} style={{ display: 'none' }} /> */}
 
                             {!p5Minimized &&
                                 <button className="button-container" onClick={codeMinClicked}>-</button>

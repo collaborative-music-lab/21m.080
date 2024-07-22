@@ -333,12 +333,35 @@ export class CollabHubClient {
         this.chatMaxDisplay = 20;
 
         // set callbacks
+        this.ch.setControlsCallback(this.handleControl);
+        this.ch.setEventsCallback(this.handleEvent);
+        this.ch.setChatCallback(this.handleChat);
 
+        // start tracking
+        this.update();
+        setInterval(this.update, 1000);
     }
 
 
     update() {
+        // clean old data
+        for (let key in this.recentControls) {
+            if (Date.now() - this.recentControls[key].time > this.activityTimeOut) {
+                delete this.recentControls[key];
+            }
+        }
 
+        for (let key in this.recentEvents) {
+            if (Date.now() - this.recentEvents[key].time > this.activityTimeOut) {
+                delete this.recentEvents[key];
+            }
+        }
+
+        for (let i = 0; i < this.recentChat.length; i++) {
+            if (Date.now() - this.recentChat[i].time > this.activityTimeOut) {
+                this.recentChat.splice(i, 1);
+            }
+        }
     }
 
     handleChat(incoming) {
@@ -346,7 +369,23 @@ export class CollabHubClient {
         if (this.recentChat.length > this.chatMaxDisplay) {
             this.recentChat.shift();
         }
+        console.log('CHAT: ', this.recentChat);
     }
 
+    handleControl(incoming) {
+        this.recentControls[incoming.header] = {
+            value: incoming.values,
+            from: incoming.from,
+            time: Date.now()
+        };
+        console.log('CONTROLS: ', this.recentControls);
+    }
 
+    handleEvent(incoming) {
+        this.recentEvents[incoming.header] = {
+            from: incoming.from,
+            time: Date.now()
+        };
+        console.log('EVENTS: ', this.recentEvents);
+    }
   }

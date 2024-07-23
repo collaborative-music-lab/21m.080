@@ -57,17 +57,19 @@ function Editor(props) {
     // Save history in browser
     const serializedState = localStorage.getItem(`${props.page}EditorState`);
 
-    // Decoding the URL
-    const URLParams = new URLSearchParams(window.location.search);
-    const encodedContent = URLParams.get('code');
-    let value;
-    if (encodedContent) {
-        value = atob(encodedContent);
-        // const url = window.location.origin + window.location.pathname;
-        // window.location.assign(url);
-    } else {
-        value = localStorage.getItem(`${props.page}Value`) || props.starterCode;
+    // Decoding the URL and reloading the page
+    function urlDecode() {
+        const URLParams = new URLSearchParams(window.location.search);
+        const encodedContent = URLParams.get('code');
+        if (encodedContent) {
+            localStorage.setItem(`${props.page}Value`, atob(encodedContent));
+            const url = window.location.origin + window.location.pathname;
+            window.location.assign(url);
+        }
     }
+
+    urlDecode();
+    const value = localStorage.getItem(`${props.page}Value`) || props.starterCode;
     
 
     //const value = 'let CHANNEL = 3'
@@ -497,6 +499,7 @@ function Editor(props) {
 
     function exportAsLink(code) {
         const liveCode = localStorage.getItem(`${props.page}Value`);
+        console.log(liveCode);
         const encodedCode = btoa(liveCode);
         const url = `${window.location.origin}${window.location.pathname}?code=${encodedCode}`;
         navigator.clipboard.writeText(url);

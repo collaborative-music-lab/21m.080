@@ -618,29 +618,51 @@ export class CollabHubTracker {
         }, 100); // Repeat every 0.5 seconds
         
         
-        // send message handler
-        document.getElementById('sendChatMessage').addEventListener('click', () => {
-        let newChatMessageEl = document.getElementById('newChatMessage')
-        window.chClient.chat(newChatMessageEl.value)
-        newChatMessageEl.placeholder = 'New message'
-        newChatMessageEl.value = ''
+                // send message handler
+        function sendMessage() {
+            let newChatMessageEl = document.getElementById('newChatMessage')
+            window.chClient.chat(newChatMessageEl.value)
+            newChatMessageEl.placeholder = 'New message'
+            newChatMessageEl.value = ''
+        }
+
+        document.getElementById('sendChatMessage').addEventListener('click', sendMessage);
+        document.getElementById('newChatMessage').addEventListener('keypress', (event) => {
+            if (event.keyCode === 13) {
+                sendMessage();
+            }
         });
-        
+
         // join room handler
-        document.getElementById('joinRoomButton').addEventListener('click', () => {
-        let roomNameEl = document.getElementById('roomName')
-        window.chClient.joinRoom(roomNameEl.value)
-        roomNameEl.placeholder = 'Joined ' + roomNameEl.value
-        roomNameEl.value = ''
+        function joinRoom() {
+            let roomNameEl = document.getElementById('roomName')
+            window.chClient.joinRoom(roomNameEl.value)
+            roomNameEl.placeholder = 'Joined ' + roomNameEl.value
+            roomNameEl.value = ''
+        }
+
+        document.getElementById('joinRoomButton').addEventListener('click', joinRoom);
+        document.getElementById('roomName').addEventListener('keypress', (event) => {
+            if (event.keyCode === 13) {
+                joinRoom();
+            }
         });
-        
+
         // change username handler
-        document.getElementById('changeUserName').addEventListener('click', () => {
-        let newUserNameEl = document.getElementById('newUserName')
-        window.chClient.setUsername(newUserNameEl.value)
-        newUserNameEl.placeholder = 'New user: ' + newUserNameEl.value
-        newUserNameEl.value = ''
+        function changeUserName() {
+            let newUserNameEl = document.getElementById('newUserName')
+            window.chClient.setUsername(newUserNameEl.value)
+            newUserNameEl.placeholder = 'New user: ' + newUserNameEl.value
+            newUserNameEl.value = ''
+        }
+
+        document.getElementById('changeUserName').addEventListener('click', changeUserName);
+        document.getElementById('newUserName').addEventListener('keypress', (event) => {
+            if (event.keyCode === 13) {
+                changeUserName();
+            }
         });
+
     }
 
     setControlsCallback(f) { this.ch.setControlsCallback(f) }

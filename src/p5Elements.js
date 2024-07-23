@@ -270,6 +270,7 @@ let prevYElementSize = 0;
 class Element {
     constructor(p, options) {
         this.p = p;
+        this.ch = window.chClient;
         this.theme = activeTheme;
         this.label = options.label || "myElement";
         this.id = this.label;
@@ -332,6 +333,17 @@ class Element {
         this.rawValue = unScaleOutput(options.value,0,1,this.min,this.max,this.curve) || 0.5;
         this.value = options.value || scaleOutput(0.5,0,1,this.min,this.max,this.curve);
         p.elements[this.id] = this;
+
+        //collab-hub sharing values
+        this.linkName = typeof options.link === 'string' ? options.link : null; // share params iff link is defined
+        this.linkFunc = typeof options.link === 'function' ? options.link : null; 
+        
+        // set listener for updates from collab-hub (for linkName only)
+        if (this.linkName) {
+            this.ch.on(this.linkName, (incoming) => {
+                this.forceSet(this.ch.getControl(this.linkName));
+            })
+        }
 
         this.mapValue(this.value, this.mapto);
         this.runCallBack()
@@ -443,6 +455,11 @@ class Element {
                 }
             }
         } else if( this.maptoDefined == 'false'){ console.log(this.label, 'no destination defined')}
+
+        // send updates to collab-hub
+        if (this.sendName) { 
+            this.ch.control(this.sendName, this.value);
+        }
     }
 
     set(value){
@@ -452,6 +469,27 @@ class Element {
             this.rawValue = unScaleOutput(value,0,1,this.min,this.max,this.curve);
             this.mapValue(this.value, this.mapto);
         }
+
+        this.runCallBack()
+
+        // send updates to collab-hub
+        if (this.linkName) { 
+            this.ch.control(this.linkName, this.value);
+        }
+        if (this.linkFunc) { 
+            this.linkFunc();
+        }
+    }
+
+    forceSet(value){
+        // sets value without sending data to collab-hub
+        if(typeof(value) === 'string') this.value = value;
+        else{
+            this.value = value
+            this.rawValue = unScaleOutput(value,0,1,this.min,this.max,this.curve) || 0.5;
+            this.mapValue(this.value, this.mapto);
+        }
+
         this.runCallBack()
     }
 }
@@ -464,6 +502,12 @@ export class Knob extends Element {
         this.degrees = options.degrees || 320;
         this.startAngle = this.p.PI * (4/8 + (360 - this.degrees)/360);
         this.endAngle = this.p.PI * (4/8 - (360 - this.degrees)/360 ) + 2 * this.p.PI;
+
+        // send initial val to collab-hub
+        if (this.linkName) { 
+            this.ch.control(this.linkName, this.value);
+        }
+        if (this.linkFunc) this.linkFunc();
     }
 
     resize(scaleWidth, scaleHeight) {
@@ -530,7 +574,14 @@ export class Knob extends Element {
             if( this.rawValue < 0 ) this.rawValue = 0
             this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
             this.mapValue(this.value, this.mapto);
+
             this.runCallBack()
+
+            // send updates to collab-hub
+            if (this.linkName) { 
+                this.ch.control(this.linkName, this.value);
+            }
+            if (this.linkFunc) this.linkFunc();
         }
     }
 }
@@ -553,6 +604,12 @@ export class Fader extends Element {
         this.value = this.value || 0.5
         this.dragging = false;
         this.size = options.size || 1
+
+        // send initial val to collab-hub
+        if (this.linkName) { 
+            this.ch.control(this.linkName, this.value);
+        }
+        if (this.linkFunc) this.linkFunc();
     }
 
     resize(scaleWidth, scaleHeight) {
@@ -636,6 +693,12 @@ export class Fader extends Element {
             this.mapValue(this.value, this.mapto);
             
             this.runCallBack()
+
+            // send updates to collab-hub
+            if (this.linkName) { 
+                this.ch.control(this.linkName, this.value);
+            }
+            if (this.linkFunc) this.linkFunc();
         }
     }
 }
@@ -649,6 +712,12 @@ p5.prototype.Slider = function (options = {}) {
 };
 
 /**************************************** PAD ******************************************/
+// NOTE THIS LOOKS BROKEN!!
+// It's the only element that has a custom valueX, valueY thingy
+// var value gets ignored and so the callback doesn't work asa expected
+// maybe represent values of x and y as a string instead??
+// doesn't support collab-hub features as of now for the same reason
+
 export class Pad extends Element {
     constructor(p, options) {
         super(p, options);
@@ -664,6 +733,12 @@ export class Pad extends Element {
         else this.maptoX = options.maptoX || null;
         if(typeof(options.maptoY)=='string') this.maptoY = eval(options.maptoY)
         else this.maptoY = options.maptoY || null;
+
+        // send initial val to collab-hub
+        // if (this.linkName) { 
+        //     this.ch.control(this.linkName, this.value);
+        // }
+        // if (this.linkFunc) this.linkFunc();
     }
 
     resize(scaleWidth, scaleHeight) {
@@ -741,6 +816,8 @@ export class Pad extends Element {
             this.valueY = scaleOutput(this.rawValueY,0,1,this.min,this.max,this.curve)
             this.mapValue(this.valueY,this.maptoY);
             this.runCallBack()
+
+            //collab-hub....
         }
     }
 }
@@ -759,6 +836,12 @@ export class Button extends Element {
         super(p, options);
         this.value = options.value || 0
         this.rawValue = this.value
+
+        // send initial val to collab-hub
+        if (this.linkName) { 
+            this.ch.control(this.linkName, this.value);
+        }
+        if (this.linkFunc) this.linkFunc();
     }
 
     resize(scaleWidth, scaleHeight) {
@@ -792,24 +875,54 @@ export class Button extends Element {
     }
 
     isPressed(){
-        if(this.active == 0){
-            if( this.p.mouseX < (this.cur_x + this.x_box/2) &&
-                this.p.mouseX > (this.cur_x - this.x_box/2) &&
-                this.p.mouseY > (this.cur_y - this.y_box/2) &&
-                this.p.mouseY < (this.cur_y + this.y_box/2) )
-            {
-                this.active = 1
-                this.rawValue = 1
-                this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
-                this.mapValue(this.value,this.mapto);
-                this.runCallBack();
-                if( this.maptoDefined == 'false') postButtonError('Buttons')
+
+        if( this.p.mouseX < (this.cur_x + this.x_box/2) &&
+            this.p.mouseX > (this.cur_x - this.x_box/2) &&
+            this.p.mouseY > (this.cur_y - this.y_box/2) &&
+            this.p.mouseY < (this.cur_y + this.y_box/2) )
+        {
+            this.active = 1
+            this.rawValue = 1
+            this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
+            this.mapValue(this.value,this.mapto);
+            this.runCallBack();
+            if( this.maptoDefined == 'false') postButtonError('Buttons')
+
+            // send updates to collab-hub
+            if (this.linkName) { 
+                this.ch.control(this.linkName, this.value);
             }
+            if (this.linkFunc) this.linkFunc();
+
         }
     }
 
     isReleased(){
         if( this.active == 1 )  {
+            this.active = 0
+            this.rawValue = 0
+            this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
+
+            // send updates to collab-hub
+            if (this.linkName) { 
+                this.ch.control(this.linkName, this.value);
+            }
+            if (this.linkFunc) this.linkFunc();
+        }
+    }
+
+    forceSet(value){
+        // sets value without sending data to collab-hub
+        if (value) {
+            this.active = 1
+            this.rawValue = 1
+            this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
+            this.mapValue(this.value,this.mapto);
+
+            this.runCallBack();
+            if( this.maptoDefined == 'false') postButtonError('Buttons')
+
+        } else {
             this.active = 0
             this.rawValue = 0
             this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
@@ -865,6 +978,12 @@ export class Toggle extends Button {
     constructor(p, options) {
         super(p, options);
         this.state = options.state || false;
+
+        // send initial val to collab-hub
+        if (this.linkName) { 
+            this.ch.control(this.linkName, this.value);
+        }
+        if (this.linkFunc) this.linkFunc();
     }
 
     isPressed(){
@@ -879,6 +998,12 @@ export class Toggle extends Button {
             this.mapValue(this.value,this.mapto);
             this.runCallBack();
             if( this.maptoDefined == 'false') postButtonError('Toggle buttons')
+
+            // send updates to collab-hub
+            if (this.linkName) { 
+                this.ch.control(this.linkName, this.value);
+            }
+            if (this.linkFunc) this.linkFunc();
         }
     }
 
@@ -886,6 +1011,16 @@ export class Toggle extends Button {
         if( this.active == 1 )  {
             this.active = 0
         }
+    }
+
+    forceSet(value){
+        // sets value without sending data to collab-hub
+        this.rawValue = value
+        this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
+        this.mapValue(this.value,this.mapto);
+
+        this.runCallBack();
+        if( this.maptoDefined == 'false') postButtonError('Toggle buttons')
     }
 }
 
@@ -904,6 +1039,12 @@ export class RadioButton extends Button {
         this.radioHeight = this.cur_size / 2;
         this.radioWidth = this.cur_size * 2;
         this.border = options.border ||activeTheme.radioBorder || 2
+
+        // send initial val to collab-hub
+        if (this.linkName) { 
+            this.ch.control(this.linkName, this.value);
+        }
+        if (this.linkFunc) this.linkFunc();
     }
 
     draw() {
@@ -994,6 +1135,12 @@ export class RadioButton extends Button {
             this.runCallBack();
             this.mapValue(this.value, this.mapto);
             if( this.maptoDefined == 'false') postButtonError('RadioButtons')
+
+            // send updates to collab-hub
+            if (this.linkName) { 
+                this.ch.control(this.linkName, this.value);
+            }
+            if (this.linkFunc) this.linkFunc();
         }
     }
 

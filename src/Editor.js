@@ -14,6 +14,11 @@ import * as Theory from './Theory.js';
 //import ml5 from 'ml5';
 import Canvas from "./Canvas.js";
 import { Oscilloscope, Spectroscope, PlotTransferFunction } from './oscilloscope';
+
+
+// Collab-Hub features
+import { CollabHubClient, CollabHubTracker, CollabHubDisplay } from './CollabHub.js';
+
 import MidiKeyboard from './MidiKeyboard.js';
 import { asciiCallbackInstance } from './AsciiKeyboard.js';
 const midi = require('./Midi.js');
@@ -30,6 +35,7 @@ function Editor(props) {
     //window.ml5 = ml5;
     window.Oscilloscope = Oscilloscope;
     window.Spectroscope = Spectroscope;
+    window.CollabHub = CollabHubDisplay;
     window.plotTransferFunction = PlotTransferFunction;
 
     window.enableAsciiInput = asciiCallbackInstance.enable.bind(asciiCallbackInstance);
@@ -104,6 +110,13 @@ function Editor(props) {
     const [maximized, setMaximized] = useState('');
 
     useEffect(() => {
+        // collab-hub socket instance
+        window.chClient = new CollabHubClient(); // needs to happen once (!)
+        window.chTracker = new CollabHubTracker(window.chClient);
+
+        // collab-hub join a room
+        window.chClient.joinRoom('21m080-temp-room'); // TODO change this to the patch-specific room name
+
         const container = document.getElementById('container');
         if (container) {
             setHeight(`${container.clientHeight}px`);

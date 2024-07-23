@@ -4,6 +4,7 @@ export { DatoDuo } from './DatoDuo.js';
 export { ESPSynth } from './ESPSynth.js';
 export { ToneWood } from './ToneWood.js';
 export { DelayOp } from './DelayOp.js';
+export { Polyphony } from './Polyphony.js';
 export { Caverns } from './Caverns.js';
 export { Rumble } from './Rumble.js';
 export { Daisies } from './Daisies.js';

@@ -131,6 +131,7 @@ export class ESPSynth {
 
     //envelopes
     triggerAttack (freq, amp, time=null){ 
+        freq = Tone.Midi(freq).toFrequency()
         amp = amp/127
         if(time){
             this.env.triggerAttack(time)
@@ -159,6 +160,7 @@ export class ESPSynth {
     }
 
     triggerAttackRelease (freq, amp, dur=0.01, time=null){
+    freq = Tone.Midi(freq).toFrequency()
     if(time){
         this.env.triggerAttackRelease(dur, time)
         this.frequency.setValueAtTime(freq, time)

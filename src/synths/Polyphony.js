@@ -11,62 +11,49 @@ export class Polyphony{
 		this.gui = gui
 		this.numVoices = num
 		//audio
-		this.voice = []
-		for(let i=0;i<this.numVoices;i++) this.voice.push(new voice)
-		this.output = new Tone.Multiply(0.125)
+		this.voices = []
+		for(let i=0;i<this.numVoices;i++) this.voices.push(new voice)
+		this.output = new Tone.Multiply(1/this.numVoices)
 		this.hpf = new Tone.Filter({type:'highpass', rolloff:-12, Q:0, cutoff:50})
-		for(let i=0;i<this.numVoices;i++) this.voice[i].output.connect( this.hpf)
+		for(let i=0;i<this.numVoices;i++) this.voices[i].output.connect( this.hpf)
 		this.hpf.connect(this.output)
 
 	    //voice tracking
 		this.prevNote = 0
 		this.v = 0
 		this.voiceCounter = 0
-	    //TODO: fix to be variable based on number of voices. . . 
-		this.activeNotes = [-1,-1,-1,-1, -1,-1,-1,-1]
-		this.noteOrder = [7,0,1,2,3,4,5,6]
+		this.activeNotes = []
+		this.noteOrder = []
+		for (let i = 0; i < this.numVoices; i++) {
+			this.activeNotes.push(-1)
+			if (i === 0) {this.noteOrder.push(this.numVoices - 1)}
+			else {this.noteOrder.push(i - 1)}
+		}
 	}
 	/**************** 
 	 * trigger methods
 	***************/
 	triggerAttack = function(val, vel=100, time=null){
 		this.v = this.getNewVoice(val)
-		if(time) this.voice[this.v].triggerAttack(val,vel,time) //midinote,velocity,time
-		else this.voice[this.v].triggerAttack(val,vel) 
+		if(time) this.voices[this.v].triggerAttack(val,vel,time) //midinote,velocity,time
+		else this.voices[this.v].triggerAttack(val,vel) 
 	}
-	//TODO: update trigger release and triggerAttackRelease
+
 	triggerRelease = function(val, time=null){
 		this.v = this.getActiveVoice(val)
-		if(this.v < 0) return
-		if(time){
-			this.voice[this.v].env.triggerRelease(time)
-			this.voice[this.v].vcf_env.triggerRelease(time)
-		} else{
-			this.voice[this.v].env.triggerRelease()
-			this.voice[this.v].vcf_env.triggerRelease()
-		}
+		if(time) this.voices[this.v].triggerRelease(time) //midinote,velocity,time
+		else this.voices[this.v].triggerRelease() 
 	}
 
 	triggerAttackRelease = function(val, vel=100, dur=0.01, time=null){
 		this.v = this.getNewVoice(val)
 		val = Tone.Midi(val).toFrequency()
 		if(time){
-			this.voice[this.v].frequency.setValueAtTime(val,time)
-			this.voice[this.v].env.triggerAttackRelease(dur,time)
-			this.voice[this.v].vcf_env.triggerAttackRelease(dur,time)
-			this.voice[this.v].velocity.setValueAtTime(Math.pow(vel,2),time)
+			this.voices[this.v].triggerAttackRelease(val, vel, dur, time)
 		} else{
-			this.voice[this.v].frequency.value = val
-			this.voice[this.v].env.triggerAttackRelease(dur)
-			this.voice[this.v].vcf_env.triggerAttackRelease(dur)
-			this.voice[this.v].velocity.value =Math.pow(vel,2) 
+			this.voices[this.v].triggerAttackRelease(val, vel, dur)
 		}
-		if (time) {
-			this.updateVoiceParameters(this.v, { val }, time);
-		} else {
-			this.updateVoiceParameters(this.v, { val });
-		}
-	}//attackRelease
+	}
 
 	//SET PARAMETERS
 	set(param, value) {
@@ -74,7 +61,7 @@ export class Polyphony{
 		let keys = param.split('.');
 		console.log('keys', keys)
 		for (let i = 0; i < this.numVoices; i++) {
-			let target = this.voice[i];
+			let target = this.voices[i];
 			for (let j = 0; j < keys.length - 1; j++) {
 				if (target[keys[j]] === undefined) {
 					console.error(`Parameter ${keys[j]} does not exist on voice ${i}`);
@@ -135,7 +122,6 @@ export class Polyphony{
 		for(let i=0;i<this.numVoices;i++){
 			if(this.activeNotes[i]==num){
 				this.activeNotes[i] = -1
-				//console.log('voice freed ', i)
 				return i
 			}
 		}
@@ -144,8 +130,8 @@ export class Polyphony{
 
 	panic = function(){
 		for(let i=0;i<this.numVoices;i++){
-		this.voice[i].env.triggerRelease()
-		this.voice[i].vcf_env.triggerRelease()
+		this.voices[i].env.triggerRelease()
+		this.voices[i].vcf_env.triggerRelease()
 		this.activeNotes[i]  = -1
 		}
 	}

@@ -128,6 +128,7 @@ export class DatoDuo {
 
   //envelopes
   triggerAttack (freq, amp, time=null){
+    freq = Tone.Midi(freq).toFrequency()
     if(time){
       this.ampEnvelope.triggerAttack(time)
       this.filterEnvelope.triggerAttack(time)
@@ -156,6 +157,7 @@ export class DatoDuo {
     }
   }
   triggerAttackRelease (freq, amp, dur=0.01, time=null){
+    freq = Tone.Midi(freq).toFrequency()
     if(time){
       this.ampEnvelope.triggerAttackRelease(dur, time)
       this.filterEnvelope.triggerAttackRelease(dur, time)

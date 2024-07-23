@@ -11,11 +11,11 @@ import {MultiVCO} from '../MultiVCO.js'
 import {stepper} from  '../Utilities.js'
 
 export class ESPSynth {
-    constructor (gui = null) {
+    constructor (waves = ['triangle', 'sawtooth', 'square', 'square', 'square', 'noise'], pitches = [1, 1, 1, 0.5, 0.25, 1], gui = null) {
         this.gui = gui
         this.frequency = new Tone.Signal()
         this.pitchshift = new Tone.Multiply()
-        this.multiOsc = new MultiVCO(['triangle', 'sawtooth', 'square', 'square', 'square', 'noise'], [1, 1, 1, 0.5, 0.25, 1])
+        this.multiOsc = new MultiVCO(waves, pitches)
         this.lfo = new Tone.LFO().start()
         this.vibratoSwitch = new Tone.Multiply()
         this.wahSwitch = new Tone.Multiply()
@@ -95,6 +95,29 @@ export class ESPSynth {
 
         this.vcfDynamicRange = 0  //at low values, there's low dynamic range
         this.vcaDynamicRange = 0  //at high values, there's high dynamic range
+        
+        //initialize values
+        this.pitchshift.value = 1; 
+        for (let i = 0; i < waves.length ; i++) {
+            this.multiOsc.setGain(i, 1)
+        }
+        this.lfo.min = 0
+        this.lfo.max = 1
+        this.vibratoSwitch.value = 0
+        this.wahSwitch.value = 0
+        this.lfo.frequency.value = 10
+        this.filterCutoffFrequency.value = 1200
+        this.vcf.Q.value = 1
+        this.vcfEnvelopeDepth.factor.value = 0.01
+        this.outputGain.value = 1
+        this.vcfDynamicRange = 0.99
+        this.vcaDynamicRange = 0.99
+        this.env.attack = 0.1
+        this.env.decay = 0.1
+        this.env.sustain = 1
+        this.env.release = 1
+        this.chorgain.factor.value = 0
+        this.dist.distortion = 0
     }
 
     octaveMapping(x) {
@@ -331,8 +354,6 @@ export class ESPSynth {
         this.resonance_knob.borderColor = [178,192,191]
         this.resonance_knob.accentColor = [255,162,1]
         this.resonance_knob.border = 5
-        
-          //TODOOOOOO
         
         this.asdr_int_knob = this.gui.Knob({
             label:'VCF Env Depth',

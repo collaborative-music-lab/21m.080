@@ -395,20 +395,20 @@ export class CollabHubTracker {
 
   export const CollabHubDisplay = function(_target) {
 
-    this.ch = window.chClient;
+    // this.ch = window.chClient;
 
     //this.target = document.querySelector(target);
-    this.target = document.getElementById(_target)
+    const target = document.getElementById(_target)
 
     // Set the dimensions based on the target container
-    this.width = this.target.offsetWidth;
-    this.height = this.target.offsetHeight;
+    const width = target.offsetWidth;
+    const height = target.offsetHeight;
 
     // Create the canvas
-    this.html = '<div><div style="margin-bottom: 5px;"><input type="text" id="roomName" name="roomName" placeholder="Enter room"></input><button id="joinRoomButton">Join Room</button><input type="text" id="newUserName" name="newUserName" placeholder="Enter new username" style="margin-left: 5px;"></input><button id="changeUserName">Change username</button></div><div class="collab-container"><div class="collab-item" id="collab-controls"> </div><div class="collab-item" id="collab-events"> </div><div class="collab-item"> <div class="collab-chat-container"><div id="collab-chat"></div><div class="collab-chat-input"><input type="text" id="newChatMessage" name="newChatMessage" placeholder="New message"></input><button id="sendChatMessage">Send</button></div></div></div></div></div>';
+    const html = '<div><div style="margin-bottom: 5px;"><input type="text" id="roomName" name="roomName" placeholder="Enter room"></input><button id="joinRoomButton">Join Room</button><input type="text" id="newUserName" name="newUserName" placeholder="Enter new username" style="margin-left: 5px;"></input><button id="changeUserName">Change username</button></div><div class="collab-container"><div class="collab-item" id="collab-controls"> </div><div class="collab-item" id="collab-events"> </div><div class="collab-item"> <div class="collab-chat-container"><div id="collab-chat"></div><div class="collab-chat-input"><input type="text" id="newChatMessage" name="newChatMessage" placeholder="New message"></input><button id="sendChatMessage">Send</button></div></div></div></div></div>';
 
     // Append the canvas element to the target container
-    this.target.innerHTML = this.html;
+    target.innerHTML = html;
 
     function updateControls() {
         const controlsContainer = document.getElementById('collab-controls');
@@ -620,7 +620,7 @@ export class CollabHubTracker {
     // send message handler
     document.getElementById('sendChatMessage').addEventListener('click', () => {
     let newChatMessageEl = document.getElementById('newChatMessage')
-    this.ch.chat(newChatMessageEl.value)
+    window.chClient.chat(newChatMessageEl.value)
     newChatMessageEl.placeholder = 'New message'
     newChatMessageEl.value = ''
     });
@@ -628,7 +628,7 @@ export class CollabHubTracker {
     // join room handler
     document.getElementById('joinRoomButton').addEventListener('click', () => {
     let roomNameEl = document.getElementById('roomName')
-    this.ch.joinRoom(roomNameEl.value)
+    window.chClient.joinRoom(roomNameEl.value)
     roomNameEl.placeholder = 'Joined ' + roomNameEl.value
     roomNameEl.value = ''
     });
@@ -636,7 +636,7 @@ export class CollabHubTracker {
     // change username handler
     document.getElementById('changeUserName').addEventListener('click', () => {
     let newUserNameEl = document.getElementById('newUserName')
-    this.ch.setUsername(newUserNameEl.value)
+    window.chClient.setUsername(newUserNameEl.value)
     newUserNameEl.placeholder = 'New user: ' + newUserNameEl.value
     newUserNameEl.value = ''
     });

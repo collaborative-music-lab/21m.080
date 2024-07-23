@@ -60,8 +60,15 @@ function Editor(props) {
     // Decoding the URL and reloading the page
     function urlDecode() {
         const URLParams = new URLSearchParams(window.location.search);
-        const encodedContent = URLParams.get('code');
+        let encodedContent = URLParams.get('code');
         if (encodedContent) {
+            encodedContent = encodedContent
+                .replace(/-/g, '+')
+                .replace(/_/g, '/');
+            // Adding the padding to the encoding
+            while (encodedContent.length % 4 !== 0) {
+                encodedContent += '=';
+            }
             localStorage.setItem(`${props.page}Value`, atob(encodedContent));
             const url = window.location.origin + window.location.pathname;
             window.location.assign(url);
@@ -500,8 +507,12 @@ function Editor(props) {
     function exportAsLink(code) {
         const liveCode = localStorage.getItem(`${props.page}Value`);
         console.log(liveCode);
-        const encodedCode = btoa(liveCode);
-        const url = `${window.location.origin}${window.location.pathname}?code=${encodedCode}`;
+        // The replaces create a URL-safe btoa conversion
+        const encodedCode = btoa(liveCode)
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, ''); // Removes padding
+        const url = `http://localhost:3000/m080/?code=${encodedCode}`;
         navigator.clipboard.writeText(url);
         console.log('copy');
     }

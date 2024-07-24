@@ -378,7 +378,7 @@ export class DatoDuo {
 
     this.crusher_toggle =  this.gui.Toggle({
       label:'bitcrusher',
-      callback: (x)=>{this.super.set('this.crusher.wet' , x)},
+      callback: (x)=>{this.super.set('crusher.wet' , x)},
       x: 90, y:50, size: 0.8,
       link: 'crusher'
     })

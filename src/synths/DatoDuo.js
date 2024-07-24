@@ -6,6 +6,7 @@ Modeled after the DatoDuo
 
 import p5 from 'p5';
 import * as Tone from 'tone';
+import {stepper} from  '../Utilities.js'
 
 export class DatoDuo {
   constructor (gui = null) {
@@ -361,42 +362,157 @@ export class DatoDuo {
       link: 'snare',
     })
     this.snare_trigger.accentColor = [20,20,20]
+  }
 
-    /*
-    * Helper function for creating a custom curve for this.gui elements
-    *
-    * input : input of the stepper function
-    * min: minimmum value of the element
-    * max: maximmum value of the element
-    * steps: array of arrays in format [[0,0], [a,b], .... [1,1]] where each point is a step in the curve
-    * 
-    * x values are how much the this.gui element is turned
-    * y values are the level the elements are at internally
-    */
+  initPolyGui(superClass, gui) {
+    this.gui = gui
+    this.super = superClass
+    this.distortion_toggle =  this.gui.Toggle({
+      label:'Accent',
+      callback: (x)=>{this.super.set('dist.wet' , x)},
+      x: 85, y:20, size: 0.8,
+      link: 'dist'
+    })
+    this.distortion_toggle.accentColor = [51,145,219]
+    this.super.set('dist.wet.value' , 0)
 
-    function stepper(input, min, max, steps) {
-      let range = max - min
-      let rawval = (input - min) / range
-      const gui_values = []
-      const internal_values = []
-      for (let i = 0; i < steps.length ; i++) {
-        gui_values.push(steps[i][0])
-        internal_values.push(steps[i][1])
-      }
-      let index = 0
-      while(index < gui_values.length) {
-        if (rawval < gui_values[index]) {
-          let slope = (internal_values[index] - internal_values[index - 1])/(gui_values[index] - gui_values[index-1])
-          let rawCurved = internal_values[index-1] + slope * (rawval - gui_values[index - 1]) 
-          let realCurved = (rawCurved * range) + min
-          //console.log('input value', input)
-          //console.log('curved value', realCurved)
-          return realCurved
-        }
-        index++
-      }
-      return max
+    this.crusher_toggle =  this.gui.Toggle({
+      label:'bitcrusher',
+      callback: (x)=>{this.super.set('this.crusher.wet' , x)},
+      x: 90, y:50, size: 0.8,
+      link: 'crusher'
+    })
+    this.crusher_toggle.accentColor = [46,152,99]
+    this.super.set('crusher.wet.value',  0)
+
+    this.glide_toggle =  this.gui.Toggle({
+      label:'Glide',
+      callback: (x)=>{this.super.set('isGlide' , x)},
+      x: 15, y:20, size: 0.8,
+      link: 'glide'
+    })
+    this.glide_toggle.accentColor = [51,145,219]
+
+    this.delayControl = function(x) {
+      this.super.set('delay.feedback.value' , stepper(x, 0 , 1 , [[0,0], [0.02, 0], [0.8,0.6], [1,1]]))
+      this.super.set('delay.wet.value' , stepper(x , 0, 1, [[0,0], [0.02, 0], [0.04, 1], [1,1]]))
+      this.super.set('delaygain.factor.value' , stepper(x , 0, 1, [[0,0], [0.02, 0], [0.04, 0.3], [0.4, 0.5], [1,1]]))
+      this.super.set('lfo.amplitude.value' , stepper(x , 0, 1, [[0,0], [0.5, 0], [0.7, 0.5], [1,1]]))
     }
+
+    this.delay_knob = this.gui.Knob({
+      label:'Delay Control',
+      callback: (x)=>{this.delayControl(x)},
+      x: 10, y: 50, size:0.8,
+      min:0.001, max: 1, curve: 1,
+      showValue: false,
+      link: 'delayknob'
+    })
+    this.delay_knob.accentColor = [49,48,55]
+    this.delay_knob.set( 0.0001 )
+
+    this.wave_fader = this.gui.Slider({
+      label:'wave',
+      x: 39, y: 10, size: 2,
+      min:0, max: 1,
+      callback: (x)=>{this.super.set('pulseWav.width.value' , stepper(x, 0, 1, [[0,0], [0.4, 0.6], [1,1]]))},
+      orientation: 'vertical',
+      showValue: false, 
+      link: 'wave'
+    })
+    this.wave_fader.accentColor = [247, 5, 5]
+    this.wave_fader.borderColor = [20, 20, 20]
+    this.wave_fader.set(0.5)
+
+    this.freq_fader = this.gui.Slider({
+      label:'freq',
+      //callback: (x)=>{this.cutoffSig.value = stepper(x, 200, 1200, [[0,0], [0.6, 0.8], [1,1]])},
+      callback: (x)=>{this.super.set('filterDepth.value' , x)},
+      mapto: this.cutoffSig,
+      x: 49, y: 10, size: 2,
+      min:50, max: 2500, curve: 2,
+      orientation: 'vertical',
+      showValue: false,
+      link: 'freq'
+    })
+    this.freq_fader.accentColor = [247, 5, 5]
+    this.freq_fader.borderColor = [20, 20, 20]
+    this.freq_fader.set(700)
+
+    this.release_fader = this.gui.Slider({
+      label:'release',
+      callback: (x)=>{ this.super.set('filterEnvelope.release' , stepper(x, 0.1, 1.5, [[0,0], [0.8, 0.5], [1,1]]))},
+      x: 59, y: 10, size: 2,
+      min:0.1, max: 1.5,
+      orientation: 'vertical',
+      showValue: false,
+      link: 'release'
+    })
+    this.release_fader.accentColor = [247, 5, 5]
+    this.release_fader.borderColor = [20, 20, 20]
+    this.release_fader.set(0.8)
+
+    this.resonance_knob = this.gui.Knob({
+      label:'res',
+      callback: (x)=>{ this.super.set('filter.Q.value' , x)},
+      x: 49.5, y: 86, size:.25,
+      min:0.99999, max: 30, curve: 2,
+      showValue: false,
+      link: 'res'
+    })
+    this.resonance_knob.accentColor = [49,48,55]
+    this.resonance_knob.set( 1 )
+
+    this.detune_knob = this.gui.Knob({
+      label:'detune',
+      callback: (x)=>{ this.super.set('tonePitchshift.factor' , x)},
+      x: 22, y: 50, size:.25,
+      min:0.99999, max: 2, curve: 1,
+      showValue: false,
+      link: 'detune'
+    })
+    this.detune_knob.accentColor = [49,48,55]
+    this.detune_knob.set( 1 )
+
+    this.speaker_knob = this.gui.Knob({
+      label:'gain',
+      callback: (x)=>{ this.super.set('output.factor' , x)},
+      x: 78, y: 50, size:.25,
+      min:0, max: 0.1, curve: 2,
+      showValue: false,
+      link: 'gain'
+    })
+    this.speaker_knob.accentColor = [49,48,55]
+    this.speaker_knob.set( 0.05 )
+
+    //sampler - beatpads
+
+    this.kick = "audio/drums-003.mp3"
+    this.snare = "audio/snare.mp3"
+    this.kickPlayer = new Tone.Player(this.kick).toDestination()
+    this.snarePlayer = new Tone.Player(this.snare).toDestination()
+    this.kickPlayer.playbackRate = 1
+    this.snarePlayer.playbackRate = 1
+
+    //trigger playback of the loaded soundfile
+
+    this.kick_trigger = this.gui.Button({
+      label:'kick',
+      callback: ()=>{ this.kickPlayer.start()},
+      size: 1, border: 20,
+      x:30, y:80, size: 1,
+      link: 'kick'
+    })
+    this.kick_trigger.accentColor = [20,20,20]
+
+    this.snare_trigger = this.gui.Button({
+      label:'snare',
+      callback: ()=>{ this.snarePlayer.start()},
+      size: 1, border: 20,
+      x:70, y:80, size: 1,
+      link: 'snare',
+    })
+    this.snare_trigger.accentColor = [20,20,20]
   }
 }
 

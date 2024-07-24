@@ -1,0 +1,13 @@
+## Polyphony
+
+You can handle make any Mono Synth Polyphonic by using the Polyphonic class. The Polyphonic class lets you pass a synth voice (class) and a number of voices (int) into
+the constructor. You can then use your keyboard or an external MIDI device to play multiple notes at a time
+
+You can then trigger attack or release by running:
+* `poly.triggerAttack(note, vel)` or `poly.triggerRelease(note)`
+
+To initialize a GUI there are some extra steps you need to take. Within your mono synth class, include a method `initPolyGui(super, gui)`. Superclass is a reference to
+an instance of the Polyphonic class. This method will contain the same objects as the `initGui` function though in order to change the parameters of all voices at the same time, you need to
+use Polyphonic's set method. Any time you're updating a value of a parameter use `super.set('paramname' , value)`
+
+To initialize the gui run `poly.initGui(poly, gui)` which passes a self reference and the gui into the function.

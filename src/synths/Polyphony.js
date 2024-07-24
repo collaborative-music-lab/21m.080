@@ -115,9 +115,9 @@ export class Polyphony{
 	//SET PARAMETERS
 
 	set(param, value) {
-		console.log('set', param, value)
+		//console.log('set', param, value)
 		let keys = param.split('.');
-		console.log('keys', keys)
+		//console.log('keys', keys)
 		for (let i = 0; i < this.numVoices; i++) {
 			let target = this.voice[i];
 			for (let j = 0; j < keys.length - 1; j++) {

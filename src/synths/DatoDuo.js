@@ -213,7 +213,8 @@ export class DatoDuo {
     this.output.factor.value = out
   }
 
-  initgui() {
+  initGui(gui) {
+    this.gui = gui
     this.distortion_toggle =  this.gui.Toggle({
       label:'Accent',
       mapto: this.dist.wet,

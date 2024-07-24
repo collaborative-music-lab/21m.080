@@ -198,7 +198,8 @@ export class ESPSynth {
         this.output.factor.value = out
     } 
 
-    initgui() {
+    initGui(gui) {
+        this.gui = gui
         this.octave_radio =  this.gui.RadioButton({
             label:'octave',
             radioOptions: ['4','8','16'],

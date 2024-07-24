@@ -41,8 +41,10 @@ export class Polyphony{
 
 	triggerRelease = function(val, time=null){
 		this.v = this.getActiveVoice(val)
-		if(time) this.voices[this.v].triggerRelease(time) //midinote,velocity,time
-		else this.voices[this.v].triggerRelease() 
+		if (this.v != -1) {
+			if(time) this.voices[this.v].triggerRelease(time) //midinote,velocity,time
+			else this.voices[this.v].triggerRelease() 
+		}
 	}
 
 	triggerAttackRelease = function(val, vel=100, dur=0.01, time=null){
@@ -53,36 +55,10 @@ export class Polyphony{
 		} else{
 			this.voices[this.v].triggerAttackRelease(val, vel, dur)
 		}
+		//this.v = this.getActiveVoice(val)
 	}
 
-	//SET PARAMETERS
-	set(param, value) {
-		console.log('set', param, value)
-		let keys = param.split('.');
-		console.log('keys', keys)
-		for (let i = 0; i < this.numVoices; i++) {
-			let target = this.voices[i];
-			for (let j = 0; j < keys.length - 1; j++) {
-				if (target[keys[j]] === undefined) {
-					console.error(`Parameter ${keys[j]} does not exist on voice ${i}`);
-					return;
-				}
-			target = target[keys[j]];
-			}
-			const lastKey = keys[keys.length - 1];
-			if (target[lastKey] !== undefined) {
-			if (target[lastKey]?.value !== undefined) {
-				target[lastKey].value = value;
-			} else {
-				target[lastKey] = value;
-			}
-			} else {
-				console.error(`Parameter ${lastKey} does not exist on voice ${i}`);
-			}
-		}//for
-	}//set
-
-	  //VOICE MANAGEMENT
+	//VOICE MANAGEMENT
 	getNewVoice(num) {
 		if (this.voiceCounter >= this.numVoices) {
 			this.voiceCounter = 0; // Reset voice counter if it exceeds the number of voices
@@ -112,15 +88,17 @@ export class Polyphony{
 		
 		// Fallback if the above logic didn't return
 		//console.log('fallback', this.voiceCounter)
+		/*
 		const returnValue = this.voiceCounter;
 		this.voiceCounter = (this.voiceCounter + 1) % this.numVoices;
 		return returnValue;
+		*/
 		}//getNewVoice
 
-		//returns the voice playing the selected note
+	//returns the voice playing the selected note
 	getActiveVoice= function(num){    
 		for(let i=0;i<this.numVoices;i++){
-			if(this.activeNotes[i]==num){
+			if(this.activeNotes[i] == num){
 				this.activeNotes[i] = -1
 				return i
 			}
@@ -128,11 +106,39 @@ export class Polyphony{
 		return -1
 	}//getActiveVoice
 
+	//SET PARAMETERS
+
+	set(param, value) {
+		console.log('set', param, value)
+		let keys = param.split('.');
+		console.log('keys', keys)
+		for (let i = 0; i < this.numVoices; i++) {
+			let target = this.voices[i];
+			for (let j = 0; j < keys.length - 1; j++) {
+				//console.log(target[keys[j]])
+				if (target[keys[j]] === undefined) {
+					console.error(`Parameter ${keys[j]} does not exist on voice ${i}`);
+					return;
+				}
+			target = target[keys[j]];
+			}
+			const lastKey = keys[keys.length - 1];
+			if (target[lastKey] !== undefined) {
+			if (target[lastKey]?.value !== undefined) {
+				target[lastKey].value = value;
+			} else {
+				target[lastKey] = value;
+			}
+			} else {
+				console.error(`Parameter ${lastKey} does not exist on voice ${i}`);
+			}
+		}//for
+	}//set
+
 	panic = function(){
 		for(let i=0;i<this.numVoices;i++){
-		this.voices[i].env.triggerRelease()
-		this.voices[i].vcf_env.triggerRelease()
-		this.activeNotes[i]  = -1
+			this.voices[this.v].triggerRelease()
+			this.activeNotes[i]  = -1
 		}
 	}
 

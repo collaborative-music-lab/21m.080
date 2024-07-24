@@ -11,11 +11,11 @@ export class Polyphony{
 		this.gui = gui
 		this.numVoices = num
 		//audio
-		this.voices = []
-		for(let i=0;i<this.numVoices;i++) this.voices.push(new voice)
+		this.voice = []
+		for(let i=0;i<this.numVoices;i++) this.voice.push(new voice)
 		this.output = new Tone.Multiply(1/this.numVoices)
 		this.hpf = new Tone.Filter({type:'highpass', rolloff:-12, Q:0, cutoff:50})
-		for(let i=0;i<this.numVoices;i++) this.voices[i].output.connect( this.hpf)
+		for(let i=0;i<this.numVoices;i++) this.voice[i].output.connect( this.hpf)
 		this.hpf.connect(this.output)
 
 	    //voice tracking
@@ -30,20 +30,21 @@ export class Polyphony{
 			else {this.noteOrder.push(i - 1)}
 		}
 	}
+
 	/**************** 
 	 * trigger methods
 	***************/
 	triggerAttack = function(val, vel=100, time=null){
 		this.v = this.getNewVoice(val)
-		if(time) this.voices[this.v].triggerAttack(val,vel,time) //midinote,velocity,time
-		else this.voices[this.v].triggerAttack(val,vel) 
+		if(time) this.voice[this.v].triggerAttack(val,vel,time) //midinote,velocity,time
+		else this.voice[this.v].triggerAttack(val,vel) 
 	}
 
 	triggerRelease = function(val, time=null){
 		this.v = this.getActiveVoice(val)
 		if (this.v != -1) {
-			if(time) this.voices[this.v].triggerRelease(time) //midinote,velocity,time
-			else this.voices[this.v].triggerRelease() 
+			if(time) this.voice[this.v].triggerRelease(time) //midinote,velocity,time
+			else this.voice[this.v].triggerRelease() 
 		}
 	}
 
@@ -51,11 +52,16 @@ export class Polyphony{
 		this.v = this.getNewVoice(val)
 		val = Tone.Midi(val).toFrequency()
 		if(time){
-			this.voices[this.v].triggerAttackRelease(val, vel, dur, time)
+			this.voice[this.v].triggerAttackRelease(val, vel, dur, time)
 		} else{
-			this.voices[this.v].triggerAttackRelease(val, vel, dur)
+			this.voice[this.v].triggerAttackRelease(val, vel, dur)
 		}
 		//this.v = this.getActiveVoice(val)
+	}
+
+	//
+	initGui(selfRef, gui){
+		this.voice[0].initPolyGui(selfRef, gui)
 	}
 
 	//VOICE MANAGEMENT
@@ -113,7 +119,7 @@ export class Polyphony{
 		let keys = param.split('.');
 		console.log('keys', keys)
 		for (let i = 0; i < this.numVoices; i++) {
-			let target = this.voices[i];
+			let target = this.voice[i];
 			for (let j = 0; j < keys.length - 1; j++) {
 				//console.log(target[keys[j]])
 				if (target[keys[j]] === undefined) {
@@ -137,7 +143,7 @@ export class Polyphony{
 
 	panic = function(){
 		for(let i=0;i<this.numVoices;i++){
-			this.voices[this.v].triggerRelease()
+			this.voice[this.v].triggerRelease()
 			this.activeNotes[i]  = -1
 		}
 	}

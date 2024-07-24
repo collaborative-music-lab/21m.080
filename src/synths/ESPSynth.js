@@ -484,5 +484,294 @@ export class ESPSynth {
         this.dist_volume_knob.accentColor = [255,162,1]
         this.dist_volume_knob.border = 5
     }
+
+    initPolyGui(superClass, gui){
+        this.gui = gui
+        this.super = superClass
+
+        this.octave_radio =  this.gui.RadioButton({
+            label:'octave',
+            radioOptions: ['4','8','16'],
+            callback: (x)=>{this.super.set('pitchshift.value', this.octaveMapping(x))},
+            x: 5, y:50,size:1, orientation:'vertical'
+        })
+        this.octave_radio.set('8');
+        this.octave_radio.accentColor = [122,132,132]
+        this.octave_radio.borderColor = [178,192,191]
+
+        this.triangle_fader = this.gui.Slider({
+            label:'tri',
+            callback: (x)=>{this.super.set('multiOsc.gainStages[0].factor.value', x)},
+            x: 11, y: 50, size: 1.5,
+            min:0.0001, max: 2,
+            orientation: 'vertical',
+            showValue: false,
+        })
+        this.triangle_fader.accentColor = [255,162,1]
+        this.triangle_fader.borderColor = [20, 20, 20]
+        this.triangle_fader.set(1)
+
+        this.saw_fader = this.gui.Slider({
+            label:'saw',
+            callback: (x)=>{this.super.set('multiOsc.gainStages[1].factor.value', x)},
+            x: 17, y: 50, size: 1.5,
+            min:0.0001, max: 2,
+            orientation: 'vertical',
+            showValue: false,
+        })
+        this.saw_fader.accentColor = [255,162,1]
+        this.saw_fader.borderColor = [20, 20, 20]
+        this.saw_fader.set(1)
+
+        this.square_fader = this.gui.Slider({
+            label:'squ',
+            callback: (x)=>{this.super.set('multiOsc.gainStages[2].factor.value', x)},
+            x: 23, y: 50, size: 1.5,
+            min:0.0001, max: 2,
+            orientation: 'vertical',
+            showValue: false,
+        })
+        this.square_fader.accentColor = [255,162,1]
+        this.square_fader.borderColor = [20, 20, 20]
+        this.square_fader.set(1)
+        
+        this.octave_down_fader = this.gui.Slider({
+            label:'-1',
+            callback: (x)=>{this.super.set('multiOsc.gainStages[3].factor.value', x)},
+            x: 29, y: 50, size: 1.5,
+            min:0.0001, max: 2,
+            orientation: 'vertical',
+            showValue: false,
+        })
+        this.octave_down_fader.accentColor = [255,162,1]
+        this.octave_down_fader.borderColor = [20, 20, 20]
+        this.octave_down_fader.set(1)
+        
+        this.two_octave_down_fader = this.gui.Slider({
+            label:'-2',
+            callback: (x)=>{this.super.set('multiOsc.gainStages[4].factor.value', x)},
+            x: 35, y: 50, size: 1.5,
+            min:0.0001, max: 2,
+            orientation: 'vertical',
+            showValue: false,
+        })
+        this.two_octave_down_fader.accentColor = [255,162,1]
+        this.two_octave_down_fader.borderColor = [20, 20, 20]
+        this.two_octave_down_fader.set(1)
+        
+        this.noise_fader = this.gui.Slider({
+            label:'noise',
+            callback: (x)=>{this.super.set('multiOsc.gainStages[5].factor.value', x)},
+            x: 41, y: 50, size: 1.5,
+            min:0.0001, max: 2,
+            orientation: 'vertical',
+            showValue: false,
+        })
+        this.noise_fader.accentColor = [255,162,1]
+        this.noise_fader.borderColor = [20, 20, 20]
+        this.noise_fader.set(1)
+        
+        function lfoControl(x) {
+            if (x !== undefined) {
+                let controlVal = Math.abs(x-0.5) * 2
+                let lfoDepth = 100
+                //console.log('stepper input', x, 'stepper output', stepper(controlVal, 0, 1, [[0,0],[1,1]]))
+                this.super.set('lfo.min', stepper(controlVal, 0, 1, [[0,0],[1,1]]))
+                this.super.set('lfo.max', lfoDepth * stepper(controlVal, 0, 1, [[0,0],[1,1]]))
+
+                if (x < 0.47) {
+                    this.super.set('vibratoSwitch.value', 1)
+                    this.super.set('wahSwitch.value', 0)
+                }
+                else if (x >= 0.47 && x <= 0.49) {
+                    this.super.set('vibratoSwitch.value', 0)
+                    this.super.set('wahSwitch.value', 0)
+                }
+                else if (x > 0.49) {
+                    this.super.set('vibratoSwitch.value', 0)
+                    this.super.set('wahSwitch.value', 50 * stepper(controlVal, 0, 1, [[0,0],[1,1]]))
+                }
+            }
+        }
+        
+        this.lfo_intensity_knob = this.gui.Knob({
+            label:'vib/wah',
+            callback: (x)=>{lfoControl(x)},
+            x: 20, y: 23, size:1.1,
+            showValue: false,
+            min:0.0001, max: 0.95
+        })
+        this.lfo_intensity_knob.set( 0.48 )
+        this.lfo_intensity_knob.borderColor = [178,192,191]
+        this.lfo_intensity_knob.accentColor = [255,162,1]
+        this.lfo_intensity_knob.border = 5
+        
+        this.lfo_speed_knob = this.gui.Knob({
+            label:'speed',
+            callback: (x)=>{this.super.set('lfo.frequency.value' , stepper(x, 0, 20, [[0,0],[1,1]]))},
+            x: 35, y: 23, size:1.1,
+            showValue: false,
+            min:0.01, max: 20
+        })
+        this.lfo_speed_knob.set( 10 )
+        this.super.set('lfo.frequency.value', 10)
+        this.lfo_speed_knob.borderColor = [178,192,191]
+        this.lfo_speed_knob.accentColor = [255,162,1]
+        this.lfo_speed_knob.border = 5
+        
+
+        this.cutoff_frequency_knob = this.gui.Knob({
+            label:'frequency',
+            callback: (x)=>{this.super.set('filterCutoffFrequency.value', stepper(x, 50, 2500, [[0,0], [1,1]]))},
+            x: 53, y: 25, size:1.4,
+            showValue: false,
+            min:50, max: 2500
+        })
+        this.cutoff_frequency_knob.set( 1200 )
+        this.super.set('filterCutoffFrequency.value' , 1200)
+        this.cutoff_frequency_knob.borderColor = [178,192,191]
+        this.cutoff_frequency_knob.accentColor = [255,162,1]
+        this.cutoff_frequency_knob.border = 5
+        
+        
+        this.resonance_knob = this.gui.Knob({
+            label:'resonance',
+            callback: (x)=>{ this.super.set('vcf.Q.value', x)},
+            x: 53, y: 72, size:1.4,
+            min:0.99999, max: 30, curve: 2,
+            showValue: false,
+        })
+        this.resonance_knob.set( 1 )
+        this.super.set('vcf.Q.value', 1)
+        this.resonance_knob.borderColor = [178,192,191]
+        this.resonance_knob.accentColor = [255,162,1]
+        this.resonance_knob.border = 5
+        
+        this.asdr_int_knob = this.gui.Knob({
+            label:'VCF Env Depth',
+            callback: (x)=>{this.super.set('vcfEnvelopeDepth.factor.value', x)},
+            x: 66, y: 34, size:0.85, curve: 3,
+            min:0, max: 5000,
+            showValue: false,
+        })
+        this.asdr_int_knob.set( 0.01 )
+        this.asdr_int_knob.borderColor = [178,192,191]
+        this.asdr_int_knob.accentColor = [255,162,1]
+        this.asdr_int_knob.border = 5
+        
+        this.volume_knob = this.gui.Knob({
+            label:'volume',
+            callback: (x)=>{this.super.set('outputGain.value',  x)},
+            x: 66, y: 68, size:0.85,
+            min:0.0001, max: 1.5,
+            showValue: false,
+        })
+        this.volume_knob.set( 1 )
+        this.super.set('outputGain.value', 1)
+        this.volume_knob.borderColor = [178,192,191]
+        this.volume_knob.accentColor = [255,162,1]
+        this.volume_knob.border = 5
+        
+        this.velocity_filter_knob = this.gui.Knob({
+            label:'velo filter',
+            callback: (x)=>{this.super.set('vcfDynamicRange', x)},
+            x: 77, y: 15, size:0.85,
+            min:0.01, max: 0.99,
+            showValue: false,
+        })
+        this.velocity_filter_knob.set( 0.99 )
+        this.velocity_filter_knob.borderColor = [178,192,191]
+        this.velocity_filter_knob.accentColor = [255,162,1]
+        this.velocity_filter_knob.border = 5
+        
+        this.velocity_volume_knob = this.gui.Knob({
+            label:'velo volume',
+            callback: (x)=>{this.super.set('vcaDynamicRange', x)},
+            x: 77, y: 83, size:0.85,
+            min:0.01, max: 0.99,
+            showValue: false,
+        })
+        this.velocity_volume_knob.set( 0.99 )
+        this.velocity_volume_knob.borderColor = [178,192,191]
+        this.velocity_volume_knob.accentColor = [255,162,1]
+        this.velocity_volume_knob.border = 5
+        
+        this.attack_fader = this.gui.Slider({
+            label:'A',
+            callback: (x)=>{this.super.set('env.attack' , x)},
+            x: 76, y: 36, size: 1, curve: 2,
+            min:0.01, max: .5,
+            orientation: 'vertical',
+            showValue: false,
+        })
+        this.attack_fader.accentColor = [255,162,1]
+        this.attack_fader.borderColor = [20, 20, 20]
+        this.super.set('env.attack' , 0.1)
+        this.attack_fader.set(0.1)
+        
+        this.decay_fader = this.gui.Slider({
+            label:'D',
+            callback: (x)=>{this.super.set('env.decay' , x)},
+            x: 82, y: 36, size: 1, curve: 2,
+            min:0.01, max: 2,
+            orientation: 'vertical',
+            showValue: false,
+        })
+        this.decay_fader.accentColor = [255,162,1]
+        this.decay_fader.borderColor = [20, 20, 20]
+        this.super.set('env.decay' , 0.1)
+        this.decay_fader.set(0.1)
+        
+        this.sustain_fader = this.gui.Slider({
+            label:'S',
+            callback: (x)=>{this.super.set('env.sustain' , stepper(x, 0, 1, [[0,0],[1,1]]))},
+            x: 88, y: 36, size: 1,
+            min:0.0001, max: 1,
+            orientation: 'vertical',
+            showValue: false,
+        })
+        this.sustain_fader.accentColor = [255,162,1]
+        this.sustain_fader.borderColor = [20, 20, 20]
+        this.sustain_fader.set(1)
+        this.super.set('env.sustain' , 1)
+        
+        this.release_fader = this.gui.Slider({
+            label:'R',
+            callback: (x)=>{this.super.set('env.release' , stepper(x, 0.1, 1.5, [[0,0], [0.8, 0.5], [1,1]]))},
+            x: 94, y: 36, size: 1,
+            min:0.1, max: 20,
+            orientation: 'vertical',
+            showValue: false,
+        })
+        this.release_fader.accentColor = [255,162,1]
+        this.release_fader.borderColor = [20, 20, 20]
+        this.release_fader.set(1)
+        this.super.set('env.release' , 1)
+        
+        this.chorus_filter_knob = this.gui.Knob({
+            label:'chorus',
+            callback: (x)=>{this.super.set('chorgain.factor.value' , x)},
+            x: 91, y: 15, size:0.85,
+            min:0.0001, max: 1,
+            showValue: false,
+        })
+        this.chorus_filter_knob.set( 0.0001 )
+        this.super.set('chorgain.factor.value' , 0.0001)
+        this.chorus_filter_knob.borderColor = [178,192,191]
+        this.chorus_filter_knob.accentColor = [255,162,1]
+        this.chorus_filter_knob.border = 5
+        
+        this.dist_volume_knob = this.gui.Knob({
+            label:'Overdrive',
+            callback: (x)=>{this.super.set('dist.distortion' , x)},
+            x: 91, y: 83, size:0.85,
+            min:0.0001, max: 1,
+            showValue: false,
+        })
+        this.dist_volume_knob.set( 0.0001 )
+        this.dist_volume_knob.borderColor = [178,192,191]
+        this.dist_volume_knob.accentColor = [255,162,1]
+        this.dist_volume_knob.border = 5
+    }
 }
 

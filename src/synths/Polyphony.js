@@ -141,6 +141,23 @@ export class Polyphony{
 		}//for
 	}//set
 
+	loadPreset(name) {
+		for(let i=0;i<this.numVoices;i++) this.voice[i].loadPreset(name)
+	}
+
+	listPresets() {
+        this.voice[0].listPresets();
+    }
+
+	savePreset(name) {
+		this.voice[0].savePreset(name)
+	};
+
+    // Function to download the updated presets data
+	downloadPresets() {
+		this.voice[0].downloadPresets()
+	};
+
 	panic = function(){
 		for(let i=0;i<this.numVoices;i++){
 			this.voice[this.v].triggerRelease()

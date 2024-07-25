@@ -1,7 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
+//codemirror
 import CodeMirror from '@uiw/react-codemirror';
 import { historyField } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
+import { okaidia } from '@uiw/codemirror-theme-okaidia';
+import { bbedit } from '@uiw/codemirror-theme-bbedit';
+import { basic } from '@uiw/codemirror-theme-basic';
+import { gruvboxDark, gruvboxLight } from '@uiw/codemirror-theme-gruvbox-dark';
+
+//tone
 import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
         Rumble, Daisies, DatoDuo, ESPSynth, Polyphony, Stripe, Diffuseur, KP, Sympathy,
         Kick, DrumSampler} from './synths/index.js';
@@ -652,6 +659,7 @@ function Editor(props) {
                                 options={{
                                     mode: 'javascript',
                                 }}
+                                theme={gruvboxDark}
                                 extensions={[javascript({ jsx: true })]}
                                 onChange={handleCodeChange}
                                 onKeyDown={handleKeyDown}

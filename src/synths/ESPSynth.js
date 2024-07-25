@@ -233,7 +233,7 @@ export class ESPSynth extends MonophonicTemplate {
         this.octave_radio =  this.gui.RadioButton({
             label:'octave',
             radioOptions: ['4','8','16'],
-            callback: (x)=>{this.pitchshift.value = this.octaveMapping(x)},  //CALLBACK ERROR!!!!!!!
+            callback: (x)=>{this.pitchshift.value = this.octaveMapping(x)},
             x: 5, y:50,size:1, orientation:'vertical'
         })
         this.octave_radio.set('8');

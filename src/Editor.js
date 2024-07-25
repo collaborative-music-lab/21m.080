@@ -21,6 +21,7 @@ import { CollabHubClient, CollabHubTracker, CollabHubDisplay } from './CollabHub
 
 import MidiKeyboard from './MidiKeyboard.js';
 import { asciiCallbackInstance } from './AsciiKeyboard.js';
+
 const midi = require('./Midi.js');
 const LZString = require('lz-string');
 
@@ -81,21 +82,21 @@ function Editor(props) {
 
     // Save history in browser
     const serializedState = localStorage.getItem(`${props.page}EditorState`);
-    
-    // Decoding the URL
-    const URLParams = new URLSearchParams(window.location.search);
-    const compressedCode = URLParams.get('code');
-    const encodedContent =  LZString.decompressFromEncodedURIComponent(compressedCode);
-    //const encodedContent = URLParams.get('code');
-    let value;
-    if (encodedContent) {
-        value = encodedContent;
-        // const url = window.location.origin + window.location.pathname;
-        // window.location.assign(url);
-    } else {
-        value = localStorage.getItem(`${props.page}Value`) || props.starterCode;
+
+    // Decoding the URL and reloading the page
+    function urlDecode() {
+        const URLParams = new URLSearchParams(window.location.search);
+        const encodedContent = URLParams.get('code');
+        if (encodedContent) {
+            localStorage.setItem(`${props.page}Value`, atob(encodedContent));
+            const url = window.location.origin + window.location.pathname;
+            window.location.assign(url);
+        }
     }
 
+    urlDecode();
+    const value = localStorage.getItem(`${props.page}Value`) || props.starterCode;
+    
 
     //const value = 'let CHANNEL = 3'
     const [height, setHeight] = useState(false);
@@ -508,13 +509,13 @@ function Editor(props) {
         document.getElementById('exportOptions').value = "default";
     }
 
-    function exportAsLink() {
+    function exportAsLink(code) {
         const liveCode = localStorage.getItem(`${props.page}Value`);
-        const compressedCode = LZString.compressToEncodedURIComponent(liveCode);
-        //const encodedCode = btoa(liveCode);
-        const url = `${window.location.origin}${window.location.pathname}?code=${compressedCode}`;
+        console.log(liveCode);
+        const encodedCode = btoa(liveCode);
+        const url = `${window.location.origin}${window.location.pathname}?code=${encodedCode}`;
         navigator.clipboard.writeText(url);
-        console.log('URL copied to clipboard');
+        console.log('copy');
     }
 
     //Export webpage code

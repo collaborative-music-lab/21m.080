@@ -37,10 +37,18 @@ gain (into waveShaper)
 */
 import p5 from 'p5';
 import * as Tone from 'tone';
+import RumblePresets from './synthPresets/RumblePresets.json';
+import { MonophonicTemplate } from './MonophonicTemplate';
 
-export class Rumble {
-  constructor(gui = null){
+export class Rumble extends MonophonicTemplate {
+  constructor (gui = null) {
+    super()
     this.gui = gui
+    this.presets = RumblePresets
+    this.isGlide = false
+    this.name = "Rumble"
+    console.log(this.name, " loaded, available preset: ", RumblePresets)
+
     // Initialize the main frequency control
     this.frequency = new Tone.Signal();
 
@@ -135,6 +143,12 @@ export class Rumble {
     this.lfo_pwm_2.connect(this.vco_2.width)
     this.lfo.connect(this.lfo_pwm_3)
     this.lfo_pwm_3.connect(this.vco_3.width)
+
+    if (this.gui !== null) {
+        this.initGui()
+        this.hideGui();
+        setTimeout(()=>{this.loadPreset('default')}, 100);
+    }
   }//constructor
 
   //envelopes
@@ -146,7 +160,7 @@ export class Rumble {
       this.vcf_env.triggerAttack(time)
       this.frequency.setValueAtTime(freq, time)
       this.velocity.rampTo(amp,.03)
-    } else{
+    } else {
       this.env.triggerAttack()
       this.vcf_env.triggerAttack()
       this.frequency.value = freq
@@ -179,19 +193,6 @@ export class Rumble {
     }
   }//attackRelease
 
-  //parameter setters
-  setADSR(a,d,s,r){
-    this.env.attack = a>0.001 ? a : 0.001
-    this.env.decay = d>0.01 ? d : 0.01
-    this.env.sustain = Math.abs(s)<1 ? s : 1
-    this.env.release = r>0.01 ? r : 0.01
-  }
-  setFilterADSR(a,d,s,r){
-    this.vcf_env.attack = a>0.001 ? a : 0.001
-    this.vcf_env.decay = d>0.01 ? d : 0.01
-    this.vcf_env.sustain = Math.abs(s)<1 ? s : 1
-    this.vcf_env.release = r>0.01 ? r : 0.01
-  }
   setDetune(a,b,c){
   	this.vco_freq_1.factor.value = a
   	this.vco_freq_2.factor.value = b
@@ -209,10 +210,11 @@ export class Rumble {
   }
 
   //GUI
-  initGui (x=2,y=2,ccolor=[200,200,0], gui = null){
-    if(gui) this.gui = gui
-    this.x = x
-    this.y = y
+  initGui(gui = this.gui) {
+    this.gui = gui
+    let ccolor = [200,200,0]
+    this.x = 0
+    this.y = 0
 
      // VCO Labels
     const vco_knob_x = [15, 25, 35];
@@ -238,20 +240,32 @@ export class Rumble {
       mapto: this.vco_gain_1.factor });
     
 
-    this.vco2_oct_knob = this.createKnob('freq', vco_knob_x[1], 20, -2, 1, 0.75, [200,50,0], /* callback */);
-    this.vco2_detune_knob = this.createKnob('detune', vco_knob_x[1], 50, -.2, .2, 0.75, [50,150,100], /* callback */);
-    this.vco2_gain_knob = this.createKnob('gain', vco_knob_x[1], 80, 0, 1, 0.75, [200,50,0] /* mapto: vco_gain_1.factor */);
+    this.vco2_oct_knob = this.createKnob('freq', vco_knob_x[1], 20, -2, 1, 0.75, [200,50,0], (x)=>this.vco_freq_2.value = Math.pow(2,Math.floor(x)) + this.vco2_detune_knob.value );
+    this.vco2_detune_knob = this.createKnob('detune', vco_knob_x[1], 50, -.2, .2, 0.75, [50,150,100],(x)=>this.vco_freq_2.value = x + Math.pow(2,Math.floor(this.vco2_oct_knob.value)) );
+    this.vco2_gain_knob = this.createKnob('gain', vco_knob_x[1], 80, 0, 1, 0.75, [200,50,0], (x)=>this.vco_gain_2.factor.value = x );
 
-    this.vco3_oct_knob = this.createKnob('freq', vco_knob_x[2], 20, -2, 1, 0.75, [200,50,0], /* callback */);
-    this.vco3_detune_knob = this.createKnob('detune', vco_knob_x[2], 50, -.2, .2, 0.75, [50,150,100], /* callback */);
-    this.vco3_gain_knob = this.createKnob('gain', vco_knob_x[2], 80, 0, 1, 0.75, [200,50,0], /* mapto: vco_gain_1.factor */);
+    this.vco3_oct_knob = this.createKnob('freq', vco_knob_x[2], 20, -2, 1, 0.75, [200,50,0], (x)=>this.vco_freq_3.value = Math.pow(2,Math.floor(x)) + this.vco3_detune_knob.value)
+    this.vco3_detune_knob = this.createKnob('detune', vco_knob_x[2], 50, -.2, .2, 0.75, [50,150,100],(x)=>this.vco_freq_3.value = x + Math.pow(2,Math.floor(this.vco3_oct_knob.value)) );
+    this.vco3_gain_knob = this.createKnob('gain', vco_knob_x[2], 80, 0, 1, 0.75, [200,50,0], (x)=>this.vco_gain_3.factor.value = x );
 
 
     // VCF and VCA Knobs
-    this.vcf_cutoff_knob = this.createKnob('cutoff', 55, 28, 2, 10000, 1.75, [200,0,200], /* mapto: cutoff */);
-    this.vcf_res_knob = this.createKnob('Q', 50, 75, 0, 20, 0.75, [200,0,200], /* mapto: vcf.Q */);
+    this.vcf_cutoff_knob = this.createKnob('cutoff', 55, 28, 2, 10000, 1.75, [200,0,200], (x)=>this.cutoff.value = x);
+    this.vcf_res_knob = this.createKnob('Q', 50, 75, 0, 20, 0.75, [200,0,200], (x)=>this.vcf.Q.value = x);
+    
+    this.attack_knob = this.createKnob('a', 60, 75, 0, .5, .25, [0,0,200], x=>this.env.attack = x);
+    this.decay_knob = this.createKnob('d', 65, 75, 0, 5, .25, [0,0,200], x=>this.env.decay = x);
+    this.sustain_knob = this.createKnob('s', 70, 75, 0, 1, .25, [0,0,200], x=>this.env.sustain = x);
+    this.release_knob = this.createKnob('r', 75, 75, 0, 20, .25, [0,0,200], x=>this.env.release = x);
     // Repeat for other knobs...
-  
+    this.gui_elements = [this.vco1_label, this.vco2_label, this.vco3_label, 
+       this.oct_label, this.detune_label, this.gain_label, 
+      this.vco1_oct_knob, this.vco1_detune_knob, this.vco1_gain_knob,
+      this.vco2_oct_knob, this.vco2_detune_knob, this.vco2_gain_knob,
+      this.vco3_oct_knob, this.vco3_detune_knob, this.vco3_gain_knob, 
+      this.vcf_cutoff_knob, this.vcf_res_knob, this.attack_knob,
+      this.decay_knob,this.sustain_knob,this.release_knob
+      ]
 	}//gui
 
 	createLabel(label, x, y, size = 1, border = 1, borderRadius = 0.01) {
@@ -266,7 +280,7 @@ export class Rumble {
       label, min, max, size, accentColor,
       x: x + this.x, y: y + this.y,
       callback: callback,
-      showLabel: 0, showValue: 1, // Assuming these are common settings
+      showLabel: 1, showValue: 1, // Assuming these are common settings
       curve: 2, // Adjust as needed
       border: 2 // Adjust as needed
     });

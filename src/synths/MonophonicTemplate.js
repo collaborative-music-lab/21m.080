@@ -88,19 +88,19 @@ export class MonophonicTemplate {
 
     setADSR(a, d, s, r) {
         if (this.env) {
-            this.env.attack = a;
-            this.env.decay = d;
-            this.env.sustain = s;
-            this.env.release = r;
+            this.env.attack = a>0.001 ? a : 0.001
+            this.env.decay = d>0.01 ? d : 0.01
+            this.env.sustain = Math.abs(s)<1 ? s : 1
+            this.env.release = r>0.01 ? r : 0.01
         }
     }
 
     setFilterADSR(a, d, s, r) {
         if (this.vcf_env) {
-            this.vcf_env.attack = a;
-            this.vcf_env.decay = d;
-            this.vcf_env.sustain = s;
-            this.vcf_env.release = r;
+            this.vcf_env.attack = a>0.001 ? a : 0.001
+            this.vcf_env.decay = d>0.01 ? d : 0.01
+            this.vcf_env.sustain = Math.abs(s)<1 ? s : 1
+            this.vcf_env.release = r>0.01 ? r : 0.01
         }
     }
 
@@ -112,7 +112,10 @@ export class MonophonicTemplate {
     }
 
     hideGui() {
-        for (let i = 0; i < this.gui_elements.length; i++) this.gui_elements[i].hide = true;
+        for (let i = 0; i < this.gui_elements.length; i++) {
+            console.log(this.gui_elements[i])
+            this.gui_elements[i].hide = true;
+        }
     }
 
     showGui() {

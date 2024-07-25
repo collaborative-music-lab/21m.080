@@ -1,4 +1,30 @@
 // MonophonicTemplate.js
+/*
+
+Base class for synths. Includes:
+- methods for loading and saving presets
+- connect/disconnect
+- setting ADSR values for env and vcf_env objects
+- show/hide gui, and custom createKnob function
+
+For presets:
+- all synths can load presets saved in the synth/synthPresets folder.
+- make sure to:
+    - import your presets and assign to this.presets 
+    - name your synth correctly in its constructor
+    - pass the gui into the synth constructor
+    - add this optional code to the end of the constructor to load
+        default preset:
+    if (this.gui !== null) {
+        this.initGui()
+        this.hideGui();
+        setTimeout(()=>{this.loadPreset('default')}, 500);
+    }
+
+When saving presets you will need to manually download and copy
+the preset file into synth/synthPresets/
+*/
+
 import * as Tone from 'tone';
 
 export class MonophonicTemplate {

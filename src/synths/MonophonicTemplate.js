@@ -113,7 +113,7 @@ export class MonophonicTemplate {
 
     hideGui() {
         for (let i = 0; i < this.gui_elements.length; i++) {
-            console.log(this.gui_elements[i])
+            //console.log(this.gui_elements[i])
             this.gui_elements[i].hide = true;
         }
     }
@@ -156,7 +156,7 @@ export class MonophonicTemplate {
 	    }
 
 	    // Update the presetsData in memory
-	    console.log(this.presets);
+	    //console.log(this.presets);
 	    if (!this.presets[name]) {
 	        this.presets[name] = {};
 	    }

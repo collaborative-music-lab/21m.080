@@ -10,7 +10,8 @@ export { Stripe } from './Stripe.js';
 export { Diffuseur } from './Diffuseur.js';
 export { KP } from './KP.js';
 export { Sympathy } from './Sympathy.js';
-export * from './waveshapers.js'
+export * from './waveshapers.js';
+export { Snare } from './Snare.js';
 
 
 

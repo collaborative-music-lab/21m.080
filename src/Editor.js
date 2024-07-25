@@ -3,11 +3,8 @@ import CodeMirror from '@uiw/react-codemirror';
 import { historyField } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
 import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
-        Rumble, Daisies, DatoDuo, Stripe, Diffuseur, KP, Sympathy} from './synths/index.js';
+        Rumble, Daisies, DatoDuo, Stripe, Diffuseur, KP, Sympathy, Snare } from './synths/index.js';
 import Bessel from 'bessel';
-
-
-
 import p5 from 'p5';
 import * as Tone from 'tone';
 //import ml5 from 'ml5';
@@ -49,6 +46,7 @@ function Editor(props) {
     window.Diffuseur = Diffuseur
     window.KP = KP
     window.Sympathy = Sympathy
+    window.Snare = Snare;
 
 
     var curLineNum = 0;
@@ -506,15 +504,15 @@ function Editor(props) {
 
     function exportAsLink(code) {
         const liveCode = localStorage.getItem(`${props.page}Value`);
-        console.log(liveCode);
+
         // The replaces create a URL-safe btoa conversion
         const encodedCode = btoa(liveCode)
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=+$/, ''); // Removes padding
-        const url = `http://localhost:3000/m080/?code=${encodedCode}`;
+        const url = `https://ianhattwick.com/m080/?code=${encodedCode}`;
+        // const url = `http://localhost:3000/m080/?code=${encodedCode}`;
         navigator.clipboard.writeText(url);
-        console.log('copy');
     }
 
     //Export webpage code

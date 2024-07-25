@@ -5,7 +5,6 @@ import { javascript } from '@codemirror/lang-javascript';
 import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
         Rumble, Daisies, DatoDuo, ESPSynth, Polyphony, Stripe, Diffuseur, KP, Sympathy,
         Kick, DrumSampler} from './synths/index.js';
-
 import {Sequencer} from './Sequencer.js';
 import {MultiVCO} from './MultiVCO.js'
 import p5 from 'p5';
@@ -14,7 +13,7 @@ import * as Theory from './Theory.js';
 //import ml5 from 'ml5';
 import Canvas from "./Canvas.js";
 import { Oscilloscope, Spectroscope, PlotTransferFunction } from './oscilloscope';
-
+import * as waveshapers from './synths/waveshapers.js'
 
 // Collab-Hub features
 import { CollabHubClient, CollabHubTracker, CollabHubDisplay } from './CollabHub.js';
@@ -33,6 +32,7 @@ function Editor(props) {
     window.p5 = p5;
     window.Tone = Tone;
     window.Theory = Theory;
+    window.ws = waveshapers
     //window.ml5 = ml5;
     window.Oscilloscope = Oscilloscope;
     window.Spectroscope = Spectroscope;

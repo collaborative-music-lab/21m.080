@@ -243,10 +243,12 @@ export class Daisies {
   loadPreset = function(name){
   	const presetData = this.presets[name];
     if (presetData) {
-    	console.log("Loading preset ",name)
+    	console.log("Loading preset2 ",name)
       for (let id in presetData) {
       	for (let element of Object.values(this.gui.elements)) {
-		        if (element.id = id) element.set(presetData[id])
+		        if (element.id === id) {
+		        	element.set(presetData[id])
+		        }
 		    }
       }
     }
@@ -379,58 +381,17 @@ export class Daisies {
     }
   }
   // //setters
-  setFrequency = function(val){for(let i=0;i<this.numVoices;i++) this.voice[i].frequency.value = val}
-  setDetune = function(val){this.voiceSettings["detune.factor"] = val}
-  setResonance = function(val){for(let i=0;i<this.numVoices;i++) this.voice[i].lpf.Q.value = val}
-  setCutoff = function(val){for(let i=0;i<this.numVoices;i++) this.voice[i].cutoff.value = val}
-  setCutoffCV = function(val){ for(let i=0;i<this.numVoices;i++) this.voice[i].cutoffCV.value = val}
-  setKeyTracking = function(val){this.voiceSettings["keyTracking.factor"] = val }
-  setFilterEnvDepth = function(val){this.voiceSettings["lpf_env_depth.factor"] =  val }
-  setPanning(val){ this.voiceSettings["panner.pan"] = val }
-  setLfoFrequency(val){this.voiceSettings["lfo.frequency"] = val }
-  setTremoloDepth(val){this.voiceSettings["vca_lfo_depth.factor"] = val }
-  setVibratoDepth(val){this.voiceSettings["pitch_lfo_depth.factor"] = val }
-  setPWMDepth(val){this.voiceSettings["pwm_lfo_depth.factor"] = val }
 
   setHighpass = function(val){this.hpf.frequency.value = val }
-  // setPulseWidth = function(num,val){ //
-  // 	if(num <0 || num >2 ){ console.log("daisy vcos are 0 and 1"); return;}
-	// if(this.vco_type[num] !== 'pulse' ) return;
-	// if(num==0 )this.voiceSettings["vco_1.width"] = Math.abs((val-.5)*2) //convert 0.5=50% to 0=50%
-	// else if(num==1)this.voiceSettings["vco_2.width"] = Math.abs((val-.5)*2)  
-  // }
+
   setVcoGain = function(num,val){
   	if(num <0 || num >2 ){ console.log("daisy vcos are 0 and 1"); return;}
-	for(let i=0;i<this.numVoices;i++) {
-		if(num==0)this.voice[i].mixer_1.factor.value = val 
-		else this.voice[i].mixer_2.factor.value = val 
-	}
+		for(let i=0;i<this.numVoices;i++) {
+			if(num==0)this.voice[i].mixer_1.factor.value = val 
+			else this.voice[i].mixer_2.factor.value = val 
+		}
   }
-  setVcoType = function(num,val){
-  	if(num <0 || num >2 ){ console.log("daisy vcos are 0 and 1"); return;}
-  	switch(val){
-  	case 'saw': case 'sawtooth': case 'ramp': 
-  		this.applyVcoType(num, 'sawtooth'); break;
-  	case 'square': case 'pwm': 
-  		this.applyVcoType(num, 'pulse'); this.setPulseWidth(num,.5); break;
-  	case 'pulse':  
-  		this.applyVcoType(num, 'pulse'); this.setPulseWidth(num,.2); break;
-  	case 'tri': case 'triangle': 
-  		this.applyVcoType(num, 'triangle'); break;
-  	/*
-	vco.type = 'fmsine'
-	vco.modulationType = 'sine'
-	vco.modulationIndex.value = 20
-	vco.harmonicity.value = 5
-  	*/
-  	}
-  }
-  applyVcoType = function(num,val){
-  	this.vco_type[num] = val
-  	if(num==0) this.voice[0].vco_1.type = val 
-		else if(num==1) this.voice[1].vco_2.type = val 
-  }
-  
+
   //envelopes
   setADSR = function(a,d,s,r){
   	this.adsr = [a,d,s,r]
@@ -475,6 +436,16 @@ export class Daisies {
   	this.decay_knob = this.createKnob('d', 15, 45, 0.01, .5, 0.75, [200,50,0],x=>this.set('env.decay',x));
   	this.sustain_knob = this.createKnob('s', 25, 45, 0, 1, 0.75, [200,50,0],x=>this.set('env.sustain',x));
   	this.release_knob = this.createKnob('r', 35, 45, 0, 1, 0.75, [200,50,0],x=>this.set('env.release',x));
+  	this.gui_elements = [this.mix1_knob, this.mix2_knob, 
+  		this.detune_knob, this.cutoff_knob, this.vcf_env_knob,
+  		this.keyTracking_knob, this.attack_knob, this.decay_knob,
+  		this.sustain_knob, this.release_knob]
+  }
+  hideGui(){
+  	for(let i=0;i<this.gui_elements.length;i++) this.gui_elements[i].hide = true
+  }
+	showGui(){
+  	for(let i=0;i<this.gui_elements.length;i++) this.gui_elements[i].hide = false
   }
   createKnob(_label, _x, _y, _min, _max, _size, _accentColor, callback) {
     //console.log(_label)

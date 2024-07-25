@@ -1,17 +1,16 @@
 /*
 p5Elements.js
 created by Kayli Requenez F23
-
-Notes: to add new gui elements, make the following changes:
-- in Editor.js: add element to p5Elements elements array (line 32)
-- in Canvas.js: add element to import statement on line 2 (import { initialize, divResized, drawElements, Knob, Fader, Button, Toggle, RadioButton } from './p5Library';)
-    - also add window.element identifier, similar to lines 6 - 10   
 */
 
 
 import p5 from 'p5';
 import themes from './p5Themes.json';
+import * as synthPresets from './synths/synthPresets';
+
 let activeTheme = themes.themes['default']; // Default theme preset
+
+
 
 export function debug(){
     console.log('esy')
@@ -274,6 +273,7 @@ class Element {
         this.theme = activeTheme;
         this.label = options.label || "myElement";
         this.id = this.label;
+        this.hide = false;
         let i = 1;
         while (this.id in p.elements) {
             this.id += i;
@@ -352,6 +352,7 @@ class Element {
     getParam(param,val){ return val == 'theme' ? activeTheme[param] : val}
 
     isPressed(){
+        if(this.hide == true) return;
         //console.log('isPressed', this.label, this.p.mouseX,this.cur_x , this.x_box);
         if( this.p.mouseX < (this.cur_x + this.x_box/2) &&
             this.p.mouseX > (this.cur_x - this.x_box/2) &&
@@ -364,6 +365,7 @@ class Element {
     }
 
     isReleased(){
+        if(this.hide == true) return;
         if( this.active == 1 )  this.active = 0
     }
 
@@ -517,6 +519,7 @@ export class Knob extends Element {
     }
 
     draw() {
+        if(this.hide == true) return;
         // Calculate the angle based on the knob's value
         this.startAngle = this.p.PI * (4/8 + (360 - this.degrees)/360);
         this.endAngle = this.p.PI * (4/8 - (360 - this.degrees)/360 ) + 2 * this.p.PI;
@@ -563,6 +566,7 @@ export class Knob extends Element {
     }
 
     isDragged() {
+        if(this.hide == true) return;
         if(this.active){
         
             if(this.p.movedY != 0 ){ 
@@ -618,6 +622,7 @@ export class Fader extends Element {
     }
 
     draw() {
+        if(this.hide == true) return;
         this.isHorizontal = this.orientation==='horizontal'
         this.cur_size = (this.size/6)*this.p.width/2
         let border = this.getParam('border',this.border)
@@ -674,6 +679,7 @@ export class Fader extends Element {
     }
 
     isDragged() {
+        if(this.hide == true) return;
         if( this.active ){
             if (this.isHorizontal){
                 if(this.p.movedX !== 0 ){ 
@@ -747,6 +753,7 @@ export class Pad extends Element {
     }
 
     draw() {
+        if(this.hide == true) return;
         this.cur_size = (this.size/6)*this.p.width/2
         this.cur_sizeX = (this.sizeX/6)*this.p.width/2
         this.cur_sizeY = (this.sizeY/6)*this.p.width/2
@@ -795,6 +802,7 @@ export class Pad extends Element {
     }
 
     isDragged() {
+        if(this.hide == true) return;
         if( this.active ){
             if(this.p.movedX !== 0 ){ 
                 if( this.p.keyIsDown(this.p.ALT)) this.rawValueX += this.p.movedX * this.incr/10;
@@ -850,6 +858,7 @@ export class Button extends Element {
     }
 
     draw() {
+        if(this.hide == true) return;
         this.cur_x = (this.x/100)*this.p.width
         this.cur_y = (this.y/100)*this.p.height
         this.cur_size = (this.size/6)*this.p.width/2
@@ -875,7 +884,7 @@ export class Button extends Element {
     }
 
     isPressed(){
-
+        if(this.hide == true) return;
         if( this.p.mouseX < (this.cur_x + this.x_box/2) &&
             this.p.mouseX > (this.cur_x - this.x_box/2) &&
             this.p.mouseY > (this.cur_y - this.y_box/2) &&
@@ -898,6 +907,7 @@ export class Button extends Element {
     }
 
     isReleased(){
+        if(this.hide == true) return;
         if( this.active == 1 )  {
             this.active = 0
             this.rawValue = 0
@@ -959,6 +969,7 @@ export class Momentary extends Button {
     }
 
     isReleased(){
+        if(this.hide == true) return;
         if( this.active == 1 )  {
             this.active = 0
             this.rawValue = 0
@@ -987,6 +998,7 @@ export class Toggle extends Button {
     }
 
     isPressed(){
+        if(this.hide == true) return;
         if( this.p.mouseX < (this.cur_x + this.x_box/2) &&
             this.p.mouseX > (this.cur_x - this.x_box/2) &&
             this.p.mouseY > (this.cur_y - this.y_box/2) &&
@@ -1008,6 +1020,7 @@ export class Toggle extends Button {
     }
 
     isReleased(){
+        if(this.hide == true) return;
         if( this.active == 1 )  {
             this.active = 0
         }
@@ -1048,6 +1061,7 @@ export class RadioButton extends Button {
     }
 
     draw() {
+        if(this.hide == true) return;
         this.radioClicked = {};
 
         this.isHorizontal = this.orientation==='horizontal'
@@ -1113,6 +1127,7 @@ export class RadioButton extends Button {
 
 
     isPressed() {
+        if(this.hide == true) return;
         if( this.p.mouseX < (this.cur_x + this.x_box/2) &&
             this.p.mouseX > (this.cur_x - this.x_box/2) &&
             this.p.mouseY > (this.cur_y - this.y_box/2) &&
@@ -1176,6 +1191,7 @@ export class Line extends Element {
     }
 
     draw() {
+        if(this.hide == true) return;
         let x1 = (this.x1/100)*this.p.width
         let x2 = (this.x2/100)*this.p.width
         let y1 = (this.y1/100)*this.p.height
@@ -1211,6 +1227,7 @@ export class Text extends Element {
     }
 
     draw() {
+        if(this.hide == true) return;
         this.cur_x = (this.x/100)*this.p.width
         this.cur_y = (this.y/100)*this.p.height
         this.cur_size = (this.size/6)*this.p.width/2
@@ -1239,3 +1256,50 @@ export class Text extends Element {
 p5.prototype.Text = function (options = {}) {
     return new Text(this, options);
 };
+
+const BASENAME = process.env.PUBLIC_URL || '/m080';
+let presetsData = null
+let presetSynthName = ''
+
+const savePreset = (p, name, synth) => {
+    const preset = {};
+    for (let element of Object.values(p.elements)) {
+        preset[element.id] = element.value;
+    }
+
+    // Access the appropriate synth preset data
+    const presetsData = synthPresets[`${synth}Presets`];
+
+    // Update the presetsData in memory
+    if (!presetsData[synth]) {
+        presetsData[synth] = {};
+    }
+    presetsData[synth][name] = preset;
+
+    console.log(`Preset saved under ${synth}/${name}`);
+};
+
+
+p5.prototype.savePreset = function (p, synth, name) {
+    //console.log(name)
+    savePreset(p, name, synth)
+};
+
+    // Function to download the updated presets data
+const downloadPresets = (synth) => {
+    const presetsData = synthPresets[`${synth}Presets`];
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(presetsData, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `${synth}Presets.json`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+};
+
+p5.prototype.downloadPresets = function () {
+    console.log("download")
+    downloadPresets(presetSynthName)
+};
+
+

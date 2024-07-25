@@ -101,7 +101,6 @@ export class DrumSampler {
     }
     if( voice.state == "started" ) voice.stop(time)
   	voice.volume.value = Tone.gainToDb(amplitude)
-  console.log(Tone.gainToDb(amplitude))
     voice.start( time )
   }
   sequence(arr, subdivision) {
@@ -109,7 +108,7 @@ export class DrumSampler {
     // Initialize arrays for each drum voice
     if(subdivision) this.subdivision = subdivision
     //this.loop.playbackRate = subdivision
-    this.loop.stop()
+    //this.loop.stop()
     this.seq = {
       "kick" : [],
       "snare" : [],

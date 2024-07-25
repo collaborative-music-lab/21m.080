@@ -122,18 +122,6 @@ export class DatoDuo extends MonophonicTemplate {
     this.delayFilter.connect(this.delayout)
     this.delayout.connect(this.output)
 
-    //initialize values
-    this.dist.wet.value = 0
-    this.crusher.wet.value = 0
-    this.delay.feedback.value = 0
-    this.delay.wet.value = 0
-    this.delaygain.factor.value = 0
-    this.lfo.amplitude.value = 0
-    this.pulseWav.width.value = 0.5
-    this.filterDepth.value = 700
-    this.vcf_env.release = 0.8
-    this.filter.Q.value = 1
-
     if (this.gui !== null) {
         this.initGui()
         this.hideGui();

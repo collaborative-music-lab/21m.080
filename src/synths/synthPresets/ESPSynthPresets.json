@@ -1,0 +1,25 @@
+{
+    "default": {
+        "octave": "8",
+        "tri": 1,
+        "saw": 1,
+        "squ": 1,
+        "-1": 1,
+        "-2": 1,
+        "noise": 1,
+        "vib/wah": 0.48,
+        "speed": 10,
+        "frequency": 1200,
+        "resonance": 1,
+        "VCF Env Depth": 0.01,
+        "volume": 1,
+        "velo filter": 0.99,
+        "velo volume": 0.99,
+        "A": 0.1,
+        "D": 0.1,
+        "S": 1,
+        "R": 1,
+        "chorus": 0.0001,
+        "Overdrive": 0.0001
+    }
+}

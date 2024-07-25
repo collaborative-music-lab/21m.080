@@ -9,10 +9,17 @@ import p5 from 'p5';
 import * as Tone from 'tone';
 import {MultiVCO} from '../MultiVCO.js'
 import {stepper} from  '../Utilities.js'
+import ESPSynthPresets from './synthPresets/ESPSynthPresets.json';
+import { MonophonicTemplate } from './MonophonicTemplate';
 
-export class ESPSynth {
-    constructor (waves = ['triangle', 'sawtooth', 'square', 'square', 'square', 'noise'], pitches = [1, 1, 1, 0.5, 0.25, 1], gui = null) {
+export class ESPSynth extends MonophonicTemplate {
+    constructor (gui = null, waves = ['triangle', 'sawtooth', 'square', 'square', 'square', 'noise'], pitches = [1, 1, 1, 0.5, 0.25, 1]) {
+        super()
         this.gui = gui
+        this.presets = ESPSynthPresets
+        this.name = "ESPSynth"
+        console.log(this.name, " loaded, available preset: ", ESPSynthPresets)
+
         this.frequency = new Tone.Signal()
         this.pitchshift = new Tone.Multiply()
         this.multiOsc = new MultiVCO(waves, pitches)
@@ -64,7 +71,7 @@ export class ESPSynth {
         this.env.connect(this.vcaEnvelopeDepth)
         this.vcaEnvelopeDepth.connect(this.vcaVelocity)
         this.vcaVelocity.connect(this.vca.factor)
-        this.vcaVelocityController.connect(this.vcaVelocity.factor)  //NEWWWWW
+        this.vcaVelocityController.connect(this.vcaVelocity.factor)
 
         //effects chain
 
@@ -78,7 +85,7 @@ export class ESPSynth {
         this.dist.connect(this.distout)
 
         //chorus
-        this.chor = new Tone.Chorus(4, 2.5, 0.5) //TODOOOOOOO
+        this.chor = new Tone.Chorus(4, 2.5, 0.5)
         this.chorgain = new Tone.Multiply(1)
         this.chorout = new Tone.Add()
         this.distout.connect(this.chorout)
@@ -95,29 +102,12 @@ export class ESPSynth {
 
         this.vcfDynamicRange = 0  //at low values, there's low dynamic range
         this.vcaDynamicRange = 0  //at high values, there's high dynamic range
-        
-        //initialize values
-        this.pitchshift.value = 1; 
-        for (let i = 0; i < waves.length ; i++) {
-            this.multiOsc.setGain(i, 1)
+
+        if (this.gui !== null) {
+            this.initGui()
+            this.hideGui();
+            setTimeout(()=>{this.loadPreset('default')}, 500);
         }
-        this.lfo.min = 0
-        this.lfo.max = 1
-        this.vibratoSwitch.value = 0
-        this.wahSwitch.value = 0
-        this.lfo.frequency.value = 10
-        this.filterCutoffFrequency.value = 1200
-        this.vcf.Q.value = 1
-        this.vcfEnvelopeDepth.factor.value = 0.01
-        this.outputGain.value = 1
-        this.vcfDynamicRange = 0.99
-        this.vcaDynamicRange = 0.99
-        this.env.attack = 0.1
-        this.env.decay = 0.1
-        this.env.sustain = 1
-        this.env.release = 1
-        this.chorgain.factor.value = 0
-        this.dist.distortion = 0
     }
 
     octaveMapping(x) {
@@ -129,6 +119,50 @@ export class ESPSynth {
         else return 1
     }
 
+    lfoControl(x) {
+        if (x !== undefined) {
+            let controlVal = Math.abs(x-0.5) * 2
+            let lfoDepth = 100
+            this.lfo.min = stepper(controlVal, 0, 1, [[0,0],[1,1]])
+            this.lfo.max = lfoDepth * stepper(controlVal, 0, 1, [[0,0],[1,1]])
+            if (x < 0.47) {
+                this.vibratoSwitch.value = 1
+                this.wahSwitch.value = 0
+            }
+            else if (x >= 0.47 && x <= 0.49) {
+                this.vibratoSwitch.value = 0
+                this.wahSwitch.value = 0
+            }
+            else if (x > 0.49) {
+                this.vibratoSwitch.value = 0
+                this.wahSwitch.value = 50 * stepper(controlVal, 0, 1, [[0,0],[1,1]])
+            }
+        }
+    }
+
+    polyLfoControl(x) {
+        if (x !== undefined) {
+            let controlVal = Math.abs(x-0.5) * 2
+            let lfoDepth = 100
+            //console.log('stepper input', x, 'stepper output', stepper(controlVal, 0, 1, [[0,0],[1,1]]))
+            this.super.set('lfo.min', stepper(controlVal, 0, 1, [[0,0],[1,1]]))
+            this.super.set('lfo.max', lfoDepth * stepper(controlVal, 0, 1, [[0,0],[1,1]]))
+
+            if (x < 0.47) {
+                this.super.set('vibratoSwitch.value', 1)
+                this.super.set('wahSwitch.value', 0)
+            }
+            else if (x >= 0.47 && x <= 0.49) {
+                this.super.set('vibratoSwitch.value', 0)
+                this.super.set('wahSwitch.value', 0)
+            }
+            else if (x > 0.49) {
+                this.super.set('vibratoSwitch.value', 0)
+                this.super.set('wahSwitch.value', 50 * stepper(controlVal, 0, 1, [[0,0],[1,1]]))
+            }
+        }
+    }
+
     //envelopes
     triggerAttack (freq, amp, time=null){ 
         freq = Tone.Midi(freq).toFrequency()
@@ -136,15 +170,11 @@ export class ESPSynth {
         if(time){
             this.env.triggerAttack(time)
             this.frequency.setValueAtTime(freq, time)
-            //console.log('raw vcf', amp, 'adjusted vcf', stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]))
-            //console.log('raw vca', amp, 'adjusted vca', stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]))
             this.vcfVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.03)
             this.vcaVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]),.03)
         } else{
             this.env.triggerAttack()
             this.frequency.value = freq
-            //console.log('raw vcf', amp, 'adjusted vcf', stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]))
-            //console.log('raw vca', amp, 'adjusted vca', stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]))
             this.vcfVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.03)
             this.vcaVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]),.03)
         }
@@ -198,12 +228,12 @@ export class ESPSynth {
         this.output.factor.value = out
     } 
 
-    initGui(gui) {
+    initGui(gui = this.gui) {
         this.gui = gui
         this.octave_radio =  this.gui.RadioButton({
             label:'octave',
             radioOptions: ['4','8','16'],
-            callback: (x)=>{this.pitchshift.value = this.octaveMapping(x)},  //CALLBACK ERROR!!!!!!!
+            callback: (x)=>{this.pitchshift.value = this.octaveMapping(x)},
             x: 5, y:50,size:1, orientation:'vertical'
         })
         this.octave_radio.set('8');
@@ -282,40 +312,18 @@ export class ESPSynth {
         this.noise_fader.borderColor = [20, 20, 20]
         this.noise_fader.set(1)
         
-        function lfoControl(x) {
-            if (x !== undefined) {
-                let controlVal = Math.abs(x-0.5) * 2
-                let lfoDepth = 100
-                //console.log('stepper input', x, 'stepper output', stepper(controlVal, 0, 1, [[0,0],[1,1]]))
-                this.lfo.min = stepper(controlVal, 0, 1, [[0,0],[1,1]])
-                this.lfo.max = lfoDepth * stepper(controlVal, 0, 1, [[0,0],[1,1]])
-                if (x < 0.47) {
-                    this.vibratoSwitch.value = 1
-                    this.wahSwitch.value = 0
-                }
-                else if (x >= 0.47 && x <= 0.49) {
-                    this.vibratoSwitch.value = 0
-                    this.wahSwitch.value = 0
-                }
-                else if (x > 0.49) {
-                    this.vibratoSwitch.value = 0
-                    this.wahSwitch.value = 50 * stepper(controlVal, 0, 1, [[0,0],[1,1]])
-                }
-            }
-        }
-        
         this.lfo_intensity_knob = this.gui.Knob({
             label:'vib/wah',
-            callback: (x)=>{lfoControl(x)},
+            callback: (x)=>{this.lfoControl(x)},
             x: 20, y: 23, size:1.1,
             showValue: false,
             min:0.0001, max: 0.95
         })
         this.lfo_intensity_knob.set( 0.48 )
-        //lfoControl(0.48)
         this.lfo_intensity_knob.borderColor = [178,192,191]
         this.lfo_intensity_knob.accentColor = [255,162,1]
         this.lfo_intensity_knob.border = 5
+        this.lfoControl(0.48)
         
         this.lfo_speed_knob = this.gui.Knob({
             label:'speed',
@@ -483,6 +491,13 @@ export class ESPSynth {
         this.dist_volume_knob.borderColor = [178,192,191]
         this.dist_volume_knob.accentColor = [255,162,1]
         this.dist_volume_knob.border = 5
+
+        this.gui_elements = [this.octave_radio, this.triangle_fader, this.saw_fader, this.square_fader,
+            this.octave_down_fader, this.two_octave_down_fader, this.noise_fader, this.lfo_intensity_knob,
+            this.lfo_speed_knob, this.cutoff_frequency_knob, this.resonance_knob, this.asdr_int_knob,
+            this.volume_knob, this.velocity_filter_knob, this.velocity_volume_knob, this.attack_fader,
+            this.decay_fader, this.sustain_fader, this.release_fader, this.chorus_filter_knob, 
+            this.dist_volume_knob]
     }
 
     initPolyGui(superClass, gui){
@@ -501,7 +516,7 @@ export class ESPSynth {
 
         this.triangle_fader = this.gui.Slider({
             label:'tri',
-            callback: (x)=>{this.super.set('multiOsc.gainStages[0].factor.value', x)},
+            callback: (x)=>{this.super.set('multiOsc.gainStages.0.factor.value', x)},
             x: 11, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -513,7 +528,7 @@ export class ESPSynth {
 
         this.saw_fader = this.gui.Slider({
             label:'saw',
-            callback: (x)=>{this.super.set('multiOsc.gainStages[1].factor.value', x)},
+            callback: (x)=>{this.super.set('multiOsc.gainStages.1.factor.value', x)},
             x: 17, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -525,7 +540,7 @@ export class ESPSynth {
 
         this.square_fader = this.gui.Slider({
             label:'squ',
-            callback: (x)=>{this.super.set('multiOsc.gainStages[2].factor.value', x)},
+            callback: (x)=>{this.super.set('multiOsc.gainStages.2.factor.value', x)},
             x: 23, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -537,7 +552,7 @@ export class ESPSynth {
         
         this.octave_down_fader = this.gui.Slider({
             label:'-1',
-            callback: (x)=>{this.super.set('multiOsc.gainStages[3].factor.value', x)},
+            callback: (x)=>{this.super.set('multiOsc.gainStages.3.factor.value', x)},
             x: 29, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -549,7 +564,7 @@ export class ESPSynth {
         
         this.two_octave_down_fader = this.gui.Slider({
             label:'-2',
-            callback: (x)=>{this.super.set('multiOsc.gainStages[4].factor.value', x)},
+            callback: (x)=>{this.super.set('multiOsc.gainStages.4.factor.value', x)},
             x: 35, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -561,7 +576,7 @@ export class ESPSynth {
         
         this.noise_fader = this.gui.Slider({
             label:'noise',
-            callback: (x)=>{this.super.set('multiOsc.gainStages[5].factor.value', x)},
+            callback: (x)=>{this.super.set('multiOsc.gainStages.5.factor.value', x)},
             x: 41, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -571,32 +586,9 @@ export class ESPSynth {
         this.noise_fader.borderColor = [20, 20, 20]
         this.noise_fader.set(1)
         
-        function lfoControl(x) {
-            if (x !== undefined) {
-                let controlVal = Math.abs(x-0.5) * 2
-                let lfoDepth = 100
-                //console.log('stepper input', x, 'stepper output', stepper(controlVal, 0, 1, [[0,0],[1,1]]))
-                this.super.set('lfo.min', stepper(controlVal, 0, 1, [[0,0],[1,1]]))
-                this.super.set('lfo.max', lfoDepth * stepper(controlVal, 0, 1, [[0,0],[1,1]]))
-
-                if (x < 0.47) {
-                    this.super.set('vibratoSwitch.value', 1)
-                    this.super.set('wahSwitch.value', 0)
-                }
-                else if (x >= 0.47 && x <= 0.49) {
-                    this.super.set('vibratoSwitch.value', 0)
-                    this.super.set('wahSwitch.value', 0)
-                }
-                else if (x > 0.49) {
-                    this.super.set('vibratoSwitch.value', 0)
-                    this.super.set('wahSwitch.value', 50 * stepper(controlVal, 0, 1, [[0,0],[1,1]]))
-                }
-            }
-        }
-        
         this.lfo_intensity_knob = this.gui.Knob({
             label:'vib/wah',
-            callback: (x)=>{lfoControl(x)},
+            callback: (x)=>{this.polyLfoControl(x)},
             x: 20, y: 23, size:1.1,
             showValue: false,
             min:0.0001, max: 0.95

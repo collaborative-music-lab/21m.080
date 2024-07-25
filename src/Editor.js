@@ -86,9 +86,10 @@ function Editor(props) {
     // Decoding the URL and reloading the page
     function urlDecode() {
         const URLParams = new URLSearchParams(window.location.search);
-        const encodedContent = URLParams.get('code');
+        const compressedCode = URLParams.get('code');
+        const encodedContent =  LZString.decompressFromEncodedURIComponent(compressedCode);
         if (encodedContent) {
-            localStorage.setItem(`${props.page}Value`, atob(encodedContent));
+            localStorage.setItem(`${props.page}Value`, encodedContent);
             const url = window.location.origin + window.location.pathname;
             window.location.assign(url);
         }
@@ -511,11 +512,11 @@ function Editor(props) {
 
     function exportAsLink(code) {
         const liveCode = localStorage.getItem(`${props.page}Value`);
-        console.log(liveCode);
-        const encodedCode = btoa(liveCode);
-        const url = `${window.location.origin}${window.location.pathname}?code=${encodedCode}`;
+        const compressedCode = LZString.compressToEncodedURIComponent(liveCode);
+
+        const url = `${window.location.origin}${window.location.pathname}?code=${compressedCode}`;
         navigator.clipboard.writeText(url);
-        console.log('copy');
+        console.log('URL copied to clipboard');
     }
 
     //Export webpage code

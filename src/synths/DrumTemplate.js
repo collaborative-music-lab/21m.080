@@ -14,6 +14,11 @@ import { MonophonicTemplate } from './MonophonicTemplate';
  */
 export class DrumTemplate extends MonophonicTemplate {
 
+    constructor() {
+      super()
+      this.type = 'Drum'
+  }
+
     /**
      * Function to trigger the drum sound.
      */

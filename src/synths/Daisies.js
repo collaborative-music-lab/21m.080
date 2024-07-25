@@ -241,10 +241,17 @@ export class Daisies {
   }
 
   loadPreset = function(name){
-  	if( this.presets[name]){
-
-  	} else{
-  		console.log("No preset of name ${name}")
+  	const presetData = this.presets[name];
+    if (presetData) {
+    	console.log("Loading preset ",name)
+      for (let id in presetData) {
+      	for (let element of Object.values(this.gui.elements)) {
+		        if (element.id = id) element.set(presetData[id])
+		    }
+      }
+    }
+		else{
+  		console.log("No preset of name ",name)
   	}
   }
 

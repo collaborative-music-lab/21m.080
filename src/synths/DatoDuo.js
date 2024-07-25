@@ -6,11 +6,17 @@ Modeled after the DatoDuo
 
 import p5 from 'p5';
 import * as Tone from 'tone';
+import DatoDuoPresets from './synthPresets/DatoDuoPresets.json';
+import { MonophonicTemplate } from './MonophonicTemplate';
 
-export class DatoDuo {
+export class DatoDuo extends MonophonicTemplate {
   constructor (gui = null) {
+    super()
     this.gui = gui
+    this.presets = DatoDuoPresets
     this.isGlide = false
+    this.name = "DatoDuo"
+    console.log(this.name, " loaded, available preset: ", DatoDuoPresets)
 
     this.frequency = new Tone.Signal()
     this.tonePitchshift = new Tone.Multiply()
@@ -20,12 +26,12 @@ export class DatoDuo {
     this.toneMixer = new Tone.Multiply()
     this.sawMixer = new Tone.Multiply()
     this.cutoffSig = new Tone.Signal()
-    this.filterEnvelope = new Tone.Envelope()
+    this.vcf_env = new Tone.Envelope()
     this.filterDepth = new Tone.Multiply()
     this.filterMultiplier = new Tone.Multiply()
     this.filter = new Tone.Filter()
     this.velocity = new Tone.Signal()
-    this.ampEnvelope = new Tone.Envelope()
+    this.env = new Tone.Envelope()
     this.amp = new Tone.Multiply()
     this.output = new Tone.Multiply(0.05).toDestination()
 
@@ -37,7 +43,7 @@ export class DatoDuo {
     this.tonePitchshift.connect(this.pulseWav.frequency)
     this.frequency.connect(this.sawPitchshift)
     this.sawPitchshift.connect(this.sawWav.frequency)
-    this.rampTime = .2
+    this.rampTime = .01
 
     this.frequency.value = 500;
     this.tonePitchshift.factor.value = 1;
@@ -53,27 +59,27 @@ export class DatoDuo {
     this.sawMixer.factor.value = 1
 
     //Connect the filter (VCF)
-    this.filterEnvelope.connect(this.filterDepth)
+    this.vcf_env.connect(this.filterDepth)
     this.cutoffSig.connect(this.filter.frequency)
     this.filterDepth.connect(this.filter.frequency)
 
     this.cutoffSig.value = 1500
     this.filterDepth.factor.value = 5000
-    this.filterEnvelope.attack = 0.1
-    this.filterEnvelope.decay = 0.1
-    this.filterEnvelope.sustain = 1
-    this.filterEnvelope.release = 0.2
+    this.vcf_env.attack = 0.02
+    this.vcf_env.decay = 0.1
+    this.vcf_env.sustain = .5
+    this.vcf_env.release = 0.2
     this.filter.rolloff = -24
     this.filter.Q.value = 1
 
     //Connect the ASDR (VCA)
     this.filter.connect(this.amp)
 
-    this.ampEnvelope.connect(this.amp.factor)
-    this.ampEnvelope.attack = 0.3
-    this.ampEnvelope.delay = 0.1
-    this.ampEnvelope.sustain = 1
-    this.ampEnvelope.release = 0.9
+    this.env.connect(this.amp.factor)
+    this.env.attack = 0.01
+    this.env.delay = 0.1
+    this.env.sustain = 0
+    this.env.release = 0.9
 
     //effects chain
 
@@ -122,86 +128,84 @@ export class DatoDuo {
     this.lfo.amplitude.value = 0
     this.pulseWav.width.value = 0.5
     this.filterDepth.value = 700
-    this.filterEnvelope.release = 0.8
+    this.vcf_env.release = 0.8
     this.filter.Q.value = 1
+
+    if (this.gui !== null) {
+        this.initGui()
+        this.hideGui();
+        setTimeout(()=>{this.loadPreset('default')}, 500);
+    }
   }
 
   //envelopes
   triggerAttack (freq, amp, time=null){
+    amp = amp/127
     freq = Tone.Midi(freq).toFrequency()
     if(time){
-      this.ampEnvelope.triggerAttack(time)
-      this.filterEnvelope.triggerAttack(time)
+      this.env.triggerAttack(time)
+      this.vcf_env.triggerAttack(time)
       if (this.isGlide) {
-        this.frequency.exponentialRampToValueAtTime(freq,this.rampTime, time)
+        this.frequency.linearRampToValueAtTime(freq,this.rampTime+ time)
       }
       else {
         this.frequency.setValueAtTime(freq, time)
       }
       this.velocity.rampTo(amp,.03)
     } else{
-      this.ampEnvelope.triggerAttack()
-      this.filterEnvelope.triggerAttack()
+      this.env.triggerAttack()
+      this.vcf_env.triggerAttack()
       this.frequency.value = freq
       this.velocity.rampTo(amp,.03)
     }
   }
   triggerRelease (time=null){
     if(time) {
-      this.ampEnvelope.triggerRelease(time)
-      this.filterEnvelope.triggerRelease(time)
+      this.env.triggerRelease(time)
+      this.vcf_env.triggerRelease(time)
     }
     else {
-      this.ampEnvelope.triggerRelease()
-      this.filterEnvelope.triggerRelease()
+      this.env.triggerRelease()
+      this.vcf_env.triggerRelease()
     }
   }
-  triggerAttackRelease (freq, amp, dur=0.01, time=null){
-    freq = Tone.Midi(freq).toFrequency()
-    if(time){
-      this.ampEnvelope.triggerAttackRelease(dur, time)
-      this.filterEnvelope.triggerAttackRelease(dur, time)
-      if (this.isGlide) {
-        this.frequency.exponentialRampToValueAtTime(freq,this.rampTime+time)
-      }
-      else {
-        this.frequency.setValueAtTime(freq, time)
-      }
-      this.velocity.rampTo(amp,.03)
-      
-    } else{
-      this.ampEnvelope.triggerAttackRelease(dur)
-      this.filterEnvelope.triggerAttackRelease(dur)
-      if (this.isGlide) {
-        this.frequency.exponentialRamp(freq, this.rampTime)
-      }
-      else {
-        this.frequency.value = freq
-      }
-      this.velocity.rampTo(amp,.03)
-    }
-  }//attackRelease
+  // Override triggerAttackRelease method
+    triggerAttackRelease(freq, amp, dur = 0.01, time = null) {
+        amp = amp / 127;
+        freq = Tone.Midi(freq).toFrequency();
+        if (time) {
+            this.env.triggerAttackRelease(dur, time);
+            this.vcf_env.triggerAttackRelease(dur, time);
+            if (this.isGlide) {
+                this.frequency.linearRampToValueAtTime(freq, this.rampTime + time);
+            } else {
+                this.frequency.setValueAtTime(freq, time);
+            }
+        } else {
+            this.env.triggerAttackRelease(dur);
+            this.vcf_env.triggerAttackRelease(dur);
+            if (this.isGlide) {
+                this.frequency.exponentialRamp(freq, this.rampTime);
+            } else {
+                this.frequency.value = freq;
+            }
+            this.velocity.rampTo(amp, 0.03);
+        }
+    }//attackRelease
 
-  connect(destination) {
-    if (destination.input) {
-      this.output.connect(destination.input);
-    } else {
-      this.output.connect(destination);
-    }
-  }
 
   //parameter setters
   setADSR(a,d,s,r){
-    this.ampEnvelope.attack = a>0.001 ? a : 0.001
-    this.ampEnvelope.decay = d>0.01 ? d : 0.01
-    this.ampEnvelope.sustain = Math.abs(s)<1 ? s : 1
-    this.ampEnvelope.release = r>0.01 ? r : 0.01
+    this.env.attack = a>0.001 ? a : 0.001
+    this.env.decay = d>0.01 ? d : 0.01
+    this.env.sustain = Math.abs(s)<1 ? s : 1
+    this.env.release = r>0.01 ? r : 0.01
   }
   setFilterADSR(a,d,s,r){
-    this.filterEnvelope.attack = a>0.001 ? a : 0.001
-    this.filterEnvelope.decay = d>0.01 ? d : 0.01
-    this.filterEnvelope.sustain = Math.abs(s)<1 ? s : 1
-    this.filterEnvelope.release = r>0.01 ? r : 0.01
+    this.vcf_env.attack = a>0.001 ? a : 0.001
+    this.vcf_env.decay = d>0.01 ? d : 0.01
+    this.vcf_env.sustain = Math.abs(s)<1 ? s : 1
+    this.vcf_env.release = r>0.01 ? r : 0.01
   }
   setDetune(detune){
     this.sawPitchshift.factor.value = detune
@@ -213,7 +217,9 @@ export class DatoDuo {
     this.output.factor.value = out
   }
 
-  initgui() {
+  initGui(gui = this.gui) {
+    this.gui = gui
+
     this.distortion_toggle =  this.gui.Toggle({
       label:'Accent',
       mapto: this.dist.wet,
@@ -241,10 +247,10 @@ export class DatoDuo {
     this.glide_toggle.accentColor = [51,145,219]
 
     this.delayControl = function(x) {
-      this.delay.feedback.value = stepper(x, 0 , 1 , [[0,0], [0.02, 0], [0.8,0.6], [1,1]])
-      this.delay.wet.value = stepper(x , 0, 1, [[0,0], [0.02, 0], [0.04, 1], [1,1]])
-      this.delaygain.factor.value = stepper(x , 0, 1, [[0,0], [0.02, 0], [0.04, 0.3], [0.4, 0.5], [1,1]])
-      this.lfo.amplitude.value = stepper(x , 0, 1, [[0,0], [0.5, 0], [0.7, 0.5], [1,1]])
+      this.delay.feedback.value = this.stepper(x, 0 , 1 , [[0,0], [0.02, 0], [0.8,0.6], [1,1]])
+      this.delay.wet.value = this.stepper(x , 0, 1, [[0,0], [0.02, 0], [0.04, 1], [1,1]])
+      this.delaygain.factor.value = this.stepper(x , 0, 1, [[0,0], [0.02, 0], [0.04, 0.3], [0.4, 0.5], [1,1]])
+      this.lfo.amplitude.value = this.stepper(x , 0, 1, [[0,0], [0.5, 0], [0.7, 0.5], [1,1]])
     }
 
     this.delay_knob = this.gui.Knob({
@@ -262,7 +268,7 @@ export class DatoDuo {
       label:'wave',
       x: 39, y: 10, size: 2,
       min:0, max: 1,
-      callback: (x)=>{this.pulseWav.width.value = stepper(x, 0, 1, [[0,0], [0.4, 0.6], [1,1]])},
+      callback: (x)=>{this.pulseWav.width.value = this.stepper(x, 0, 1, [[0,0], [0.4, 0.6], [1,1]])},
       orientation: 'vertical',
       showValue: false, 
       link: 'wave'
@@ -273,7 +279,7 @@ export class DatoDuo {
 
     this.freq_fader = this.gui.Slider({
       label:'freq',
-      //callback: (x)=>{this.cutoffSig.value = stepper(x, 200, 1200, [[0,0], [0.6, 0.8], [1,1]])},
+      //callback: (x)=>{this.cutoffSig.value = this.stepper(x, 200, 1200, [[0,0], [0.6, 0.8], [1,1]])},
       callback: (x)=>{this.filterDepth.value = x},
       mapto: this.cutoffSig,
       x: 49, y: 10, size: 2,
@@ -288,7 +294,12 @@ export class DatoDuo {
 
     this.release_fader = this.gui.Slider({
       label:'release',
-      callback: (x)=>{ this.filterEnvelope.release = stepper(x, 0.1, 1.5, [[0,0], [0.8, 0.5], [1,1]])},
+      callback: (x)=>{ 
+        this.env.decay = this.stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]])
+        this.env.release = this.stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]])
+        this.vcf_env.decay = this.stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]])
+        this.vcf_env.release = this.stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]])
+      },
       x: 59, y: 10, size: 2,
       min:0.1, max: 1.5,
       orientation: 'vertical',
@@ -361,7 +372,14 @@ export class DatoDuo {
     })
     this.snare_trigger.accentColor = [20,20,20]
 
-    /*
+    this.gui_elements = [this.distortion_toggle, this.crusher_toggle, 
+      this.glide_toggle, this.delay_knob, this.wave_fader, 
+      this.freq_fader, this.release_fader, this.resonance_knob,
+      this.detune_knob, this.speaker_knob, this.kick_trigger,
+      this.snare_trigger]
+  }
+
+  /*
     * Helper function for creating a custom curve for this.gui elements
     *
     * input : input of the stepper function
@@ -372,8 +390,7 @@ export class DatoDuo {
     * x values are how much the this.gui element is turned
     * y values are the level the elements are at internally
     */
-
-    function stepper(input, min, max, steps) {
+    stepper(input, min, max, steps) {
       let range = max - min
       let rawval = (input - min) / range
       const gui_values = []
@@ -396,6 +413,5 @@ export class DatoDuo {
       }
       return max
     }
-  }
 }
 

@@ -1,0 +1,28 @@
+{
+  "thickDistortion": {
+    "Accent": 0,
+    "bitcrusher": 0,
+    "Glide": 0,
+    "Delay Control": 0.0001,
+    "wave": 0.5,
+    "freq": 700,
+    "release": 0.8,
+    "res": 1,
+    "detune": 1,
+    "gain": 0.05,
+    "kick": 0,
+    "snare": 0
+  },
+  "default": {
+    "Accent": 0,
+    "bitcrusher": 0,
+    "Glide": 0,
+    "Delay Control": 0.05095,
+    "wave": 0.6950000000000002,
+    "freq": 791.337256248868,
+    "release": 1.2970000000000006,
+    "res": 3.448777886795153,
+    "detune": 2,
+    "gain": 0.05
+  }
+}

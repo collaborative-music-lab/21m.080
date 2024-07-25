@@ -80,77 +80,77 @@ Main List of Parameters & how to set them:
 import p5 from 'p5';
 import * as Tone from 'tone';
 import DaisiesPresets from './synthPresets/DaisiesPresets.json';
+import { MonophonicTemplate } from './MonophonicTemplate';
 
 export class Daisy{
-	constructor(color = [200,200,200], gui = null){
-	this.gui = gui
+	constructor(){
+		
+		this.frequency = new Tone.Signal(100)
+		this.frequencyCV = new Tone.Signal()
+		this.frequency_scalar = new Tone.Multiply(1)
+		this.detune = new Tone.Multiply(1)
+		this.vco_1 = new Tone.Oscillator({type:"square"}).start()
+		this.vco_2 = new Tone.Oscillator({type:"square"}).start()
+		this.frequency.connect(this.frequency_scalar)
+		this.frequencyCV.connect(this.frequency_scalar.factor)
+		this.frequency_scalar.connect(this.vco_1.frequency)
+		this.frequency_scalar.connect(this.detune)
+		this.detune.connect(this.vco_2.frequency)
 
-	this.frequency = new Tone.Signal(100)
-	this.frequencyCV = new Tone.Signal()
-	this.frequency_scalar = new Tone.Multiply(1)
-	this.detune = new Tone.Multiply(1)
-	this.vco_1 = new Tone.Oscillator({type:"square"}).start()
-	this.vco_2 = new Tone.Oscillator({type:"square"}).start()
-	this.frequency.connect(this.frequency_scalar)
-	this.frequencyCV.connect(this.frequency_scalar.factor)
-	this.frequency_scalar.connect(this.vco_1.frequency)
-	this.frequency_scalar.connect(this.detune)
-	this.detune.connect(this.vco_2.frequency)
+		this.mixer_1 = new Tone.Multiply(.5)
+		this.mixer_2 = new Tone.Multiply(.5)
+		this.vco_1.connect( this.mixer_1)
+		this.vco_2.connect( this.mixer_2)
 
-	this.mixer_1 = new Tone.Multiply(.5)
-	this.mixer_2 = new Tone.Multiply(.5)
-	this.vco_1.connect( this.mixer_1)
-	this.vco_2.connect( this.mixer_2)
+		this.lpf = new Tone.Filter({type:'lowpass', rolloff:-24, Q:0, cutoff:3000})
+		this.mixer_1.connect(this.lpf)
+		this.mixer_2.connect(this.lpf)
 
-	this.lpf = new Tone.Filter({type:'lowpass', rolloff:-24, Q:0, cutoff:3000})
-	this.mixer_1.connect(this.lpf)
-	this.mixer_2.connect(this.lpf)
+		this.vca = new Tone.Multiply()
+		this.panner = new Tone.Panner(0)
+		this.output = new Tone.Multiply(.25)
+		this.lpf.connect(this.vca)
+		this.vca.connect(this.panner)
+		this.panner.connect(this.output)
 
-	this.vca = new Tone.Multiply()
-	this.panner = new Tone.Panner(0)
-	this.output = new Tone.Multiply(.25)
-	this.lpf.connect(this.vca)
-	this.vca.connect(this.panner)
-	this.panner.connect(this.output)
+		//envelopes
+		this.env = new Tone.Envelope()
+		this.velocity = new Tone.Signal(1)
+		this.velocity_depth = new Tone.Multiply(1)
+		this.env.connect(this.velocity_depth)
+		this.velocity_depth.connect(this.vca.factor)
+		this.velocity.connect(this.velocity_depth.factor)
 
-	//envelopes
-	this.env = new Tone.Envelope()
-	this.velocity = new Tone.Signal(1)
-	this.velocity_depth = new Tone.Multiply(1)
-	this.env.connect(this.velocity_depth)
-	this.velocity_depth.connect(this.vca.factor)
-	this.velocity.connect(this.velocity_depth.factor)
+		//vcf
+		this.cutoff = new Tone.Signal(1000)
+		this.cutoff.connect(this.lpf.frequency)
+		this.cutoffCV = new Tone.Signal()
+		this.cutoffCV.connect(this.lpf.frequency)
+		this.keyTracking = new Tone.Multiply(.1)
+		this.frequency.connect(this.keyTracking)
+		this.keyTracking.connect(this.lpf.frequency)
+		this.vcf_env = new Tone.Envelope()
+		this.lpf_env_depth = new Tone.Multiply()
+		this.vcf_env.connect(this.lpf_env_depth)
+		this.lpf_env_depth.connect(this.lpf.frequency)
 
-	//vcf
-	this.cutoff = new Tone.Signal(1000)
-	this.cutoff.connect(this.lpf.frequency)
-	this.cutoffCV = new Tone.Signal()
-	this.cutoffCV.connect(this.lpf.frequency)
-	this.keyTracking = new Tone.Multiply(.1)
-	this.frequency.connect(this.keyTracking)
-	this.keyTracking.connect(this.lpf.frequency)
-	this.vcf_env = new Tone.Envelope()
-	this.lpf_env_depth = new Tone.Multiply()
-	this.vcf_env.connect(this.lpf_env_depth)
-	this.lpf_env_depth.connect(this.lpf.frequency)
+		this.lfo = new Tone.Oscillator(.5).start()
+		this.vca_constant = new Tone.Signal(1)
+		this.vca_lfo_depth = new Tone.Multiply(0)
+		this.lfo.connect(this.vca_lfo_depth)
+		this.vca_lfo_depth.connect(this.output.factor)
+		this.vca_constant.connect(this.output.factor)
+		this.pitch_lfo_depth = new Tone.Multiply(0)
+		this.lfo.connect(this.pitch_lfo_depth)
+		this.frequency_constant = new Tone.Signal(1)
+		this.pitch_lfo_depth.connect(this.frequency_scalar.factor)
+		this.frequency_constant.connect(this.frequency_scalar.factor)
 
-	this.lfo = new Tone.Oscillator(.5).start()
-	this.vca_constant = new Tone.Signal(1)
-	this.vca_lfo_depth = new Tone.Multiply(0)
-	this.lfo.connect(this.vca_lfo_depth)
-	this.vca_lfo_depth.connect(this.output.factor)
-	this.vca_constant.connect(this.output.factor)
-	this.pitch_lfo_depth = new Tone.Multiply(0)
-	this.lfo.connect(this.pitch_lfo_depth)
-	this.frequency_constant = new Tone.Signal(1)
-	this.pitch_lfo_depth.connect(this.frequency_scalar.factor)
-	this.frequency_constant.connect(this.frequency_scalar.factor)
-
-	//no PWM to prevent errors when vco is not set to pulse
-	this.pwm_lfo_depth = new Tone.Multiply()
-	this.lfo.connect(this.pwm_lfo_depth)
-	//this.pwm_lfo_depth.connect(this.vco_1.width)
-	//this.pwm_lfo_depth.connect(this.vco_2.width)
+		//no PWM to prevent errors when vco is not set to pulse
+		this.pwm_lfo_depth = new Tone.Multiply()
+		this.lfo.connect(this.pwm_lfo_depth)
+		//this.pwm_lfo_depth.connect(this.vco_1.width)
+		//this.pwm_lfo_depth.connect(this.vco_2.width)
   }
 
   //TRIGGER METHODS
@@ -195,11 +195,15 @@ export class Daisy{
  * polyphony
  ********************/
 
-export class Daisies {
-  constructor(num = 8, gui = null){
-	this.gui = gui
-	this.numVoices = num
-	this.presets = DaisiesPresets
+export class Daisies extends MonophonicTemplate{
+  constructor(gui = null, num = 8){
+		super()
+    this.gui = gui
+    this.name = "Daisies"
+		this.presets = DaisiesPresets
+    console.log(this.name, " loaded, available preset: ", this.presets)
+		this.numVoices = num
+
 	//audio
     this.voice = []
     for(let i=0;i<this.numVoices;i++) this.voice.push(new Daisy())
@@ -209,27 +213,27 @@ export class Daisies {
     this.hpf.connect(this.output)
     //control
     this.decay_cv = 0
-	this.adsr = [.01,.5,.5,2]
-	this.vcf_adsr = [.01,.5,.5,2]
-	this.vco_type = ["pulse","pulse"]
-	this.voiceSettings = {
-				//vco
-				"vco_1.type": "square",
-				"vco_2.type": "square",
-				"detune.factor": 0,
-				"mixer_1.factor": .5,
-				"mixer_2.factor": .5,
-				"pitch_lfo_depth.factor": 0,
-        //vcf
-        "lpf_env_depth.factor": 0,
-        "keyTracking.factor": 0,
-        "panner.pan": 0,
-        "keyTracking.factor": 0,
-        //vca
-        "lfo.frequency": 0,
-        "vca_lfo_depth.factor": 0,
-        "velocity": 1
-    }
+		this.adsr = [.01,.5,.5,2]
+		this.vcf_adsr = [.01,.5,.5,2]
+		this.vco_type = ["pulse","pulse"]
+		this.voiceSettings = {
+					//vco
+					"vco_1.type": "square",
+					"vco_2.type": "square",
+					"detune.factor": 0,
+					"mixer_1.factor": .5,
+					"mixer_2.factor": .5,
+					"pitch_lfo_depth.factor": 0,
+	        //vcf
+	        "lpf_env_depth.factor": 0,
+	        "keyTracking.factor": 0,
+	        "panner.pan": 0,
+	        "keyTracking.factor": 0,
+	        //vca
+	        "lfo.frequency": 0,
+	        "vca_lfo_depth.factor": 0,
+	        "velocity": 1
+	    }
     //voice tracking
     this.prevNote = 0
     this.v = 0
@@ -238,28 +242,14 @@ export class Daisies {
     this.noteOrder = [7,0,1,2,3,4,5,6]
     this.x = 0
     this.y = 0
-  }
 
-  loadPreset = function(name){
-  	const presetData = this.presets[name];
-    if (presetData) {
-    	console.log("Loading preset2 ",name)
-      for (let id in presetData) {
-      	for (let element of Object.values(this.gui.elements)) {
-		        if (element.id === id) {
-		        	element.set(presetData[id])
-		        }
-		    }
-      }
+    if (this.gui !== null) {
+        console.log('gui');
+        this.hideGui();
+        setTimeout(()=>{this.loadPreset('default')}, 500);
     }
-		else{
-  		console.log("No preset of name ",name)
-  	}
   }
 
-  listPresets = function(name){
-  	console.log(this.presets)
-  }
   /**************** 
    * trigger methods
   ***************/
@@ -393,14 +383,7 @@ export class Daisies {
   }
 
   //envelopes
-  setADSR = function(a,d,s,r){
-  	this.adsr = [a,d,s,r]
-    this.updateEnv()
-  }
-  setFilterADSR = function(a,d,s,r){
-  	this.vcf_adsr = [a,d,s,r]
-    this.updateFilterEnv()
-  }
+	//moved setADSR and setFilterADSR to parent class
   setDecayCV = function(val){
   	this.decay_cv = val
   	this.updateEnv()
@@ -423,6 +406,10 @@ export class Daisies {
     }
   }
   initGui(gui, x=10,	y=10){
+  	if(this.gui_elements.length > 0){
+  		console.log("initGui is called when a synth is created.\n Call synth.showGui() to see it.")
+  		return;
+  	}
   	this.gui = gui
   	this.x = x
   	this.y = y
@@ -440,38 +427,6 @@ export class Daisies {
   		this.detune_knob, this.cutoff_knob, this.vcf_env_knob,
   		this.keyTracking_knob, this.attack_knob, this.decay_knob,
   		this.sustain_knob, this.release_knob]
-  }
-  hideGui(){
-  	for(let i=0;i<this.gui_elements.length;i++) this.gui_elements[i].hide = true
-  }
-	showGui(){
-  	for(let i=0;i<this.gui_elements.length;i++) this.gui_elements[i].hide = false
-  }
-  createKnob(_label, _x, _y, _min, _max, _size, _accentColor, callback) {
-    //console.log(_label)
-    return this.gui.Knob({
-      label:_label, min:_min, max:_max, size:_size, accentColor:_accentColor,
-      x: _x + this.x, y: _y + this.y,
-      callback: callback,
-      showLabel: 1, showValue: 1, // Assuming these are common settings
-      curve: 2, // Adjust as needed
-      border: 2 // Adjust as needed
-    });
-  }
-  connect(destination) {
-    if (destination.input) {
-      this.output.connect(destination.input);
-    } else {
-      this.output.connect(destination);
-    }
-  }
-	disconnect(destination) {
-    if (destination.input) {
-      this.output.disconnect(destination.input);
-    } else {
-
-      this.output.disconnect(destination);
-    }
   }
 
 	updateVoiceParameters(voiceIndex, params, time = null) {

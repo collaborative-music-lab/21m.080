@@ -27,6 +27,10 @@ the preset file into synth/synthPresets/
 
 import * as Tone from 'tone';
 
+/**
+ * Represents a Monophonic Synth
+ * @constructor
+ */
 export class MonophonicTemplate {
     constructor() {
         this.presets = null;
@@ -38,6 +42,12 @@ export class MonophonicTemplate {
         this.presetsData = null
     }
 
+    /**
+     * Load a preset by name
+     * @param {string} name - Name of the preset to load
+     * @returns {void}
+     * @example synth.loadPreset('default')
+     */
     loadPreset(name) {
         const presetData = this.presets[name];
         if (presetData) {
@@ -55,10 +65,23 @@ export class MonophonicTemplate {
         }
     }
 
+    /**
+     * Console log all available presets
+     * @returns {void}
+     * @example synth.listPresets()
+     */
     listPresets() {
         console.log("Synth presets", this.presets);
     }
 
+    /**
+     * Trigger the attack phase of the envelope
+     * @param {number} val - MIDI note value
+     * @param {number} vel - MIDI velocity value
+     * @param {number} time - Time to trigger the attack
+     * @returns {void}
+     * @example synth.triggerAttack(60, 100, Tone.now())
+     */
     triggerAttack(val, vel = 100, time = null) {
         vel = vel / 127;
         if (time) {
@@ -70,11 +93,29 @@ export class MonophonicTemplate {
         }
     }
 
+    /**
+     * Trigger the release phase of the envelope
+     * @param {number} val - MIDI note value
+     * @param {number} time - Time to trigger the release
+     * @returns {void}
+     * @example synth.triggerRelease(60, Tone.now())
+     * @example synth.triggerRelease(60)
+     */
     triggerRelease(val, time = null) {
         if (time) this.env.triggerRelease(time);
         else this.env.triggerRelease();
     }
 
+    /**
+     * Trigger the attack and release phases of the envelope
+     * @param {number} val - MIDI note value
+     * @param {number} vel - MIDI velocity value
+     * @param {number} dur - Duration of the attack and release
+     * @param {number} time - Time to trigger the attack and release
+     * @returns {void}
+     * @example synth.triggerAttackRelease(60, 100, 0.01, Tone.now())
+     * @example synth.triggerAttackRelease(60, 100, 0.01)
+     */
     triggerAttackRelease(val, vel = 100, dur = 0.01, time = null) {
         vel = vel / 127;
         if (time) {
@@ -86,6 +127,15 @@ export class MonophonicTemplate {
         }
     }
 
+    /**
+     * Set the ADSR values for the envelope
+     * @param {number} a - Attack time
+     * @param {number} d - Decay time
+     * @param {number} s - Sustain level
+     * @param {number} r - Release time
+     * @returns {void}
+     * @example synth.setADSR(0.01, 0.1, 0.5, 0.1)
+     */
     setADSR(a, d, s, r) {
         if (this.env) {
             this.env.attack = a>0.001 ? a : 0.001
@@ -95,6 +145,15 @@ export class MonophonicTemplate {
         }
     }
 
+    /**
+     * Set the ADSR values for the filter envelope
+     * @param {number} a - Attack time
+     * @param {number} d - Decay time
+     * @param {number} s - Sustain level
+     * @param {number} r - Release time
+     * @returns {void}
+     * @example synth.setFilterADSR(0.01, 0.1, 0.5, 0.1)
+     */ 
     setFilterADSR(a, d, s, r) {
         if (this.vcf_env) {
             this.vcf_env.attack = a>0.001 ? a : 0.001
@@ -104,6 +163,16 @@ export class MonophonicTemplate {
         }
     }
 
+    /**
+     * Initialize the GUI
+     * @param {object} gui - p5.gui object
+     * @param {number} x - X position of the GUI
+     * @param {number} y - Y position of the GUI
+     * @returns {void}
+     * @example 
+     * const gui = new p5(sketch, 'Canvas1');
+     * synth.initGui(gui, 10, 10)
+     */
     initGui(gui, x = 10, y = 10) {
         this.gui = gui;
         this.x = x;
@@ -111,6 +180,10 @@ export class MonophonicTemplate {
         this.gui_elements = [];
     }
 
+    /**
+     * Hide the GUI
+     * @returns {void}
+     */
     hideGui() {
         for (let i = 0; i < this.gui_elements.length; i++) {
             //console.log(this.gui_elements[i])
@@ -118,10 +191,30 @@ export class MonophonicTemplate {
         }
     }
 
+    /**
+     * Show the GUI
+     * @returns {void}
+     */
     showGui() {
         for (let i = 0; i < this.gui_elements.length; i++) this.gui_elements[i].hide = false;
     }
 
+    /**
+     * Fast way to create a knob GUI element
+     * @param {string} _label - Label for the knob
+     * @param {number} _x - X position of the knob
+     * @param {number} _y - Y position of the knob
+     * @param {number} _min - Minimum value of the knob
+     * @param {number} _max - Maximum value of the knob
+     * @param {number} _size - Size of the knob
+     * @param {string} _accentColor - Accent color of the knob
+     * @param {function} callback - Callback function for the knob
+     * @returns {object} - p5.gui knob object
+     * @example
+     * this.createKnob('Attack', 10, 10, 0.01, 1, 100, '#ff0000', (val) => {
+     *    this.setADSR(val, this.gui.get('Decay').value(), this.gui.get('Sustain').value(), this.gui.get('Release').value());
+     * });
+     */
     createKnob(_label, _x, _y, _min, _max, _size, _accentColor, callback) {
         return this.gui.Knob({
             label: _label, min: _min, max: _max, size: _size, accentColor: _accentColor,
@@ -133,6 +226,14 @@ export class MonophonicTemplate {
         });
     }
 
+    /**
+     * Connects to Tone.js destination
+     * @param {object} destination - Tone.js destination object
+     * @returns {void}
+     * @example 
+     * const amp = new Tone.Gain(0.5).toDestination();
+     * synth.connect(amp)
+     */
     connect(destination) {
         if (destination.input) {
             this.output.connect(destination.input);
@@ -141,6 +242,15 @@ export class MonophonicTemplate {
         }
     }
 
+    /**
+     * Disconnects from Tone.js destination
+     * @param {object} destination - Tone.js destination object
+     * @returns {void}
+     * @example
+     * const amp = new Tone.Gain(0.5).toDestination();
+     * synth.connect(amp)
+     * synth.disconnect(amp)
+     */
     disconnect(destination) {
         if (destination.input) {
             this.output.disconnect(destination.input);
@@ -149,6 +259,12 @@ export class MonophonicTemplate {
         }
     }
 
+    /**
+     * Save a preset by name
+     * @param {string} name - Name of the preset to save
+     * @returns {void}
+     * @example synth.savePreset('default')
+     */
 	savePreset = (name) => {
 	    const preset = {};
 	    for (let element of Object.values(this.gui.elements)) {
@@ -165,7 +281,11 @@ export class MonophonicTemplate {
 	    console.log(`Preset saved under ${this.name}/${name}`);
 	};
 
-    // Function to download the updated presets data
+    /**
+     * Download the presets data as a JSON file
+     * @returns {void}
+     * @example synth.downloadPresets()
+     */
 	downloadPresets = () => {
 	    this.presetsData = this.presets;
 	    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.presetsData, null, 2));

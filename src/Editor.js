@@ -11,7 +11,7 @@ import { gruvboxDark, gruvboxLight } from '@uiw/codemirror-theme-gruvbox-dark';
 //tone
 import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
         Rumble, Daisies, DatoDuo, ESPSynth, Polyphony, Stripe, Diffuseur, KP, Sympathy,
-        Kick, DrumSampler} from './synths/index.js';
+        Kick, DrumSampler, Cymbal } from './synths/index.js';
 import {Sequencer} from './Sequencer.js';
 import {MultiVCO} from './MultiVCO.js'
 import p5 from 'p5';
@@ -83,6 +83,7 @@ function Editor(props) {
     window.Sequencer = Sequencer
     window.MultiVCO = MultiVCO
     window.Kick = Kick
+    window.Cymbal = Cymbal
     window.DrumSampler = DrumSampler
 
     var curLineNum = 0;

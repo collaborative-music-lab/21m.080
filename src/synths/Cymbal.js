@@ -2,8 +2,25 @@ import p5 from 'p5';
 import * as Tone from 'tone';
 import { DrumTemplate } from './DrumTemplate';
 
-class Cymbal extends DrumTemplate {
+/**
+ * Class representing a cymbal drum synth.
+ * 
+ * Synth architecture:
+ * - 3 oscillators
+ * - 3 noise sources
+ * - 2 bandpass filters
+ * - 2 amplitude envelopes
+ * 
+ * @extends DrumTemplate
+ * @constructor
+ * @param {GUI} gui - The p5 GUI instance to create GUI elements.
+ */
+
+export class Cymbal extends DrumTemplate {
+  
   constructor(gui = null) {
+    super();
+
     this.gui = gui;
     this.name = "Cymbal";
 
@@ -31,14 +48,17 @@ class Cymbal extends DrumTemplate {
     this.oscillators.forEach(osc => osc.connect(this.oscMixer));
     this.noises.forEach(n => n.connect(this.oscMixer));
 
-    // Create filters and envelopes
-    this.lowerBandFilter = new Tone.Filter({ type: 'bandpass', Q: 1 });
+    // Filter out lower band and envelope
+    this.lowerBandFilter = new Tone.Filter({ type: 'bandpass' });
     this.lowerBandEnv = new Tone.AmplitudeEnvelope({
       attack: 0.01, decay: 0.4, sustain: 0.0, release: 0.1
     });
     this.lowerBandVCA = new Tone.Gain(1);
-    this.lowerBandFilter.chain(this.lowerBandEnv, this.lowerBandVCA);
+    // Connect mixer to the lower band filter. Chain filter to envelope and VCA
+    this.oscMixer.chain(this.lowerBandFilter, this.lowerBandEnv, this.lowerBandVCA);
 
+
+    // Filter out upper band, split into two bands, and envelope
     this.upperBandFilter = new Tone.Filter({ type: 'bandpass' });
     this.upperBandFilter1 = new Tone.Filter({ type: 'bandpass' });
     this.upperBandFilter2 = new Tone.Filter({ type: 'bandpass' });
@@ -50,15 +70,19 @@ class Cymbal extends DrumTemplate {
     });
     this.upperBandVCA1 = new Tone.Gain(1);
     this.upperBandVCA2 = new Tone.Gain(1);
-    this.upperBandFilter.connect(this.upperBandFilter1);
-    this.upperBandFilter.connect(this.upperBandFilter2);
-    this.upperBandFilter1.chain(this.upperBandEnv1, this.upperBandVCA1);
-    this.upperBandFilter2.chain(this.upperBandEnv2, this.upperBandVCA2);
+    // Connect mixer to the upper band filter. Chain filter to envelope and VCA
+    this.oscMixer.connect(this.upperBandFilter);
+    this.upperBandFilter.chain(this.upperBandFilter1, this.upperBandEnv1, this.upperBandVCA1);
+    this.upperBandFilter.chain(this.upperBandFilter2, this.upperBandEnv2, this.upperBandVCA2);
 
-    // Connect VCAs to the master output
-    this.lowerBandVCA.connect(Tone.Destination);
-    this.upperBandVCA1.connect(Tone.Destination);
-    this.upperBandVCA2.connect(Tone.Destination);
+    // Connect VCAs to the ouput node
+    this.output = new Tone.Gain(1);
+    this.lowerBandVCA.connect(this.output);
+    this.upperBandVCA1.connect(this.output);
+    this.upperBandVCA2.connect(this.output);
+
+    this.output.toDestination();
+
 
     // Initialize GUI if provided
     if (this.gui !== null) {
@@ -66,8 +90,12 @@ class Cymbal extends DrumTemplate {
     }
   }
 
-  initGui() {
-    const gui = this.gui;
+  initGui(gui = this.gui) {
+    if (gui === null) {
+      console.error('Provide a GUI instance to create GUI elements');
+      return;
+    }
+
     for (let i = 0; i < 3; i++) {
       const osc = this.oscillators[i];
       const freq = gui.Knob({
@@ -78,9 +106,9 @@ class Cymbal extends DrumTemplate {
         size: 0.5,
         min: 20,
         max: 2500,
-        curve: 2
+        curve: 2,
+        value: this.defaultFrequencies[i]
       });
-      freq.set(this.defaultFrequencies[i]);
 
       const oscWaveform = gui.Radio({
         label: 'waveform ' + i,
@@ -91,9 +119,9 @@ class Cymbal extends DrumTemplate {
         size: 1,
         x: 7,
         y: 12 + i * 20,
-        horizontal: true
+        horizontal: true,
+        value: 'square'
       });
-      oscWaveform.set('square');
     }
 
     for (let i = 0; i < 3; i++) {
@@ -107,9 +135,9 @@ class Cymbal extends DrumTemplate {
         size: 1,
         x: 90,
         y: 12 + i * 16,
-        horizontal: true
+        horizontal: true,
+        value: 'white'
       });
-      noiseType.set('white');
     }
 
     const lowerBandFreq = gui.Knob({
@@ -120,7 +148,8 @@ class Cymbal extends DrumTemplate {
       size: 0.5,
       min: 100,
       max: 5000,
-      curve: 2
+      curve: 2,
+      value: 579
     });
     const lowerBandQ = gui.Knob({
       label: 'low band Q',
@@ -130,10 +159,9 @@ class Cymbal extends DrumTemplate {
       size: 0.5,
       min: 0.5,
       max: 5,
-      curve: 2
+      curve: 2,
+      value: 1.45
     });
-    lowerBandFreq.set(579);
-    lowerBandQ.set(1.45);
 
     const lowerBandDecay = gui.Knob({
       label: 'low decay',
@@ -143,9 +171,9 @@ class Cymbal extends DrumTemplate {
       size: 0.5,
       min: 0.01,
       max: 1,
-      curve: 2
+      curve: 2,
+      value: 0.4
     });
-    lowerBandDecay.set(0.4);
     const lowerBandRelease = gui.Knob({
       label: 'low release',
       mapto: this.lowerBandEnv.release,
@@ -154,9 +182,9 @@ class Cymbal extends DrumTemplate {
       size: 0.5,
       min: 0.01,
       max: 1,
-      curve: 2
+      curve: 2,
+      value: 0.1
     });
-    lowerBandRelease.set(0.1);
 
     const upperBandFreq = gui.Knob({
       label: 'up band freq',
@@ -166,7 +194,8 @@ class Cymbal extends DrumTemplate {
       size: 0.5,
       min: 1000,
       max: 10000,
-      curve: 2
+      curve: 2,
+      value: 5976
     });
     const upperBandQ = gui.Knob({
       label: 'up band Q',
@@ -176,10 +205,9 @@ class Cymbal extends DrumTemplate {
       size: 0.5,
       min: 0.5,
       max: 5,
-      curve: 2
+      curve: 2,
+      value: 1.4
     });
-    upperBandFreq.set(5976);
-    upperBandQ.set(1.4);
 
     const upperBandFreq1 = gui.Knob({
       label: 'up1 band freq',
@@ -189,7 +217,8 @@ class Cymbal extends DrumTemplate {
       size: 0.5,
       min: 1000,
       max: 10000,
-      curve: 2
+      curve: 2,
+      value: 6795
     });
     const upperBandFreq2 = gui.Knob({
       label: 'up2 band freq',
@@ -199,7 +228,8 @@ class Cymbal extends DrumTemplate {
       size: 0.5,
       min: 1000,
       max: 10000,
-      curve: 2
+      curve: 2,
+      value: 8735
     });
     const upperBandQ1 = gui.Knob({
       label: 'up1 band Q',
@@ -209,7 +239,8 @@ class Cymbal extends DrumTemplate {
       size: 0.5,
       min: 0.5,
       max: 5,
-      curve: 2
+      curve: 2,
+      value: 1.39
     });
     const upperBandQ2 = gui.Knob({
       label: 'up2 band Q',
@@ -219,12 +250,9 @@ class Cymbal extends DrumTemplate {
       size: 0.5,
       min: 0.5,
       max: 5,
-      curve: 2
+      curve: 2,
+      value: 0.67
     });
-    upperBandFreq1.set(6795);
-    upperBandFreq2.set(8735);
-    upperBandQ1.set(1.39);
-    upperBandQ2.set(0.67);
 
     const upperBandDecay1 = gui.Knob({
       label: 'up1 decay',
@@ -234,7 +262,8 @@ class Cymbal extends DrumTemplate {
       size: 0.5,
       min: 0.01,
       max: 1,
-      curve: 2
+      curve: 2,
+      value: 0.2
     });
     const upperBandRelease1 = gui.Knob({
       label: 'up1 release',
@@ -244,7 +273,8 @@ class Cymbal extends DrumTemplate {
       size: 0.5,
       min: 0.01,
       max: 1,
-      curve: 2
+      curve: 2,
+      value: 0.1
     });
     const upperBandDecay2 = gui.Knob({
       label: 'up2 decay',
@@ -254,7 +284,8 @@ class Cymbal extends DrumTemplate {
       size: 0.5,
       min: 0.01,
       max: 1,
-      curve: 2
+      curve: 2,
+      value: 0.3
     });
     const upperBandRelease2 = gui.Knob({
       label: 'up2 release',
@@ -264,17 +295,14 @@ class Cymbal extends DrumTemplate {
       size: 0.5,
       min: 0.01,
       max: 1,
-      curve: 2
+      curve: 2,
+      value: 0.1
     });
-    upperBandDecay1.set(0.2);
-    upperBandRelease1.set(0.1);
-    upperBandDecay2.set(0.3);
-    upperBandRelease2.set(0.1);
 
     // Trigger button for the cymbal sound
     const triggerButton = gui.Button({
       label: 'trig',
-      callback: () => this.triggerCymbal(),
+      callback: () => this.trigger(),
       size: 2,
       border: 20,
       borderColor: [255, 0, 0],
@@ -283,7 +311,7 @@ class Cymbal extends DrumTemplate {
     });
   }
 
-  triggerCymbal() {
+  trigger() {
     this.lowerBandEnv.triggerAttackRelease(0.01);
     this.upperBandEnv1.triggerAttackRelease(0.01);
     this.upperBandEnv2.triggerAttackRelease(0.01);

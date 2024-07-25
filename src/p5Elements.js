@@ -1,17 +1,16 @@
 /*
 p5Elements.js
 created by Kayli Requenez F23
-
-Notes: to add new gui elements, make the following changes:
-- in Editor.js: add element to p5Elements elements array (line 32)
-- in Canvas.js: add element to import statement on line 2 (import { initialize, divResized, drawElements, Knob, Fader, Button, Toggle, RadioButton } from './p5Library';)
-    - also add window.element identifier, similar to lines 6 - 10   
 */
 
 
 import p5 from 'p5';
 import themes from './p5Themes.json';
+import * as synthPresets from './synths/synthPresets';
+
 let activeTheme = themes.themes['default']; // Default theme preset
+
+
 
 export function debug(){
     console.log('esy')
@@ -1239,3 +1238,50 @@ export class Text extends Element {
 p5.prototype.Text = function (options = {}) {
     return new Text(this, options);
 };
+
+const BASENAME = process.env.PUBLIC_URL || '/m080';
+let presetsData = null
+let presetSynthName = ''
+
+const savePreset = (p, name, synth) => {
+    const preset = {};
+    for (let element of Object.values(p.elements)) {
+        preset[element.id] = element.value;
+    }
+
+    // Access the appropriate synth preset data
+    const presetsData = synthPresets[`${synth}Presets`];
+
+    // Update the presetsData in memory
+    if (!presetsData[synth]) {
+        presetsData[synth] = {};
+    }
+    presetsData[synth][name] = preset;
+
+    console.log(`Preset saved under ${synth}/${name}`);
+};
+
+
+p5.prototype.savePreset = function (p, synth, name) {
+    //console.log(name)
+    savePreset(p, name, synth)
+};
+
+    // Function to download the updated presets data
+const downloadPresets = (synth) => {
+    const presetsData = synthPresets[`${synth}Presets`];
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(presetsData, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `${synth}Presets.json`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+};
+
+p5.prototype.downloadPresets = function () {
+    console.log("download")
+    downloadPresets(presetSynthName)
+};
+
+

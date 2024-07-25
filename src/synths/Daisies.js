@@ -79,6 +79,7 @@ Main List of Parameters & how to set them:
 
 import p5 from 'p5';
 import * as Tone from 'tone';
+import DaisiesPresets from './synthPresets/DaisiesPresets.json';
 
 export class Daisy{
 	constructor(color = [200,200,200], gui = null){
@@ -198,6 +199,7 @@ export class Daisies {
   constructor(num = 8, gui = null){
 	this.gui = gui
 	this.numVoices = num
+	this.presets = DaisiesPresets
 	//audio
     this.voice = []
     for(let i=0;i<this.numVoices;i++) this.voice.push(new Daisy())
@@ -236,6 +238,18 @@ export class Daisies {
     this.noteOrder = [7,0,1,2,3,4,5,6]
     this.x = 0
     this.y = 0
+  }
+
+  loadPreset = function(name){
+  	if( this.presets[name]){
+
+  	} else{
+  		console.log("No preset of name ${name}")
+  	}
+  }
+
+  listPresets = function(name){
+  	console.log(this.presets)
   }
   /**************** 
    * trigger methods
@@ -276,9 +290,9 @@ export class Daisies {
   }//attackRelease
 
   set(param, value) {
-  	console.log('set', param, value)
+  	//console.log('set', param, value)
   	let keys = param.split('.');
-  	console.log('keys', keys)
+  	//console.log('keys', keys)
     for (let i = 0; i < this.numVoices; i++) {
       let target = this.voice[i];
 
@@ -456,7 +470,7 @@ export class Daisies {
   	this.release_knob = this.createKnob('r', 35, 45, 0, 1, 0.75, [200,50,0],x=>this.set('env.release',x));
   }
   createKnob(_label, _x, _y, _min, _max, _size, _accentColor, callback) {
-    console.log(_label)
+    //console.log(_label)
     return this.gui.Knob({
       label:_label, min:_min, max:_max, size:_size, accentColor:_accentColor,
       x: _x + this.x, y: _y + this.y,

@@ -1,15 +1,5 @@
 import { useState, useEffect } from 'react';
 import { sketch } from './p5Library';
-//, Knob, Dial, Fader, Slider, Button, Toggle, RadioButton, Radio, Line
-
-//if adding more P5Elements to list below, add to list "p5Elements' in Editor.js
-//traverse function -> visitors -> variableDeclaration
-// window.Knob = Knob;
-// window.Fader = Fader;
-// window.Button = Button;
-// window.Toggle = Toggle;
-// window.RadioButton = RadioButton;
-// window.Line = Line;
 
 function Canvas(props) {
     const [isMaximized, setIsMaximized] = useState(false);

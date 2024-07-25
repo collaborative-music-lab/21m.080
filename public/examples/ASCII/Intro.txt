@@ -1,0 +1,5 @@
+ASCII messages are generated when you type a key on your keyboard. For the ASCII code mappings, see https://www.ascii-code.com/
+* To use ASCII Input, run:
+	* `enableAsciiInput()`
+* To disable ASCII Input, run:
+	* `disableAsciiInput()`

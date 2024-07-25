@@ -1,101 +1,65 @@
-import { useState, useEffect, useRef } from 'react';
-import keyboard from './Icons/keyboard.png';
-//const midi = require('./Midi.js');
-function AsciiKeyboard() {
-    const [midiOn, setMidiOn] = useState(false);
-    const [notesOn, setNotesOn] = useState(new Set());
-    const midiOnRef = useRef(midiOn); // Mutable reference to hold the latest value of midiOn
+//Sometimes you have to ask chatGPT to start from scratch :-)
 
-    let activeKeys = {};
-
-    useEffect(() => {
-        document.addEventListener('keydown', keyDown);
-        document.addEventListener('keyup', keyUp);
-
-        // Cleanup: Remove the event listeners when the component unmounts
-        return () => {
-            document.removeEventListener('keydown', keyDown);
-            document.removeEventListener('keyup', keyUp);
-        };
-    },[]);
-
-    // Update the mutable reference whenever midiOn changes
-    useEffect(() => {
-        midiOnRef.current = midiOn;
-    }, [midiOn]);
-    
-
-    /*
-    Goal is to have ASCII object which has keydown/up handler
-    enable / disable
-    converts ASCII to x/y
-    export into editor.js
-
-    rename things so I don't go insane
-    
-    */
-
-    function keyDown(event) {
-        const midiOn = midiOnRef.current;
-        if( midiOn ){
-            const keyCode = event.keyCode;
-            let note = keyCode
-            if (!activeKeys[keyCode]) {
-                activeKeys[keyCode] = true;
-                try {
-                    setNotesOn(new Set(notesOn).add(note));
-                    asciiHandlerInstance.asciiHandler(note, 'down');
-                } catch (error) {
-                    console.log(note)
-                }
-            }
-        }
-    }
-    function keyUp(event) {
-        const midiOn = midiOnRef.current;
-        if( midiOn ){
-            const keyCode = event.keyCode;
-            let note = keyCode
-            activeKeys[keyCode] = false;
-            try {
-                setNotesOn(new Set(notesOn).delete(note));
-                asciiHandlerInstance.asciiHandler(note, 'up');
-            } catch (error) {
-            }
-        }
-    }
-
-    const midiClicked = () => {
-        setMidiOn(midiOn === false ? true : false);          
-    }
-    const keyboardCSS = midiOn ? 'icon active' : 'icon inactive';
-    return (
-        <div className='span-container'>
-            {Array.from(notesOn).map((midiNote) => (
-                <div key={midiNote}>{midiNote}</div>
-            ))}
-            <button className="invisible-button" onClick={midiClicked} >
-                <img className={keyboardCSS} src={keyboard} alt="Keyboard" />
-            </button>
-        </div>
-    );
-}
-export default AsciiKeyboard;
-
-class AsciiHandler {
+class AsciiCallback {
     constructor() {
-        this.asciiHandler = (key, upOrDown) => {
-            console.log('Default ASCII Handler:', key);
-            console.log(`Define your own note ${upOrDown} handler like this:\nsetASCIIHandler(( note, upOrDown) => { <your code here> }) `)
+        this.asciiOn = false;
+        this.handler = (key, upOrDown) => {
+            console.log('Ascii', key, upOrDown,
+                '\nadd a new handler like: \nsetAsciiHandler((num,state)=>{\nconsole.log(num, state)})');
         };
+        this.activeKeys = {};
+        
+        // Bind the event handlers
+        this.keyDown = this.keyDown.bind(this);
+        this.keyUp = this.keyUp.bind(this);
     }
 
-    handleAscii(note, velocity) {
-        this.asciiHandler(note, velocity);
+    keyDown(event) {
+        if (!this.asciiOn) return;
+
+        const keyCode = event.keyCode;
+        let key = keyCode
+        if( keyCode == 32 ) key = 'Space'
+        else key = event.key;
+        if (!this.activeKeys[key]) {
+            this.activeKeys[key] = true;
+            this.handler(key, 'down');
+        }
     }
 
-    setAsciiHandler(func) {
-        this.asciiHandler = func;
+    keyUp(event) {
+        if (!this.asciiOn) return;
+
+        const keyCode = event.keyCode;
+        let key = keyCode
+        if( keyCode == 32 ) key = 'Space'
+        else key = event.key;
+        if (this.activeKeys[key]) {
+            this.activeKeys[key] = false;
+            this.handler(key, 'up');
+        }
+    }
+
+    enable() {
+        if (!this.asciiOn) {
+            this.asciiOn = true;
+            document.addEventListener('keydown', this.keyDown);
+            document.addEventListener('keyup', this.keyUp);
+        }
+    }
+
+    disable() {
+        if (this.asciiOn) {
+            this.asciiOn = false;
+            document.removeEventListener('keydown', this.keyDown);
+            document.removeEventListener('keyup', this.keyUp);
+        }
+    }
+
+    setHandler(newHandler) {
+        this.handler = newHandler;
     }
 }
-export const asciiHandlerInstance = new AsciiHandler();
+
+export const asciiCallbackInstance = new AsciiCallback();
+

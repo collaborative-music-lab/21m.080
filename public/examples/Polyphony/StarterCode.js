@@ -1,25 +1,13 @@
 /*
-DatoDuo
-Monophonic subtractive synth
+DatoDuo - polyphonic
+Polyphonic subtractive synth
 Modeled after the DatoDuo
 */
 
-import p5 from 'p5';
-import * as Tone from 'tone';
-
-import {stepper} from  '../Utilities.js'
-import DatoDuoPresets from './synthPresets/DatoDuoPresets.json';
-import { MonophonicTemplate } from './MonophonicTemplate';
-
-
-export class DatoDuo extends MonophonicTemplate {
+class PolyExample {
   constructor (gui = null) {
-    super()
     this.gui = gui
-    this.presets = DatoDuoPresets
     this.isGlide = false
-    this.name = "DatoDuo"
-    console.log(this.name, " loaded, available preset: ", DatoDuoPresets)
 
     this.frequency = new Tone.Signal()
     this.tonePitchshift = new Tone.Multiply()
@@ -29,12 +17,12 @@ export class DatoDuo extends MonophonicTemplate {
     this.toneMixer = new Tone.Multiply()
     this.sawMixer = new Tone.Multiply()
     this.cutoffSig = new Tone.Signal()
-    this.vcf_env = new Tone.Envelope()
+    this.filterEnvelope = new Tone.Envelope()
     this.filterDepth = new Tone.Multiply()
     this.filterMultiplier = new Tone.Multiply()
     this.filter = new Tone.Filter()
     this.velocity = new Tone.Signal()
-    this.env = new Tone.Envelope()
+    this.ampEnvelope = new Tone.Envelope()
     this.amp = new Tone.Multiply()
     this.output = new Tone.Multiply(0.05).toDestination()
 
@@ -46,7 +34,7 @@ export class DatoDuo extends MonophonicTemplate {
     this.tonePitchshift.connect(this.pulseWav.frequency)
     this.frequency.connect(this.sawPitchshift)
     this.sawPitchshift.connect(this.sawWav.frequency)
-    this.rampTime = .01
+    this.rampTime = .2
 
     this.frequency.value = 500;
     this.tonePitchshift.factor.value = 1;
@@ -62,27 +50,27 @@ export class DatoDuo extends MonophonicTemplate {
     this.sawMixer.factor.value = 1
 
     //Connect the filter (VCF)
-    this.vcf_env.connect(this.filterDepth)
+    this.filterEnvelope.connect(this.filterDepth)
     this.cutoffSig.connect(this.filter.frequency)
     this.filterDepth.connect(this.filter.frequency)
 
     this.cutoffSig.value = 1500
     this.filterDepth.factor.value = 5000
-    this.vcf_env.attack = 0.02
-    this.vcf_env.decay = 0.1
-    this.vcf_env.sustain = .5
-    this.vcf_env.release = 0.2
+    this.filterEnvelope.attack = 0.1
+    this.filterEnvelope.decay = 0.1
+    this.filterEnvelope.sustain = 1
+    this.filterEnvelope.release = 0.2
     this.filter.rolloff = -24
     this.filter.Q.value = 1
 
     //Connect the ASDR (VCA)
     this.filter.connect(this.amp)
 
-    this.env.connect(this.amp.factor)
-    this.env.attack = 0.01
-    this.env.delay = 0.1
-    this.env.sustain = 0
-    this.env.release = 0.9
+    this.ampEnvelope.connect(this.amp.factor)
+    this.ampEnvelope.attack = 0.3
+    this.ampEnvelope.delay = 0.1
+    this.ampEnvelope.sustain = 1
+    this.ampEnvelope.release = 0.9
 
     //effects chain
 
@@ -122,81 +110,95 @@ export class DatoDuo extends MonophonicTemplate {
     this.delayFilter.connect(this.delayout)
     this.delayout.connect(this.output)
 
-    if (this.gui !== null) {
-        this.initGui()
-        this.hideGui();
-        setTimeout(()=>{this.loadPreset('default')}, 500);
-    }
+    //initialize values
+    this.dist.wet.value = 0
+    this.crusher.wet.value = 0
+    this.delay.feedback.value = 0
+    this.delay.wet.value = 0
+    this.delaygain.factor.value = 0
+    this.lfo.amplitude.value = 0
+    this.pulseWav.width.value = 0.5
+    this.filterDepth.value = 700
+    this.filterEnvelope.release = 0.8
+    this.filter.Q.value = 1
   }
 
   //envelopes
   triggerAttack (freq, amp, time=null){
-    amp = amp/127
     freq = Tone.Midi(freq).toFrequency()
     if(time){
-      this.env.triggerAttack(time)
-      this.vcf_env.triggerAttack(time)
+      this.ampEnvelope.triggerAttack(time)
+      this.filterEnvelope.triggerAttack(time)
       if (this.isGlide) {
-        this.frequency.linearRampToValueAtTime(freq,this.rampTime+ time)
+        this.frequency.exponentialRampToValueAtTime(freq,this.rampTime, time)
       }
       else {
         this.frequency.setValueAtTime(freq, time)
       }
       this.velocity.rampTo(amp,.03)
     } else{
-      this.env.triggerAttack()
-      this.vcf_env.triggerAttack()
+      this.ampEnvelope.triggerAttack()
+      this.filterEnvelope.triggerAttack()
       this.frequency.value = freq
       this.velocity.rampTo(amp,.03)
     }
   }
   triggerRelease (time=null){
     if(time) {
-      this.env.triggerRelease(time)
-      this.vcf_env.triggerRelease(time)
+      this.ampEnvelope.triggerRelease(time)
+      this.filterEnvelope.triggerRelease(time)
     }
     else {
-      this.env.triggerRelease()
-      this.vcf_env.triggerRelease()
+      this.ampEnvelope.triggerRelease()
+      this.filterEnvelope.triggerRelease()
     }
   }
-  // Override triggerAttackRelease method
-    triggerAttackRelease(freq, amp, dur = 0.01, time = null) {
-        amp = amp / 127;
-        freq = Tone.Midi(freq).toFrequency();
-        if (time) {
-            this.env.triggerAttackRelease(dur, time);
-            this.vcf_env.triggerAttackRelease(dur, time);
-            if (this.isGlide) {
-                this.frequency.linearRampToValueAtTime(freq, this.rampTime + time);
-            } else {
-                this.frequency.setValueAtTime(freq, time);
-            }
-        } else {
-            this.env.triggerAttackRelease(dur);
-            this.vcf_env.triggerAttackRelease(dur);
-            if (this.isGlide) {
-                this.frequency.exponentialRamp(freq, this.rampTime);
-            } else {
-                this.frequency.value = freq;
-            }
-            this.velocity.rampTo(amp, 0.03);
-        }
-    }//attackRelease
+  triggerAttackRelease (freq, amp, dur=0.01, time=null){
+    freq = Tone.Midi(freq).toFrequency()
+    if(time){
+      this.ampEnvelope.triggerAttackRelease(dur, time)
+      this.filterEnvelope.triggerAttackRelease(dur, time)
+      if (this.isGlide) {
+        this.frequency.exponentialRampToValueAtTime(freq,this.rampTime+time)
+      }
+      else {
+        this.frequency.setValueAtTime(freq, time)
+      }
+      this.velocity.rampTo(amp,.03)
+      
+    } else{
+      this.ampEnvelope.triggerAttackRelease(dur)
+      this.filterEnvelope.triggerAttackRelease(dur)
+      if (this.isGlide) {
+        this.frequency.exponentialRamp(freq, this.rampTime)
+      }
+      else {
+        this.frequency.value = freq
+      }
+      this.velocity.rampTo(amp,.03)
+    }
+  }//attackRelease
 
+  connect(destination) {
+    if (destination.input) {
+      this.output.connect(destination.input);
+    } else {
+      this.output.connect(destination);
+    }
+  }
 
   //parameter setters
   setADSR(a,d,s,r){
-    this.env.attack = a>0.001 ? a : 0.001
-    this.env.decay = d>0.01 ? d : 0.01
-    this.env.sustain = Math.abs(s)<1 ? s : 1
-    this.env.release = r>0.01 ? r : 0.01
+    this.ampEnvelope.attack = a>0.001 ? a : 0.001
+    this.ampEnvelope.decay = d>0.01 ? d : 0.01
+    this.ampEnvelope.sustain = Math.abs(s)<1 ? s : 1
+    this.ampEnvelope.release = r>0.01 ? r : 0.01
   }
   setFilterADSR(a,d,s,r){
-    this.vcf_env.attack = a>0.001 ? a : 0.001
-    this.vcf_env.decay = d>0.01 ? d : 0.01
-    this.vcf_env.sustain = Math.abs(s)<1 ? s : 1
-    this.vcf_env.release = r>0.01 ? r : 0.01
+    this.filterEnvelope.attack = a>0.001 ? a : 0.001
+    this.filterEnvelope.decay = d>0.01 ? d : 0.01
+    this.filterEnvelope.sustain = Math.abs(s)<1 ? s : 1
+    this.filterEnvelope.release = r>0.01 ? r : 0.01
   }
   setDetune(detune){
     this.sawPitchshift.factor.value = detune
@@ -208,10 +210,8 @@ export class DatoDuo extends MonophonicTemplate {
     this.output.factor.value = out
   }
 
-
-  initGui(gui = this.gui) {
+  initGui(gui) {
     this.gui = gui
-
     this.distortion_toggle =  this.gui.Toggle({
       label:'Accent',
       mapto: this.dist.wet,
@@ -239,10 +239,10 @@ export class DatoDuo extends MonophonicTemplate {
     this.glide_toggle.accentColor = [51,145,219]
 
     this.delayControl = function(x) {
-      this.delay.feedback.value = stepper(x, 0 , 1 , [[0,0], [0.02, 0], [0.8,0.6], [1,1]])
-      this.delay.wet.value = stepper(x , 0, 1, [[0,0], [0.02, 0], [0.04, 1], [1,1]])
-      this.delaygain.factor.value = stepper(x , 0, 1, [[0,0], [0.02, 0], [0.04, 0.3], [0.4, 0.5], [1,1]])
-      this.lfo.amplitude.value = stepper(x , 0, 1, [[0,0], [0.5, 0], [0.7, 0.5], [1,1]])
+      this.delay.feedback.value = x
+      this.delay.wet.value = x
+      this.delaygain.factor.value = x
+      this.lfo.amplitude.value = x
     }
 
     this.delay_knob = this.gui.Knob({
@@ -260,7 +260,7 @@ export class DatoDuo extends MonophonicTemplate {
       label:'wave',
       x: 39, y: 10, size: 2,
       min:0, max: 1,
-      callback: (x)=>{this.pulseWav.width.value = stepper(x, 0, 1, [[0,0], [0.4, 0.6], [1,1]])},
+      callback: (x)=>{this.pulseWav.width.value = x},
       orientation: 'vertical',
       showValue: false, 
       link: 'wave'
@@ -271,7 +271,6 @@ export class DatoDuo extends MonophonicTemplate {
 
     this.freq_fader = this.gui.Slider({
       label:'freq',
-      //callback: (x)=>{this.cutoffSig.value = stepper(x, 200, 1200, [[0,0], [0.6, 0.8], [1,1]])},
       callback: (x)=>{this.filterDepth.value = x},
       mapto: this.cutoffSig,
       x: 49, y: 10, size: 2,
@@ -286,12 +285,7 @@ export class DatoDuo extends MonophonicTemplate {
 
     this.release_fader = this.gui.Slider({
       label:'release',
-      callback: (x)=>{ 
-        this.env.decay = stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]])
-        this.env.release = stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]])
-        this.vcf_env.decay = stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]])
-        this.vcf_env.release = stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]])
-      },
+      callback: (x)=>{ this.filterEnvelope.release = x},
       x: 59, y: 10, size: 2,
       min:0.1, max: 1.5,
       orientation: 'vertical',
@@ -333,45 +327,8 @@ export class DatoDuo extends MonophonicTemplate {
       link: 'gain'
     })
     this.speaker_knob.accentColor = [49,48,55]
-    this.speaker_knob.set( 0.05 )
-
-    //sampler - beatpads
-
-    this.kick = "audio/drums-003.mp3"
-    this.snare = "audio/snare.mp3"
-    this.kickPlayer = new Tone.Player(this.kick).toDestination()
-    this.snarePlayer = new Tone.Player(this.snare).toDestination()
-    this.kickPlayer.playbackRate = 1
-    this.snarePlayer.playbackRate = 1
-
-    //trigger playback of the loaded soundfile
-
-    this.kick_trigger = this.gui.Button({
-      label:'kick',
-      callback: ()=>{ this.kickPlayer.start()},
-      size: 1, border: 20,
-      x:30, y:80, size: 1,
-      link: 'kick'
-    })
-    this.kick_trigger.accentColor = [20,20,20]
-
-    this.snare_trigger = this.gui.Button({
-      label:'snare',
-      callback: ()=>{ this.snarePlayer.start()},
-      size: 1, border: 20,
-      x:70, y:80, size: 1,
-      link: 'snare',
-    })
-    this.snare_trigger.accentColor = [20,20,20]
-
-    this.gui_elements = [this.distortion_toggle, this.crusher_toggle, 
-      this.glide_toggle, this.delay_knob, this.wave_fader, 
-      this.freq_fader, this.release_fader, this.resonance_knob,
-      this.detune_knob, this.speaker_knob, this.kick_trigger,
-      this.snare_trigger]
-
+    this.speaker_knob.set( 0.03 )
   }
-
 
   initPolyGui(superClass, gui) {
     this.gui = gui
@@ -403,10 +360,10 @@ export class DatoDuo extends MonophonicTemplate {
     this.glide_toggle.accentColor = [51,145,219]
 
     this.delayControl = function(x) {
-      this.super.set('delay.feedback.value' , stepper(x, 0 , 1 , [[0,0], [0.02, 0], [0.8,0.6], [1,1]]))
-      this.super.set('delay.wet.value' , stepper(x , 0, 1, [[0,0], [0.02, 0], [0.04, 1], [1,1]]))
-      this.super.set('delaygain.factor.value' , stepper(x , 0, 1, [[0,0], [0.02, 0], [0.04, 0.3], [0.4, 0.5], [1,1]]))
-      this.super.set('lfo.amplitude.value' , stepper(x , 0, 1, [[0,0], [0.5, 0], [0.7, 0.5], [1,1]]))
+      this.super.set('delay.feedback.value' , x)
+      this.super.set('delay.wet.value' , x)
+      this.super.set('delaygain.factor.value' , x)
+      this.super.set('lfo.amplitude.value' , x)
     }
 
     this.delay_knob = this.gui.Knob({
@@ -424,7 +381,7 @@ export class DatoDuo extends MonophonicTemplate {
       label:'wave',
       x: 39, y: 10, size: 2,
       min:0, max: 1,
-      callback: (x)=>{this.super.set('pulseWav.width.value' , stepper(x, 0, 1, [[0,0], [0.4, 0.6], [1,1]]))},
+      callback: (x)=>{this.super.set('pulseWav.width.value' , x)},
       orientation: 'vertical',
       showValue: false, 
       link: 'wave'
@@ -435,7 +392,6 @@ export class DatoDuo extends MonophonicTemplate {
 
     this.freq_fader = this.gui.Slider({
       label:'freq',
-      //callback: (x)=>{this.cutoffSig.value = stepper(x, 200, 1200, [[0,0], [0.6, 0.8], [1,1]])},
       callback: (x)=>{this.super.set('filterDepth.value' , x)},
       mapto: this.cutoffSig,
       x: 49, y: 10, size: 2,
@@ -450,7 +406,7 @@ export class DatoDuo extends MonophonicTemplate {
 
     this.release_fader = this.gui.Slider({
       label:'release',
-      callback: (x)=>{ this.super.set('filterEnvelope.release' , stepper(x, 0.1, 1.5, [[0,0], [0.8, 0.5], [1,1]]))},
+      callback: (x)=>{ this.super.set('filterEnvelope.release' , x)},
       x: 59, y: 10, size: 2,
       min:0.1, max: 1.5,
       orientation: 'vertical',
@@ -492,35 +448,22 @@ export class DatoDuo extends MonophonicTemplate {
       link: 'gain'
     })
     this.speaker_knob.accentColor = [49,48,55]
-    this.speaker_knob.set( 0.05 )
-
-    //sampler - beatpads
-
-    this.kick = "audio/drums-003.mp3"
-    this.snare = "audio/snare.mp3"
-    this.kickPlayer = new Tone.Player(this.kick).toDestination()
-    this.snarePlayer = new Tone.Player(this.snare).toDestination()
-    this.kickPlayer.playbackRate = 1
-    this.snarePlayer.playbackRate = 1
-
-    //trigger playback of the loaded soundfile
-
-    this.kick_trigger = this.gui.Button({
-      label:'kick',
-      callback: ()=>{ this.kickPlayer.start()},
-      size: 1, border: 20,
-      x:30, y:80, size: 1,
-      link: 'kick'
-    })
-    this.kick_trigger.accentColor = [20,20,20]
-
-    this.snare_trigger = this.gui.Button({
-      label:'snare',
-      callback: ()=>{ this.snarePlayer.start()},
-      size: 1, border: 20,
-      x:70, y:80, size: 1,
-      link: 'snare',
-    })
-    this.snare_trigger.accentColor = [20,20,20]
+    this.speaker_knob.set( 0.03 )
   }
 }
+
+let poly = new Polyphony(PolyExample, 8)
+let out  = new Tone.Multiply(0.2).toDestination()
+poly.connect(out)
+
+const gui = new p5(sketch, 'Polyphony')
+
+poly.initGui(poly, gui)
+
+setNoteOnHandler( (note,vel)=>{
+  poly.triggerAttack(note, vel)
+})
+
+setNoteOffHandler( (note,vel)=>{
+  poly.triggerRelease(note)
+})

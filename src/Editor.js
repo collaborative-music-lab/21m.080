@@ -1,33 +1,64 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+//codemirror
 import CodeMirror from '@uiw/react-codemirror';
 import { historyField } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
+import { okaidia } from '@uiw/codemirror-theme-okaidia';
+import { bbedit } from '@uiw/codemirror-theme-bbedit';
+import { basic } from '@uiw/codemirror-theme-basic';
+import { gruvboxDark, gruvboxLight } from '@uiw/codemirror-theme-gruvbox-dark';
+
+//tone
 import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
-        Rumble, Daisies, DatoDuo, Stripe, Diffuseur, KP, Sympathy, Snare } from './synths/index.js';
-import Bessel from 'bessel';
+        Rumble, Daisies, DatoDuo, ESPSynth, Polyphony, Stripe, Diffuseur, KP, Sympathy, Kick, DrumSampler, Snare} from './synths/index.js';
+import {Sequencer} from './Sequencer.js';
+import {MultiVCO} from './MultiVCO.js'
 import p5 from 'p5';
 import * as Tone from 'tone';
+import * as Theory from './Theory.js';
 //import ml5 from 'ml5';
 import Canvas from "./Canvas.js";
-//import gui_sketch from "./gui.js";
 import { Oscilloscope, Spectroscope, PlotTransferFunction } from './oscilloscope';
-import MidiKeyboard from './midiKeyboard.js';
+import * as waveshapers from './synths/waveshapers.js'
+
+// Collab-Hub features
+import { CollabHubClient, CollabHubTracker, CollabHubDisplay } from './CollabHub.js';
+
+import MidiKeyboard from './MidiKeyboard.js';
+import { asciiCallbackInstance } from './AsciiKeyboard.js';
+
 const midi = require('./Midi.js');
+const LZString = require('lz-string');
+
+
 //Save history in browser
 const stateFields = { history: historyField };
-
-// Initialize the Tone context
-let audioContext = new AudioContext();
-// Tone.setContext(audioContext);
 
 function Editor(props) {
     window.p5 = p5;
     window.Tone = Tone;
+    window.Theory = Theory;
+    window.ws = waveshapers
     //window.ml5 = ml5;
     window.Oscilloscope = Oscilloscope;
     window.Spectroscope = Spectroscope;
+    window.CollabHub = CollabHubDisplay;
     window.plotTransferFunction = PlotTransferFunction;
-    //window.gui_sketch = gui_sketch;
+
+    window.enableAsciiInput = asciiCallbackInstance.enable.bind(asciiCallbackInstance);
+    window.disableAsciiInput = asciiCallbackInstance.disable.bind(asciiCallbackInstance);
+    window.setAsciiHandler = asciiCallbackInstance.setHandler.bind(asciiCallbackInstance);
+    // window.enableRecording = asciiCallbackInstance.enableLogging.bind(asciiCallbackInstance);
+    // window.disableRecording = asciiCallbackInstance.disableLogging.bind(asciiCallbackInstance);
+    // window.loadRecording = asciiCallbackInstance.loadLogs.bind(asciiCallbackInstance);
+    // window.playbackRecording = asciiCallbackInstance.replayPerformance.bind(asciiCallbackInstance);
+    // window.printLogs = asciiCallbackInstance.printLogs.bind(asciiCallbackInstance);
+    // //const fileInputRef = useRef(null);
+    // Set the file input reference to the AsciiCallback instance
+    //asciiCallbackInstance.fileInput = fileInputRef.current;
+    //asciiCallbackInstance.fileInput.addEventListener('change', asciiCallbackInstance.handleFileChange);
+
+    
     window.setMidiInput = midi.setMidiInput;
     window.setNoteOnHandler = midi.midiHandlerInstance.setNoteOnHandler.bind(midi.midiHandlerInstance);
     window.setNoteOffHandler = midi.midiHandlerInstance.setNoteOffHandler.bind(midi.midiHandlerInstance);
@@ -36,21 +67,26 @@ function Editor(props) {
     //synths
     window.NoiseVoice = NoiseVoice
     window.DatoDuo = DatoDuo
+    window.ESPSynth = ESPSynth
     window.Resonator = Resonator
     window.ToneWood = ToneWood
     window.DelayOp = DelayOp
     window.Caverns = Caverns
     window.Rumble = Rumble
+    window.Polyphony = Polyphony
     window.Daisies = Daisies
     window.Stripe = Stripe
     window.Diffuseur = Diffuseur
     window.KP = KP
     window.Sympathy = Sympathy
+    window.Sequencer = Sequencer
+    window.MultiVCO = MultiVCO
+    window.Kick = Kick
+    window.DrumSampler = DrumSampler   
     window.Snare = Snare;
 
 
     var curLineNum = 0;
-    let p5Elements = ["p5", "Knob", "Fader", "Button", "Toggle", "RadioButton"];
 
     // Save history in browser
     const serializedState = localStorage.getItem(`${props.page}EditorState`);
@@ -58,7 +94,8 @@ function Editor(props) {
     // Decoding the URL and reloading the page
     function urlDecode() {
         const URLParams = new URLSearchParams(window.location.search);
-        let encodedContent = URLParams.get('code');
+        const compressedCode = URLParams.get('code');
+        let encodedContent =  LZString.decompressFromEncodedURIComponent(compressedCode);
         if (encodedContent) {
             encodedContent = encodedContent
                 .replace(/-/g, '+')
@@ -67,7 +104,7 @@ function Editor(props) {
             while (encodedContent.length % 4 !== 0) {
                 encodedContent += '=';
             }
-            localStorage.setItem(`${props.page}Value`, atob(encodedContent));
+            localStorage.setItem(`${props.page}Value`, encodedContent);
             const url = window.location.origin + window.location.pathname;
             window.location.assign(url);
         }
@@ -83,7 +120,6 @@ function Editor(props) {
     var vars = {}; //current audioNodes
     var innerScopeVars = {}; //maps vars inside scope to a list of its instances
     window.innerScopeVars = innerScopeVars;
-    const [liveMode, setLiveMode] = useState(true); //live mode is on by default
     const [refresh, setRefresh] = useState(false);
 
     const canvases = props.canvases;
@@ -91,9 +127,14 @@ function Editor(props) {
     const [p5Minimized, setP5Minimized] = useState(false);
     const [maximized, setMaximized] = useState('');
 
-    const [exportFileName, setexportFileName] = useState('Enter filename...');
-
     useEffect(() => {
+        // collab-hub socket instance
+        window.chClient = new CollabHubClient(); // needs to happen once (!)
+        window.chTracker = new CollabHubTracker(window.chClient);
+
+        // collab-hub join a room
+        window.chClient.joinRoom('21m080-temp-room'); // TODO change this to the patch-specific room name
+
         const container = document.getElementById('container');
         if (container) {
             setHeight(`${container.clientHeight}px`);
@@ -145,7 +186,6 @@ function Editor(props) {
                     string = string.substring(0, node.start + incr) + string.substring(node.start + incr + kind.length);
                     incr -= kind.length;
                 }
-                ///console.log('2',string)
                 //Continue walk to search for identifiers
                 for (const declaration of node.declarations) {
                     let name = declaration.id.name;
@@ -171,7 +211,6 @@ function Editor(props) {
                             innerScopeVars[name] = [];
                         }
                     }
-                    //console.log('4',string)
                     //In case of no assignment, set to var to null
                     let init = declaration.init;
                     if (!init && !state.forLoop) {
@@ -180,14 +219,6 @@ function Editor(props) {
                         incr += length2;
                     }
                     else if (init) {
-                        let val = string.substring(init.start + incr, init.end + incr);
-                        for (let canvas of canvases) {
-                            //console.log('6',canvas, canvases, val)
-                            // if (val.includes(canvas) && !p5Elements.some(word => val.includes(word))) {
-                            //     p5Code += `${canvas}.elements[${name}]="${val}"\n`;
-                            //     console.log('p5 code', p5Code)
-                            // }
-                        }
                         if (init.body) {
                             let newState = {
                                 innerScope: true,
@@ -298,7 +329,7 @@ function Editor(props) {
             catch(e){console.log(e)}
         }
         for (const [key, instances] of Object.entries(innerScopeVars)) {
-            if (liveMode && !cleanedCode.includes(key)) {
+            if (!cleanedCode.includes(key)) {
                 for (const instance of instances) {
                     try {
                         instance.stop();
@@ -320,19 +351,17 @@ function Editor(props) {
         }
 
         //Remove all vars that have been deleted from full code
-        if (liveMode) {
-            for (const [key, val] of Object.entries(vars)) {
-                if (!(key in vars)) {
-                    if (!(cleanedCode.includes(key.substring(0, key.length - 4)))) {
-                        try {
-                            val.stop();
-                        } catch (error) {
-                            //val not playing sound
-                        }
+        for (const [key, val] of Object.entries(vars)) {
+            if (!(key in vars)) {
+                if (!(cleanedCode.includes(key.substring(0, key.length - 4)))) {
+                    try {
+                        val.stop();
+                    } catch (error) {
+                        //val not playing sound
                     }
-                    else {
-                        vars[key] = val;
-                    }
+                }
+                else {
+                    vars[key] = val;
                 }
             }
         }
@@ -413,20 +442,18 @@ function Editor(props) {
 
     //Handle Live Mode Key Funcs
     const handleKeyDown = (event) => {
-        if (liveMode) {
-            if (event.altKey && event.shiftKey && event.key === 'Enter') {
-                // if (prevLineNum !== curLineNum) {
-                //     setRemoveEnter(true);
-                // }
-                evaluateBlock();
-            }
-            // else if (event.ctrlKey) {
-            //     setPrevLineNum(curLineNum);
+        if (event.altKey && event.shiftKey && event.key === 'Enter') {
+            // if (prevLineNum !== curLineNum) {
+            //     setRemoveEnter(true);
             // }
-            else if (event.altKey && event.key === 'Enter') {
-                evaluateLine();
-            }
+            evaluateBlock();
         }
+        // else if (event.ctrlKey) {
+        //     setPrevLineNum(curLineNum);
+        // }
+        else if (event.altKey && event.key === 'Enter') {
+            evaluateLine();
+        }   
     };
 
 
@@ -438,10 +465,6 @@ function Editor(props) {
     const playClicked = () => {
         stopClicked();
         traverse(code);
-
-    }
-    const liveClicked = () => {
-        setLiveMode(!liveMode);
     }
     const stopClicked = () => {
         clearCanvases();
@@ -504,15 +527,16 @@ function Editor(props) {
 
     function exportAsLink(code) {
         const liveCode = localStorage.getItem(`${props.page}Value`);
-
+        const compressedCode = LZString.compressToEncodedURIComponent(liveCode);
         // The replaces create a URL-safe btoa conversion
-        const encodedCode = btoa(liveCode)
+        const encodedCode = btoa(compressedCode)
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=+$/, ''); // Removes padding
         const url = `https://ianhattwick.com/m080/?code=${encodedCode}`;
         // const url = `http://localhost:3000/m080/?code=${encodedCode}`;
         navigator.clipboard.writeText(url);
+        console.log('URL copied to clipboard');
     }
 
     //Export webpage code
@@ -547,6 +571,8 @@ function Editor(props) {
       //end export dialog support
 
     function exportAsWebPage(code) {
+        alert("exporting as web page will happen, eventually. . . . :-)")
+        /*
         const htmlContent = `
             <!DOCTYPE html>
             <html lang="en">
@@ -565,6 +591,7 @@ function Editor(props) {
         a.href = URL.createObjectURL(blob);
         a.download = 'code.html';
         a.click();
+        */
     }
 
     /**** RESIZE CANVAS ****/
@@ -600,8 +627,6 @@ function Editor(props) {
     }
 
     /**** CREATE HTML ******/
-    const liveCSS = liveMode ? 'button-container active' : 'button-container';
-
     return (
         <div id="flex" className="flex-container" >
             {!codeMinimized &&
@@ -623,6 +648,7 @@ function Editor(props) {
                                 <option value="textFile">Text File</option>
                                 <option value="webPage">Web Page</option>
                             </select>
+                            { /* <input type="file" ref={fileInputRef} style={{ display: 'none' }} /> */}
 
                             {!p5Minimized &&
                                 <button className="button-container" onClick={codeMinClicked}>-</button>
@@ -646,6 +672,7 @@ function Editor(props) {
                                 options={{
                                     mode: 'javascript',
                                 }}
+                                theme={gruvboxDark}
                                 extensions={[javascript({ jsx: true })]}
                                 onChange={handleCodeChange}
                                 onKeyDown={handleKeyDown}

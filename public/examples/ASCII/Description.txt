@@ -1,0 +1,6 @@
+## ASCII Note Messages
+
+You can handle ASCII note messages sent from the computer keyboard using the ASCII Handler. 
+
+Every ASCII message has an on- and off- message (triggered when you press and release a key, respectively). By default, incoming ASCII Note messages do nothing. You can define your own handlers which are called when a key is pressed and released. Note is the ASCII value of the key pressed and state is 'up' or 'down' for key pressed or released:
+* `setAsciiHandler((note,state)=>{ <your code hear>}`

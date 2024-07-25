@@ -142,7 +142,7 @@ code {
   flex-direction: column;
   overflow: hidden;
   border: 1px solid gray;
-  background-color: white;
+  background-color: LightGray;
 }
 
 .span-container {

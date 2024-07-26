@@ -1,4 +1,4 @@
-import { initialize, divResized, drawElements, GuiColors, 
+import { initialize, divResized, drawElements, drawBackground, GuiColors, 
     setColor, setFont, setTheme, debug,
     listThemes, setThemeParameters, exportTheme } from './p5Elements';
 
@@ -15,6 +15,8 @@ export const sketch = (p) => {
     p.setThemeParameters = setThemeParameters
     p.exportTheme = exportTheme
 
+    p.p5Code = '';
+
 
     p.Debug = function(){ p.debug(); }
 
@@ -23,10 +25,23 @@ export const sketch = (p) => {
         let div = document.getElementById(p.canvas.parentElement.id);
         // div = document.getElementById(props.id);
         p.initialize(div, grey);
+        p.frame = 0
+        p.x = 0
+        p.y = 0
     };
 
     p.draw = function () {
+        p.drawBackground();        
+
+        try {
+            eval(p.p5Code);
+        } catch (error) {
+            console.log("Error in p5Code: ", error);
+        }
+        p.frame += 1
+
         p.drawElements();
+        
     };
 
     p.mousePressed = function () {

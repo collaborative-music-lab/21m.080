@@ -215,6 +215,15 @@ function Editor(props) {
         let innerVars = [];
         let p5Code = "";
 
+
+        // Match p5{...} blocks and extract the content
+        const p5BlockRegex = /p5\s*{([^}]*)}/g;
+        let match;
+        while ((match = p5BlockRegex.exec(string)) !== null) {
+            p5Code += match[1] + "\n";
+            string = string.replace(match[0], ""); // Remove the p5{...} block from the string
+        }
+
         try {
             ast = acorn.parse(string, { ecmaVersion: 'latest' });
         } catch (error) {
@@ -232,6 +241,7 @@ function Editor(props) {
 
         //Take action when we see a VariableDeclaration Node
         const visitors = {
+            
             VariableDeclaration(node, state, c) {
                 //remove kind (let/var/const)
                 //console.log('1',string)
@@ -288,6 +298,7 @@ function Editor(props) {
             },
 
             FunctionDeclaration(node, state, c) {
+                //console.log('func', string)
                 let name = node.id.name;
                 let start = node.start + incr;
                 let end = node.id.end + incr;
@@ -304,6 +315,7 @@ function Editor(props) {
             },
 
             ClassDeclaration(node, state, c) {
+                //console.log('class', string)
                 let name = node.id.name;
                 let start = node.start + incr;
                 let end = node.id.end + incr;
@@ -320,6 +332,7 @@ function Editor(props) {
             },
 
             ForStatement(node, state, c) {
+                //console.log('for', string)
                 let newState = {
                     innerScope: true,
                     forLoop: true
@@ -367,9 +380,13 @@ function Editor(props) {
 
     function evaluate(string, p5Code) {
         try {
-            //console.log('eval', string, 'p5', p5Code)
+            //console.log('eval', string, 'p5Define', p5DefineCode, 'p5Draw', p5DrawCode);
             eval(string);
-            //eval(p5Code);
+            if (typeof window.gui !== 'undefined') {
+                window.gui.p5Code = p5Code;
+            } else {
+                console.log("Error: p5 instance 'gui' does not exist.");
+            }
         } catch (error) {
             console.log("Error Evaluating Code", error);
         }

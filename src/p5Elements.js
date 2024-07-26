@@ -158,10 +158,20 @@ let updateCanvas = 1;
 
 //************** DRAW ELEMENTS //**************
 
-export function drawElements(p) {
+export function drawBackground(p) {
     if( updateCanvas > 0 ){
         updateCanvas = 1
         p.background(activeTheme.backgroundColor);
+    }
+}
+
+p5.prototype.drawBackground = function () {
+    drawBackground(this);
+};
+
+export function drawElements(p) {
+    if( updateCanvas > 0 ){
+        updateCanvas = 1
         //drawGrid(p);
         for (let element of Object.values(p.elements)) {
             if (typeof (element) === "string") {

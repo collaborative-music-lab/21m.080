@@ -145,8 +145,7 @@ export class ESPSynth extends MonophonicTemplate {
     polyLfoControl(x) {
         if (x !== undefined) {
             let controlVal = Math.abs(x-0.5) * 2
-            let lfoDepth = 100
-
+            let lfoDepth = 50
             if (x < 0.47) {
                 this.super.set('lfo.min', -lfoDepth * stepper(controlVal, 0, 1, [[0,0],[0.6,0.2],[1,1]]))
                 this.super.set('lfo.max', lfoDepth * stepper(controlVal, 0, 1, [[0,0],[0.6,0.2],[1,1]]))
@@ -158,6 +157,8 @@ export class ESPSynth extends MonophonicTemplate {
                 this.super.set('wahSwitch.value', 0)
             }
             else if (x > 0.49) {
+                this.super.set('lfo.min', 0)
+                this.super.set('lfo.max', lfoDepth * stepper(controlVal, 0, 1, [[0,0],[0.6,0.2],[1,1]]))
                 this.super.set('vibratoSwitch.value', 0)
                 this.super.set('wahSwitch.value', 100 * controlVal)
             }
@@ -195,15 +196,11 @@ export class ESPSynth extends MonophonicTemplate {
     if(time){
         this.env.triggerAttackRelease(dur, time)
         this.frequency.setValueAtTime(freq, time)
-        //console.log('raw vcf', amp, 'adjusted vcf', stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]))
-        //console.log('raw vca', amp, 'adjusted vca', stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]))
         this.vcfVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.03)
         this.vcaVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]),.03)
     } else{
         this.env.triggerAttackRelease(dur)
         this.frequency.value = freq
-        //console.log('raw vcf', amp, 'adjusted vcf', stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]))
-        //console.log('raw vca', amp, 'adjusted vca', stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]))
         this.vcfVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.03)
         this.vcaVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]),.03)
     }

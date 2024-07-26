@@ -55,10 +55,12 @@ export function initialize(p, div) {
     p.width = div.offsetWidth;
     p.height = div.offsetHeight;
     p.elements = {};
+
+    return [p.width, p.height]
 }
 
 p5.prototype.initialize = function (div) {
-    initialize(this, div);
+    return initialize(this, div);
 };
 
 function resizeP5(string, scaleWidth, scaleHeight) {

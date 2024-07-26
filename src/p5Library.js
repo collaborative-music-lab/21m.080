@@ -17,14 +17,16 @@ export const sketch = (p) => {
 
     p.p5Code = '';
 
-
     p.Debug = function(){ p.debug(); }
 
     p.setup = function () {
         let divID = p.canvas.parentElement.id;
         let div = document.getElementById(p.canvas.parentElement.id);
         // div = document.getElementById(props.id);
-        p.initialize(div, grey);
+        let dim =  p.initialize(div, grey) 
+
+        p.width = dim[0]
+        p.height = dim[1]
         p.frame = 0
         p.x = 0
         p.y = 0

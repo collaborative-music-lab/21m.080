@@ -9,6 +9,12 @@ Base class for synths. Includes:
 
 For presets:
 - all synths can load presets saved in the synth/synthPresets folder.
+
+To add preset functionality to a synth:
+- create the preset file `synths/synthPresets/yourSynthPresets.json' j
+- your preset file nedds an open/close brace {} in it
+- 
+
 - make sure to:
     - import your presets and assign to this.presets 
     - name your synth correctly in its constructor

@@ -419,7 +419,7 @@ function Editor(props) {
         }
     }
 
-
+    //CODEMIRROR HANDLERS
     //save history in browser and update code value
     const handleCodeChange = (value, viewUpdate) => {
         if (refresh) {
@@ -453,6 +453,7 @@ function Editor(props) {
         curLineNum = data.line.number;
     }
 
+    //GUI HANDLERS
     //Handle Mode Changes + Play & Stop
     const playClicked = () => {
         stopClicked();

@@ -10,8 +10,7 @@ import { gruvboxDark, gruvboxLight } from '@uiw/codemirror-theme-gruvbox-dark';
 
 //tone
 import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
-        Rumble, Daisies, DatoDuo, ESPSynth, Polyphony, Stripe, Diffuseur, KP, Sympathy,
-        Kick, DrumSampler} from './synths/index.js';
+        Rumble, Daisies, DatoDuo, ESPSynth, Polyphony, Stripe, Diffuseur, KP, Sympathy, Kick, DrumSampler, Snare} from './synths/index.js';
 import {Sequencer} from './Sequencer.js';
 import {MultiVCO} from './MultiVCO.js'
 import p5 from 'p5';
@@ -25,7 +24,7 @@ import * as waveshapers from './synths/waveshapers.js'
 // Collab-Hub features
 import { CollabHubClient, CollabHubTracker, CollabHubDisplay } from './CollabHub.js';
 
-import MidiKeyboard from './MidiKeyboard.js';
+import MidiKeyboard from './midiKeyboard.js';
 import { asciiCallbackInstance } from './AsciiKeyboard.js';
 
 const midi = require('./Midi.js');
@@ -83,7 +82,9 @@ function Editor(props) {
     window.Sequencer = Sequencer
     window.MultiVCO = MultiVCO
     window.Kick = Kick
-    window.DrumSampler = DrumSampler
+    window.DrumSampler = DrumSampler   
+    window.Snare = Snare;
+
 
     var curLineNum = 0;
 
@@ -94,7 +95,7 @@ function Editor(props) {
     function urlDecode() {
         const URLParams = new URLSearchParams(window.location.search);
         const compressedCode = URLParams.get('code');
-        const encodedContent =  LZString.decompressFromEncodedURIComponent(compressedCode);
+        let encodedContent =  LZString.decompressFromEncodedURIComponent(compressedCode);
         if (encodedContent) {
             localStorage.setItem(`${props.page}Value`, encodedContent);
             const url = window.location.origin + window.location.pathname;
@@ -521,8 +522,8 @@ function Editor(props) {
     function exportAsLink(code) {
         const liveCode = localStorage.getItem(`${props.page}Value`);
         const compressedCode = LZString.compressToEncodedURIComponent(liveCode);
-
-        const url = `${window.location.origin}${window.location.pathname}?code=${compressedCode}`;
+        const url = `https://ianhattwick.com/m080/?code=${compressedCode}`;
+        // const url = `http://localhost:3000/m080/?code=${compressedCode}`;
         navigator.clipboard.writeText(url);
         console.log('URL copied to clipboard');
     }

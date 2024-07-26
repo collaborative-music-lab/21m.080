@@ -3,10 +3,6 @@ import { useState, useEffect, useRef } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { historyField } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
-import { okaidia } from '@uiw/codemirror-theme-okaidia';
-import { bbedit } from '@uiw/codemirror-theme-bbedit';
-import { basic } from '@uiw/codemirror-theme-basic';
-import { gruvboxDark, gruvboxLight } from '@uiw/codemirror-theme-gruvbox-dark';
 
 //tone
 import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
@@ -33,6 +29,45 @@ const LZString = require('lz-string');
 
 //Save history in browser
 const stateFields = { history: historyField };
+
+// List of available themes
+const themeNames = ['gruvboxDark', 'gruvboxLight', 'okaidia', 'bbedit', 
+  'basicDark', 'basicDarkInit', 'basicLight', 'basicLightInit'];
+
+// Load the theme dynamically based on the theme name
+const loadTheme = async (themeName) => {
+  try {
+    let themeModule;
+    switch (themeName) {
+      case 'gruvboxDark':
+      case 'gruvboxLight':
+        themeModule = await import('@uiw/codemirror-theme-gruvbox-dark');
+        return themeName === 'gruvboxDark' ? themeModule.gruvboxDark : themeModule.gruvboxLight;
+      case 'okaidia':
+        themeModule = await import('@uiw/codemirror-theme-okaidia');
+        return themeModule.okaidia;
+      case 'bbedit':
+        themeModule = await import('@uiw/codemirror-theme-bbedit');
+        return themeModule.bbedit;
+      case 'basicDark':
+      case 'basicDarkInit':
+      case 'basicDarkStyle':
+      case 'basicLight':
+      case 'basicLightInit':
+      case 'basicLightStyle':
+      case 'defaultSettingsBasicDark':
+      case 'defaultSettingsBasicLight':
+        themeModule = await import('@uiw/codemirror-theme-basic');
+        return themeModule[themeName];
+      default:
+        throw new Error(`Theme ${themeName} not found`);
+    }
+  } catch (error) {
+    console.error(`Error loading theme ${themeName}:`, error);
+    const fallbackModule = await import('@uiw/codemirror-theme-gruvbox-dark');
+    return fallbackModule.gruvboxDark; // Fallback theme
+  }
+};
 
 function Editor(props) {
     window.p5 = p5;
@@ -128,6 +163,20 @@ function Editor(props) {
     const [p5Minimized, setP5Minimized] = useState(false);
     const [maximized, setMaximized] = useState('');
 
+    /****** HANDLE THEMES ************/
+
+    const [themeDef, setThemeDef] = useState(); // Default theme
+
+    const setTheme = async (themeName) => {
+        if( typeof themeName === 'number') themeName = themeNames[themeName%themeNames.length]
+        const selectedTheme = await loadTheme(themeName);
+        console.log(themeName)
+        setThemeDef(selectedTheme);     
+    };
+
+    window.setTheme = setTheme
+    /******************/
+
     useEffect(() => {
         // collab-hub socket instance
         window.chClient = new CollabHubClient(); // needs to happen once (!)
@@ -140,7 +189,11 @@ function Editor(props) {
         if (container) {
             setHeight(`${container.clientHeight}px`);
         }
+        loadTheme('gruvboxDark').then((loadedTheme) => {
+      setTheme('gruvboxDark');
+    });
     }, []);
+
 
     function removeComments() {
         // Regular expression to match single-line and multi-line comments
@@ -672,7 +725,7 @@ function Editor(props) {
                                 options={{
                                     mode: 'javascript',
                                 }}
-                                theme={gruvboxDark}
+                                theme={themeDef}
                                 extensions={[javascript({ jsx: true })]}
                                 onChange={handleCodeChange}
                                 onKeyDown={handleKeyDown}

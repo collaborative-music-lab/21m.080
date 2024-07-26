@@ -203,7 +203,7 @@ export const setColor = function(name, value) {
     else if( name === 'background' )  activeTheme.backgroundColor = value
     else if( name === 'text' )  activeTheme.textColor = value
 
-    else if( typeof( name ) == 'string' && Array.isArray(value)){
+    else if( typeof( name )==='string' && Array.isArray(value)){
         if(value.length = 3){
             activeTheme[name] = value;
             console.error(`new Color added: ${name}`);
@@ -348,10 +348,10 @@ class Element {
         this.runCallBack()
     }
 
-    getParam(param,val){ return val == 'theme' ? activeTheme[param] : val}
+    getParam(param,val){ return val==='theme' ? activeTheme[param] : val}
 
     isPressed(){
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         //console.log('isPressed', this.label, this.p.mouseX,this.cur_x , this.x_box);
         if( this.p.mouseX < (this.cur_x + this.x_box/2) &&
             this.p.mouseX > (this.cur_x - this.x_box/2) &&
@@ -364,8 +364,8 @@ class Element {
     }
 
     isReleased(){
-        if(this.hide == true) return;
-        if( this.active == 1 )  this.active = 0
+        if(this.hide===true) return;
+        if( this.active===1 )  this.active = 0
     }
 
     resize(scaleWidth, scaleHeight) {
@@ -414,11 +414,11 @@ class Element {
     }
 
     setColor( arg ){
-        if( typeof(arg) == 'string'){
+        if( typeof(arg)==='string'){
             return getColor( arg )
         }
         else if( Array.isArray(arg) ){
-            if( arg.length == 3) return arg
+            if( arg.length===3) return arg
         } 
         console.log(this.label, typeof(arg), 'invalid color')
         return [0,0,0]
@@ -440,7 +440,7 @@ class Element {
                     }
                 }
             }
-        } else if( this.maptoDefined == 'false'){ console.log(this.label, 'no destination defined')}
+        } else if( this.maptoDefined==='false'){ console.log(this.label, 'no destination defined')}
     }
 
     runCallBack() {
@@ -455,7 +455,7 @@ class Element {
                     console.log('Error with Callback Function: ', error);
                 }
             }
-        } else if( this.maptoDefined == 'false'){ console.log(this.label, 'no destination defined')}
+        } else if( this.maptoDefined==='false'){ console.log(this.label, 'no destination defined')}
 
         // send updates to collab-hub
         if (this.sendName) { 
@@ -518,7 +518,7 @@ export class Knob extends Element {
     }
 
     draw() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         // Calculate the angle based on the knob's value
         this.startAngle = this.p.PI * (4/8 + (360 - this.degrees)/360);
         this.endAngle = this.p.PI * (4/8 - (360 - this.degrees)/360 ) + 2 * this.p.PI;
@@ -565,7 +565,7 @@ export class Knob extends Element {
     }
 
     isDragged() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         if(this.active){
         
             if(this.p.movedY != 0 ){ 
@@ -621,7 +621,7 @@ export class Fader extends Element {
     }
 
     draw() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         this.isHorizontal = this.orientation==='horizontal'
         this.cur_size = (this.size/6)*this.p.width/2
         let border = this.getParam('border',this.border)
@@ -678,7 +678,7 @@ export class Fader extends Element {
     }
 
     isDragged() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         if( this.active ){
             if (this.isHorizontal){
                 if(this.p.movedX !== 0 ){ 
@@ -752,7 +752,7 @@ export class Pad extends Element {
     }
 
     draw() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         this.cur_size = (this.size/6)*this.p.width/2
         this.cur_sizeX = (this.sizeX/6)*this.p.width/2
         this.cur_sizeY = (this.sizeY/6)*this.p.width/2
@@ -801,7 +801,7 @@ export class Pad extends Element {
     }
 
     isDragged() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         if( this.active ){
             if(this.p.movedX !== 0 ){ 
                 if( this.p.keyIsDown(this.p.ALT)) this.rawValueX += this.p.movedX * this.incr/10;
@@ -857,7 +857,7 @@ export class Button extends Element {
     }
 
     draw() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         this.cur_x = (this.x/100)*this.p.width
         this.cur_y = (this.y/100)*this.p.height
         this.cur_size = (this.size/6)*this.p.width/2
@@ -883,7 +883,7 @@ export class Button extends Element {
     }
 
     isPressed(){
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         if( this.p.mouseX < (this.cur_x + this.x_box/2) &&
             this.p.mouseX > (this.cur_x - this.x_box/2) &&
             this.p.mouseY > (this.cur_y - this.y_box/2) &&
@@ -894,7 +894,7 @@ export class Button extends Element {
             this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
             this.mapValue(this.value,this.mapto);
             this.runCallBack();
-            if( this.maptoDefined == 'false') postButtonError('Buttons')
+            if( this.maptoDefined==='false') postButtonError('Buttons')
 
             // send updates to collab-hub
             if (this.linkName) { 
@@ -906,8 +906,8 @@ export class Button extends Element {
     }
 
     isReleased(){
-        if(this.hide == true) return;
-        if( this.active == 1 )  {
+        if(this.hide===true) return;
+        if( this.active===1 )  {
             this.active = 0
             this.rawValue = 0
             this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
@@ -929,7 +929,7 @@ export class Button extends Element {
             this.mapValue(this.value,this.mapto);
 
             this.runCallBack();
-            if( this.maptoDefined == 'false') postButtonError('Buttons')
+            if( this.maptoDefined==='false') postButtonError('Buttons')
 
         } else {
             this.active = 0
@@ -968,8 +968,8 @@ export class Momentary extends Button {
     }
 
     isReleased(){
-        if(this.hide == true) return;
-        if( this.active == 1 )  {
+        if(this.hide===true) return;
+        if( this.active===1 )  {
             this.active = 0
             this.rawValue = 0
             this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
@@ -997,7 +997,7 @@ export class Toggle extends Button {
     }
 
     isPressed(){
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         if( this.p.mouseX < (this.cur_x + this.x_box/2) &&
             this.p.mouseX > (this.cur_x - this.x_box/2) &&
             this.p.mouseY > (this.cur_y - this.y_box/2) &&
@@ -1008,7 +1008,7 @@ export class Toggle extends Button {
             this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
             this.mapValue(this.value,this.mapto);
             this.runCallBack();
-            if( this.maptoDefined == 'false') postButtonError('Toggle buttons')
+            if( this.maptoDefined==='false') postButtonError('Toggle buttons')
 
             // send updates to collab-hub
             if (this.linkName) { 
@@ -1019,8 +1019,8 @@ export class Toggle extends Button {
     }
 
     isReleased(){
-        if(this.hide == true) return;
-        if( this.active == 1 )  {
+        if(this.hide===true) return;
+        if( this.active===1 )  {
             this.active = 0
         }
     }
@@ -1032,7 +1032,7 @@ export class Toggle extends Button {
         this.mapValue(this.value,this.mapto);
 
         this.runCallBack();
-        if( this.maptoDefined == 'false') postButtonError('Toggle buttons')
+        if( this.maptoDefined==='false') postButtonError('Toggle buttons')
     }
 }
 
@@ -1060,7 +1060,7 @@ export class RadioButton extends Button {
     }
 
     draw() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         this.radioClicked = {};
 
         this.isHorizontal = this.orientation==='horizontal'
@@ -1111,7 +1111,7 @@ export class RadioButton extends Button {
             let x = this.isHorizontal ? this.x_corner + i * this.radioWidth : this.x_corner;
             let y = this.isHorizontal ? this.y_corner : this.y_corner + this.radioHeight * i;
 
-            this.p.fill(this.value == option ? this.setColor(this.accentColor) : this.setColor(this.borderColor));
+            this.p.fill(this.value===option ? this.setColor(this.accentColor) : this.setColor(this.borderColor));
             this.p.stroke(0);
             this.p.strokeWeight(border);
             this.p.rect(x, y, this.radioWidth, this.radioHeight);
@@ -1126,7 +1126,7 @@ export class RadioButton extends Button {
 
 
     isPressed() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         if( this.p.mouseX < (this.cur_x + this.x_box/2) &&
             this.p.mouseX > (this.cur_x - this.x_box/2) &&
             this.p.mouseY > (this.cur_y - this.y_box/2) &&
@@ -1148,7 +1148,7 @@ export class RadioButton extends Button {
 
             this.runCallBack();
             this.mapValue(this.value, this.mapto);
-            if( this.maptoDefined == 'false') postButtonError('RadioButtons')
+            if( this.maptoDefined==='false') postButtonError('RadioButtons')
 
             // send updates to collab-hub
             if (this.linkName) { 
@@ -1190,7 +1190,7 @@ export class Line extends Element {
     }
 
     draw() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         let x1 = (this.x1/100)*this.p.width
         let x2 = (this.x2/100)*this.p.width
         let y1 = (this.y1/100)*this.p.height
@@ -1226,7 +1226,7 @@ export class Text extends Element {
     }
 
     draw() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         this.cur_x = (this.x/100)*this.p.width
         this.cur_y = (this.y/100)*this.p.height
         this.cur_size = (this.size/6)*this.p.width/2

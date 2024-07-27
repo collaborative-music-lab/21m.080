@@ -1,11 +1,10 @@
 import * as Tone from 'tone'
 export class Sequencer{
-  constructor(values = [], control = 0, custom = false, subdivision = '8n', enable = [true]){
+  constructor(control = null, values = [], subdivision = '8n', enable = []){
     //console.log('enter construct')
     this.gui = null
     this.subdivision = subdivision
     this.control = control
-    this.custom = custom
     this.callback = function(){}
     this.values = values
     this.enable = enable
@@ -13,6 +12,7 @@ export class Sequencer{
     this.subdivisionsPerBeat = 4
     this.timeGrain = this.beatsPerBar * this.subdivisionsPerBeat
     this.env = new Tone.Envelope()
+    this.setCallback()
     this.loop =  new Tone.Loop((time) => {
 //
     //Index calculations
@@ -34,20 +34,21 @@ export class Sequencer{
       if (this.gui){
         this.updateGui()
         }
-      if (this.enable[this.enable_index]){
+      if( this.enable.length === 0 ) {
+        this.val = this.values[this.values_index]
+        this.callback(time)
+        console.log(this.val)
+      }
+      else if (this.enable[this.enable_index]){
         //console.log(this.values[this.values_index])
         this.val = this.values[this.values_index]
         console.log(this.val)
-        
+        this.callback(time)
       }
       else {
         console.log(0)
         this.val = 0
       }
-      this.setCallback()
-      this.callback()
-
-      
   //
   }, this.subdivision);
   //console.log("sequencer ready")
@@ -74,7 +75,12 @@ export class Sequencer{
   }
 
   setCallback() {
-    if (this.control.name === 'Synth'){
+    if( this.control === 'custom'){
+      this.callback = function(){
+        console.log('custom callback')
+      }
+    }
+    else if (this.control.name === 'Synth'){
       //console.log(true)
       this.callback = function(){
         if (this.val) {
@@ -119,6 +125,16 @@ export class Sequencer{
         }
       }
     }
+
+    else if (this.control.name === 'Signal'){
+      //console.log(true)
+      this.callback = function(time){
+        if (this.val) {
+          this.control.setValueAtTime(this.val, time)
+        }
+      }
+    }
+
 
     else if (this.custom){
       this.callback = function(){

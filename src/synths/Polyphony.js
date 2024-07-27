@@ -50,7 +50,7 @@ export class Polyphony{
 
 	triggerAttackRelease = function(val, vel=100, dur=0.01, time=null){
 		this.v = this.getNewVoice(val)
-		val = Tone.Midi(val).toFrequency()
+		//val = Tone.Midi(val).toFrequency()
 		if(time){
 			this.voice[this.v].triggerAttackRelease(val, vel, dur, time)
 		} else{
@@ -142,7 +142,8 @@ export class Polyphony{
 	}//set
 
 	loadPreset(name) {
-		for(let i=0;i<this.numVoices;i++) this.voice[i].loadPreset(name)
+		//for(let i=0;i<this.numVoices;i++) this.voice[i].loadPreset(name)
+		this.voice[0].loadPreset(name)
 	}
 
 	listPresets() {

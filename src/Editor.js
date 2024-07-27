@@ -16,7 +16,7 @@ import * as Theory from './Theory.js';
 import Canvas from "./Canvas.js";
 import { Oscilloscope, Spectroscope, PlotTransferFunction } from './oscilloscope';
 import * as waveshapers from './synths/waveshapers.js'
-
+import {stepper, expr} from  './Utilities.js'
 // Collab-Hub features
 import { CollabHubClient, CollabHubTracker, CollabHubDisplay } from './CollabHub.js';
 
@@ -93,7 +93,7 @@ function Editor(props) {
     //asciiCallbackInstance.fileInput = fileInputRef.current;
     //asciiCallbackInstance.fileInput.addEventListener('change', asciiCallbackInstance.handleFileChange);
 
-    
+    //midi    
     window.setMidiInput = midi.setMidiInput;
     window.setNoteOnHandler = midi.midiHandlerInstance.setNoteOnHandler.bind(midi.midiHandlerInstance);
     window.setNoteOffHandler = midi.midiHandlerInstance.setNoteOffHandler.bind(midi.midiHandlerInstance);
@@ -107,6 +107,7 @@ function Editor(props) {
     window.ToneWood = ToneWood
     window.DelayOp = DelayOp
     window.Caverns = Caverns
+    //window.AnalogDelay = AnalogDelay
     window.Rumble = Rumble
     window.Polyphony = Polyphony
     window.Daisies = Daisies
@@ -120,6 +121,9 @@ function Editor(props) {
     window.DrumSampler = DrumSampler   
     window.Snare = Snare;
 
+    //utilities
+    window.stepper = stepper
+    window.expr = expr
 
     var curLineNum = 0;
 

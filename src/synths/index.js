@@ -14,6 +14,7 @@ export { KP } from './KP.js';
 export { Kick } from './Kick.js';
 export { Sympathy } from './Sympathy.js';
 export { DrumSampler } from './DrumSampler.js';
+export { AnalogDelay } from './AnalogDelay.js';
 //export * from './waveshapers.js';
 export { Snare } from './Snare.js';
 

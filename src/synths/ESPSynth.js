@@ -61,7 +61,7 @@ export class ESPSynth extends MonophonicTemplate {
         this.env.connect(this.vcfEnvelopeDepth)
         this.vcfEnvelopeDepth.connect(this.vcfVelocity)
         this.vcfVelocity.connect(this.vcf.frequency)
-        this.vcaVelocityController.connect(this.vcfVelocity.factor)
+        this.vcfVelocityController.connect(this.vcfVelocity.factor)
 
         //connect vcf to vca
         this.vcf.connect(this.vca)
@@ -193,6 +193,7 @@ export class ESPSynth extends MonophonicTemplate {
 
     triggerAttackRelease (freq, amp, dur=0.01, time=null){
     freq = Tone.Midi(freq).toFrequency()
+    amp = amp/127
     if(time){
         this.env.triggerAttackRelease(dur, time)
         this.frequency.setValueAtTime(freq, time)

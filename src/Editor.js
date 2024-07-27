@@ -5,7 +5,7 @@ import { historyField } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
 
 //tone
-import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
+import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns, AnalogDelay,
         Rumble, Daisies, DatoDuo, ESPSynth, Polyphony, Stripe, Diffuseur, KP, Sympathy, Kick, DrumSampler, Snare} from './synths/index.js';
 import {Sequencer} from './Sequencer.js';
 import {MultiVCO} from './MultiVCO.js'
@@ -107,7 +107,7 @@ function Editor(props) {
     window.ToneWood = ToneWood
     window.DelayOp = DelayOp
     window.Caverns = Caverns
-    //window.AnalogDelay = AnalogDelay
+    window.AnalogDelay = AnalogDelay
     window.Rumble = Rumble
     window.Polyphony = Polyphony
     window.Daisies = Daisies

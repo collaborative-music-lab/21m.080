@@ -197,6 +197,7 @@ export class Daisy{
 export class Daisies {
   constructor(num = 8, gui = null){
 	this.gui = gui
+  this.name = 'Synth'
 	this.numVoices = num
 	//audio
     this.voice = []

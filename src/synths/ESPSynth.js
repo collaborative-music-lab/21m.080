@@ -18,7 +18,7 @@ export class ESPSynth extends MonophonicTemplate {
         this.gui = gui
         this.presets = ESPSynthPresets
         this.name = "ESPSynth"
-        console.log(this.name, " loaded, available preset: ", ESPSynthPresets)
+        //console.log(this.name, " loaded, available preset: ", ESPSynthPresets)
 
         this.frequency = new Tone.Signal()
         this.pitchshift = new Tone.Multiply()

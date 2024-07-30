@@ -63,7 +63,7 @@ const loadTheme = async (themeName) => {
         throw new Error(`Theme ${themeName} not found`);
     }
   } catch (error) {
-    console.error(`Error loading theme ${themeName}:`, error);
+    console.error(`Selected theme "${themeName}" does not exist. Try using a number like setTheme(2).`)
     const fallbackModule = await import('@uiw/codemirror-theme-gruvbox-dark');
     return fallbackModule.gruvboxDark; // Fallback theme
   }
@@ -174,7 +174,7 @@ function Editor(props) {
     const setTheme = async (themeName) => {
         if( typeof themeName === 'number') themeName = themeNames[themeName%themeNames.length]
         const selectedTheme = await loadTheme(themeName);
-        console.log(themeName)
+        console.log(`Current codebox theme: ${themeName}. \nChange theme with setTheme(number or string)`)
         setThemeDef(selectedTheme);     
     };
 
@@ -389,7 +389,7 @@ function Editor(props) {
             if (typeof window.gui !== 'undefined') {
                 window.gui.p5Code = p5Code;
             } else {
-                console.log("Error: p5 instance 'gui' does not exist.");
+                console.log(`Warning: p5 instance 'gui' does not exist.`);
             }
         } catch (error) {
             console.log("Error Evaluating Code", error);

@@ -114,7 +114,7 @@ export class Polyphony{
 
 	//SET PARAMETERS
 
-	set(param, value) {
+	set(param, value, time = null) {
 		//console.log('set', param, value)
 		let keys = param.split('.');
 		//console.log('keys', keys)
@@ -131,7 +131,8 @@ export class Polyphony{
 			const lastKey = keys[keys.length - 1];
 			if (target[lastKey] !== undefined) {
 			if (target[lastKey]?.value !== undefined) {
-				target[lastKey].value = value;
+				if(time === null) target[lastKey].value = value;
+				else target.linearRampToValueAtTime(value, time+.1)
 			} else {
 				target[lastKey] = value;
 			}

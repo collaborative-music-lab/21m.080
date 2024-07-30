@@ -207,6 +207,28 @@ const unScaleOutput = function (input, outLow, outHigh, inLow, inHigh, curve) {
     return val * (outHigh - outLow) + outLow;
   }
 
+/**
+ * returns an element by querying its id
+ * - the id of an element is unique
+ * - multiple elements with the same label are id as label, label1, etc.
+*/
+// Function to retrieve an element by its label
+const getElementByLabel = (p, label) => {
+  const elementArray = Object.values(p.elements);
+  for (const element of elementArray) {
+    console.log(element.id)
+    if (element.id === label) {
+      return element;
+    }
+  }
+  return null; // Return null if no matching element is found
+};
+
+p5.prototype.getElementByLabel = function (label) {
+    getElementByLabel(this,label);
+};
+
+
 
 /********************** COLORS & FONTS ***********************/
 export const setColor = function(name, value) {

@@ -30,6 +30,7 @@ export const sketch = (p) => {
         p.frame = 0
         p.x = 0
         p.y = 0
+        p.capture = null
     };
 
     p.draw = function () {
@@ -97,4 +98,11 @@ export const sketch = (p) => {
     p.windowResized = function () {
         p.divResized();
     };
+
+    p.openWebcam = function(width, height) {
+      p.capture = p.createCapture(p.VIDEO);
+      p.capture.size(width, height);
+      p.capture.hide();
+      console.log("Webcam opened with resolution:", width, "x", height);
+    }
 };

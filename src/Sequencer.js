@@ -164,9 +164,12 @@ class stepSequence{
     }
     
     for( let i=0; i<this.target.values.length; i++){
-      this.values_array.push(this.createKnob((i+1), 10*i, 50, 0, 127, 0.5,  [200,50,0],  x => this.target.values[i] = Math.floor(x)))
+      this.values_array.push(this.createKnob((i+1), 10*i, 60, 0, 127, 1,  [200,50,0],  x => this.target.values[i] = Math.floor(x)))
     }
     this.playButton = this.createToggle('Pause/Play', 50, 10, 1, [200,50,0], x => this.togglePlay(x))
+    this.playButton.set(1)
+
+    this.playText = this.gui.Text({label:"play", x:50,y:20})
   }
 
   updateGui(values, enables){
@@ -187,7 +190,8 @@ class stepSequence{
       x: _x + this.x, y: _y + this.y,
       callback: callback,
       curve: 1, // Adjust as needed
-      border: 2 // Adjust as needed
+      border: 4, // Adjust as needed
+      showLabel: 0, showValue: 0
     });
   }
 
@@ -198,7 +202,8 @@ class stepSequence{
       x: _x + this.x, y: _y + this.y,
       callback: callback,
       showLabel: 1, showValue: 1, // Assuming these are common settings
-      border: 2 // Adjust as needed
+      border: 20, // Adjust as needed
+      showLabel: 0, showValue: 0
     });
   }
 
@@ -235,7 +240,7 @@ class circularSequence extends stepSequence{
         const buttonX = centerX + radius * Math.cos(angle)/10;
         const buttonY = centerY + radius * Math.sin(angle)/5;
         
-        this.enables_array.push(this.createToggle('En'+(i+1).toString(), buttonX, buttonY, 0.5, [200, 50, 0], x => this.target.enables[i] = x));
+        this.enables_array.push(this.createToggle('En'+(i+1).toString(), buttonX, buttonY, 0.3, [200, 50, 0], x => this.target.enables[i] = x));
         this.enables_array[i].set(1);
     }
 
@@ -245,10 +250,12 @@ class circularSequence extends stepSequence{
         const knobX = centerX + knobRadius * Math.cos(angle)/10;
         const knobY = centerY + knobRadius * Math.sin(angle)/5;
 
-        this.values_array.push(this.createKnob((i + 1), knobX, knobY, 0, 127, 0.5, [200, 50, 0], x => this.target.values[i] = Math.floor(x)));
+        this.values_array.push(this.createKnob((i + 1), knobX, knobY, 24, 72, 0.8, [200, 50, 0], x => this.target.values[i] = Math.floor(x)));
     }
 
     // Place the play button in the center
     this.playButton = this.createToggle('Pause/Play', centerX, centerY, 1, [200, 50, 0], x => this.togglePlay(x));
+    this.playButton.set(1)
+    this.playText = this.gui.Text({label:"play", x:50,y:50, border:1})
   }
 }

@@ -137,13 +137,13 @@ function Editor(props) {
         let encodedContent =  LZString.decompressFromEncodedURIComponent(compressedCode)
         if (encodedContent) {
             console.log(encodedContent)
-            encodedContent = encodedContent
-                .replace(/-/g, '+')
-                .replace(/_/g, '/');
-            // Adding the padding to the encoding
-            while (encodedContent.length % 4 !== 0) {
-                encodedContent += '=';
-            }
+            // encodedContent = encodedContent
+            //     .replace(/-/g, '+')
+            //     .replace(/_/g, '/');
+            // // Adding the padding to the encoding
+            // while (encodedContent.length % 4 !== 0) {
+            //     encodedContent += '=';
+            // }
             localStorage.setItem(`${props.page}Value`, encodedContent);
             const url = window.location.origin + window.location.pathname;
             window.location.assign(url);
@@ -151,6 +151,7 @@ function Editor(props) {
     }
 
     urlDecode();
+    //console.log('test')
     const value = localStorage.getItem(`${props.page}Value`) || props.starterCode;
     
 
@@ -604,9 +605,9 @@ function Editor(props) {
     function exportAsLink(code) {
         const liveCode = localStorage.getItem(`${props.page}Value`);
         const compressedCode = LZString.compressToEncodedURIComponent(liveCode)
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, ''); // Removes padding
+        // .replace(/\+/g, '-')
+        // .replace(/\//g, '_')
+        // .replace(/=+$/, ''); // Removes padding
         const url = `https://ianhattwick.com/m080/?code=${compressedCode}`;
         //const url = `http://localhost:3000/m080/?code=${compressedCode}`;
         navigator.clipboard.writeText(url);

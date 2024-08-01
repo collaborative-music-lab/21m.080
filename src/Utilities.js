@@ -1,3 +1,9 @@
+/****
+ * In this file:
+ * stepper( input:number, min:number, max:number, steps:array of [in:out] points)
+ * expr( func, len=32 ): returns a custom array built using func
+ * /
+
 /*
     * Helper function for creating a custom curve for this.gui elements
     *
@@ -33,3 +39,13 @@ export function stepper(input, min, max, steps) {
     }
     return max
 }
+
+/***
+ * 
+ */
+
+export function expr( func, len = 32 ){
+  const arr = Array.from({ length: len }, (_, i) => func(i))
+  return arr
+}
+ 

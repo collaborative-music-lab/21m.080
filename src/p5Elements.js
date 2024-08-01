@@ -55,10 +55,12 @@ export function initialize(p, div) {
     p.width = div.offsetWidth;
     p.height = div.offsetHeight;
     p.elements = {};
+
+    return [p.width, p.height]
 }
 
 p5.prototype.initialize = function (div) {
-    initialize(this, div);
+    return initialize(this, div);
 };
 
 function resizeP5(string, scaleWidth, scaleHeight) {
@@ -158,10 +160,20 @@ let updateCanvas = 1;
 
 //************** DRAW ELEMENTS //**************
 
-export function drawElements(p) {
+export function drawBackground(p) {
     if( updateCanvas > 0 ){
         updateCanvas = 1
         p.background(activeTheme.backgroundColor);
+    }
+}
+
+p5.prototype.drawBackground = function () {
+    drawBackground(this);
+};
+
+export function drawElements(p) {
+    if( updateCanvas > 0 ){
+        updateCanvas = 1
         //drawGrid(p);
         for (let element of Object.values(p.elements)) {
             if (typeof (element) === "string") {
@@ -195,6 +207,28 @@ const unScaleOutput = function (input, outLow, outHigh, inLow, inHigh, curve) {
     return val * (outHigh - outLow) + outLow;
   }
 
+/**
+ * returns an element by querying its id
+ * - the id of an element is unique
+ * - multiple elements with the same label are id as label, label1, etc.
+*/
+// Function to retrieve an element by its label
+const getElementByLabel = (p, label) => {
+  const elementArray = Object.values(p.elements);
+  for (const element of elementArray) {
+    console.log(element.id)
+    if (element.id === label) {
+      return element;
+    }
+  }
+  return null; // Return null if no matching element is found
+};
+
+p5.prototype.getElementByLabel = function (label) {
+    getElementByLabel(this,label);
+};
+
+
 
 /********************** COLORS & FONTS ***********************/
 export const setColor = function(name, value) {
@@ -203,7 +237,7 @@ export const setColor = function(name, value) {
     else if( name === 'background' )  activeTheme.backgroundColor = value
     else if( name === 'text' )  activeTheme.textColor = value
 
-    else if( typeof( name ) == 'string' && Array.isArray(value)){
+    else if( typeof( name )==='string' && Array.isArray(value)){
         if(value.length = 3){
             activeTheme[name] = value;
             console.error(`new Color added: ${name}`);
@@ -348,10 +382,10 @@ class Element {
         this.runCallBack()
     }
 
-    getParam(param,val){ return val == 'theme' ? activeTheme[param] : val}
+    getParam(param,val){ return val==='theme' ? activeTheme[param] : val}
 
     isPressed(){
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         //console.log('isPressed', this.label, this.p.mouseX,this.cur_x , this.x_box);
         if( this.p.mouseX < (this.cur_x + this.x_box/2) &&
             this.p.mouseX > (this.cur_x - this.x_box/2) &&
@@ -364,8 +398,8 @@ class Element {
     }
 
     isReleased(){
-        if(this.hide == true) return;
-        if( this.active == 1 )  this.active = 0
+        if(this.hide===true) return;
+        if( this.active===1 )  this.active = 0
     }
 
     resize(scaleWidth, scaleHeight) {
@@ -414,11 +448,11 @@ class Element {
     }
 
     setColor( arg ){
-        if( typeof(arg) == 'string'){
+        if( typeof(arg)==='string'){
             return getColor( arg )
         }
         else if( Array.isArray(arg) ){
-            if( arg.length == 3) return arg
+            if( arg.length===3) return arg
         } 
         console.log(this.label, typeof(arg), 'invalid color')
         return [0,0,0]
@@ -440,7 +474,7 @@ class Element {
                     }
                 }
             }
-        } else if( this.maptoDefined == 'false'){ console.log(this.label, 'no destination defined')}
+        } else if( this.maptoDefined==='false'){ console.log(this.label, 'no destination defined')}
     }
 
     runCallBack() {
@@ -455,7 +489,7 @@ class Element {
                     console.log('Error with Callback Function: ', error);
                 }
             }
-        } else if( this.maptoDefined == 'false'){ console.log(this.label, 'no destination defined')}
+        } else if( this.maptoDefined==='false'){ console.log(this.label, 'no destination defined')}
 
         // send updates to collab-hub
         if (this.sendName) { 
@@ -518,7 +552,7 @@ export class Knob extends Element {
     }
 
     draw() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         // Calculate the angle based on the knob's value
         this.startAngle = this.p.PI * (4/8 + (360 - this.degrees)/360);
         this.endAngle = this.p.PI * (4/8 - (360 - this.degrees)/360 ) + 2 * this.p.PI;
@@ -565,7 +599,7 @@ export class Knob extends Element {
     }
 
     isDragged() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         if(this.active){
         
             if(this.p.movedY != 0 ){ 
@@ -621,7 +655,7 @@ export class Fader extends Element {
     }
 
     draw() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         this.isHorizontal = this.orientation==='horizontal'
         this.cur_size = (this.size/6)*this.p.width/2
         let border = this.getParam('border',this.border)
@@ -678,7 +712,7 @@ export class Fader extends Element {
     }
 
     isDragged() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         if( this.active ){
             if (this.isHorizontal){
                 if(this.p.movedX !== 0 ){ 
@@ -752,7 +786,7 @@ export class Pad extends Element {
     }
 
     draw() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         this.cur_size = (this.size/6)*this.p.width/2
         this.cur_sizeX = (this.sizeX/6)*this.p.width/2
         this.cur_sizeY = (this.sizeY/6)*this.p.width/2
@@ -801,7 +835,7 @@ export class Pad extends Element {
     }
 
     isDragged() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         if( this.active ){
             if(this.p.movedX !== 0 ){ 
                 if( this.p.keyIsDown(this.p.ALT)) this.rawValueX += this.p.movedX * this.incr/10;
@@ -857,7 +891,7 @@ export class Button extends Element {
     }
 
     draw() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         this.cur_x = (this.x/100)*this.p.width
         this.cur_y = (this.y/100)*this.p.height
         this.cur_size = (this.size/6)*this.p.width/2
@@ -883,7 +917,7 @@ export class Button extends Element {
     }
 
     isPressed(){
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         if( this.p.mouseX < (this.cur_x + this.x_box/2) &&
             this.p.mouseX > (this.cur_x - this.x_box/2) &&
             this.p.mouseY > (this.cur_y - this.y_box/2) &&
@@ -894,7 +928,7 @@ export class Button extends Element {
             this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
             this.mapValue(this.value,this.mapto);
             this.runCallBack();
-            if( this.maptoDefined == 'false') postButtonError('Buttons')
+            if( this.maptoDefined==='false') postButtonError('Buttons')
 
             // send updates to collab-hub
             if (this.linkName) { 
@@ -906,8 +940,8 @@ export class Button extends Element {
     }
 
     isReleased(){
-        if(this.hide == true) return;
-        if( this.active == 1 )  {
+        if(this.hide===true) return;
+        if( this.active===1 )  {
             this.active = 0
             this.rawValue = 0
             this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
@@ -929,7 +963,7 @@ export class Button extends Element {
             this.mapValue(this.value,this.mapto);
 
             this.runCallBack();
-            if( this.maptoDefined == 'false') postButtonError('Buttons')
+            if( this.maptoDefined==='false') postButtonError('Buttons')
 
         } else {
             this.active = 0
@@ -968,8 +1002,8 @@ export class Momentary extends Button {
     }
 
     isReleased(){
-        if(this.hide == true) return;
-        if( this.active == 1 )  {
+        if(this.hide===true) return;
+        if( this.active===1 )  {
             this.active = 0
             this.rawValue = 0
             this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
@@ -997,7 +1031,7 @@ export class Toggle extends Button {
     }
 
     isPressed(){
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         if( this.p.mouseX < (this.cur_x + this.x_box/2) &&
             this.p.mouseX > (this.cur_x - this.x_box/2) &&
             this.p.mouseY > (this.cur_y - this.y_box/2) &&
@@ -1008,7 +1042,7 @@ export class Toggle extends Button {
             this.value = scaleOutput(this.rawValue,0,1,this.min,this.max,this.curve)
             this.mapValue(this.value,this.mapto);
             this.runCallBack();
-            if( this.maptoDefined == 'false') postButtonError('Toggle buttons')
+            if( this.maptoDefined==='false') postButtonError('Toggle buttons')
 
             // send updates to collab-hub
             if (this.linkName) { 
@@ -1019,8 +1053,8 @@ export class Toggle extends Button {
     }
 
     isReleased(){
-        if(this.hide == true) return;
-        if( this.active == 1 )  {
+        if(this.hide===true) return;
+        if( this.active===1 )  {
             this.active = 0
         }
     }
@@ -1032,7 +1066,7 @@ export class Toggle extends Button {
         this.mapValue(this.value,this.mapto);
 
         this.runCallBack();
-        if( this.maptoDefined == 'false') postButtonError('Toggle buttons')
+        if( this.maptoDefined==='false') postButtonError('Toggle buttons')
     }
 }
 
@@ -1060,7 +1094,7 @@ export class RadioButton extends Button {
     }
 
     draw() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         this.radioClicked = {};
 
         this.isHorizontal = this.orientation==='horizontal'
@@ -1111,7 +1145,7 @@ export class RadioButton extends Button {
             let x = this.isHorizontal ? this.x_corner + i * this.radioWidth : this.x_corner;
             let y = this.isHorizontal ? this.y_corner : this.y_corner + this.radioHeight * i;
 
-            this.p.fill(this.value == option ? this.setColor(this.accentColor) : this.setColor(this.borderColor));
+            this.p.fill(this.value===option ? this.setColor(this.accentColor) : this.setColor(this.borderColor));
             this.p.stroke(0);
             this.p.strokeWeight(border);
             this.p.rect(x, y, this.radioWidth, this.radioHeight);
@@ -1126,7 +1160,7 @@ export class RadioButton extends Button {
 
 
     isPressed() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         if( this.p.mouseX < (this.cur_x + this.x_box/2) &&
             this.p.mouseX > (this.cur_x - this.x_box/2) &&
             this.p.mouseY > (this.cur_y - this.y_box/2) &&
@@ -1148,7 +1182,7 @@ export class RadioButton extends Button {
 
             this.runCallBack();
             this.mapValue(this.value, this.mapto);
-            if( this.maptoDefined == 'false') postButtonError('RadioButtons')
+            if( this.maptoDefined==='false') postButtonError('RadioButtons')
 
             // send updates to collab-hub
             if (this.linkName) { 
@@ -1171,6 +1205,108 @@ p5.prototype.Radio = function (options = {}) {
     return new RadioButton(this, options);
 };
 
+/**************************************** DROPDOWN MENU ******************************************/
+
+export class Dropdown extends Button {
+    constructor(p, options) {
+        super(p, options);
+        this.dropdownOptions = options.dropdownOptions || ['on', 'off'];
+        this.value = options.value || this.dropdownOptions[0]; // Default to the first dropdown option
+        this.isOpen = false; // Track whether the dropdown is open
+        this.cur_size = this.size || 30; // Increase the size for better readability
+        this.border = options.border || activeTheme.radioBorder || 2;
+        this.accentColor = options.accentColor || [200, 50, 0]; // Default accent color
+
+        // Send initial value to collab-hub if linked
+        if (this.linkName) { 
+            this.ch.control(this.linkName, this.value);
+        }
+        if (this.linkFunc) this.linkFunc();
+    }
+
+    draw() {
+        if (this.hide === true) return;
+
+        this.cur_x = (this.x / 100) * this.p.width;
+        this.cur_y = (this.y / 100) * this.p.height;
+
+        this.p.textSize(this.cur_size * 0.9); // Larger text size
+        let textWidth = this.p.textWidth(this.value);
+        this.boxWidth = Math.max(textWidth + 20, 100); // Ensure a minimum width for the dropdown
+        this.boxHeight = this.cur_size;
+
+        // Draw the main dropdown box
+        this.p.fill(255); // Background color
+        this.p.stroke(0); // Border color
+        this.p.strokeWeight(this.border);
+        this.p.rect(this.cur_x, this.cur_y, this.boxWidth, this.boxHeight);
+
+        this.drawText(this.value, this.cur_x + this.boxWidth / 2, this.cur_y + this.boxHeight / 2);
+
+        if (this.isOpen) {
+            for (let i = 0; i < this.dropdownOptions.length; i++) {
+                let option = this.dropdownOptions[i];
+                let y = this.cur_y + (i + 1) * (this.boxHeight + 2); // Increase spacing between options
+
+                if (this.value === option) {
+                    this.p.fill(this.accentColor); // Selected option background
+                } else {
+                    this.p.fill(200); // Unselected option background color (light grey)
+                }
+
+                this.p.stroke(0);
+                this.p.rect(this.cur_x, y, this.boxWidth, this.boxHeight);
+                this.p.fill(0); // Text color
+                this.drawText(option, this.cur_x + this.boxWidth / 2, y + this.boxHeight / 2);
+            }
+        }
+    }
+
+    isPressed() {
+        if (this.hide === true) return;
+
+        if (this.p.mouseX >= this.cur_x && this.p.mouseX <= this.cur_x + this.boxWidth &&
+            this.p.mouseY >= this.cur_y && this.p.mouseY <= this.cur_y + this.boxHeight) {
+            this.isOpen = !this.isOpen; // Toggle dropdown open/close state
+        } else if (this.isOpen) {
+            // Check if click is on one of the options
+            for (let i = 0; i < this.dropdownOptions.length; i++) {
+                let y = this.cur_y + (i + 1) * (this.boxHeight + 2); // Calculate the position of each option
+                if (this.p.mouseX >= this.cur_x && this.p.mouseX <= this.cur_x + this.boxWidth &&
+                    this.p.mouseY >= y && this.p.mouseY <= y + this.boxHeight) {
+                    this.value = this.dropdownOptions[i];
+                    this.isOpen = false;
+                    this.runCallBack();
+                    this.mapValue(this.value, this.mapto);
+                    if (this.maptoDefined === 'false') postButtonError('Dropdown');
+
+                    // Send updates to collab-hub if linked
+                    if (this.linkName) {
+                        this.ch.control(this.linkName, this.value);
+                    }
+                    if (this.linkFunc) this.linkFunc();
+                    return; // Exit after selecting an option
+                }
+            }
+
+            // Close dropdown if clicked outside
+            this.isOpen = false;
+        } else {
+            this.isOpen = false; // Close dropdown if clicked outside
+        }
+    }
+
+    isReleased() {
+        // Override to prevent calling the superclass method
+    }
+}
+
+p5.prototype.Dropdown = function (options = {}) {
+    return new Dropdown(this, options);
+};
+
+
+
 /**************************************** LINES ******************************************/
 export class Line extends Element {
     constructor(p, x1,y1,x2,y2, options) {
@@ -1190,7 +1326,7 @@ export class Line extends Element {
     }
 
     draw() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         let x1 = (this.x1/100)*this.p.width
         let x2 = (this.x2/100)*this.p.width
         let y1 = (this.y1/100)*this.p.height
@@ -1226,7 +1362,7 @@ export class Text extends Element {
     }
 
     draw() {
-        if(this.hide == true) return;
+        if(this.hide===true) return;
         this.cur_x = (this.x/100)*this.p.width
         this.cur_y = (this.y/100)*this.p.height
         this.cur_size = (this.size/6)*this.p.width/2

@@ -18,7 +18,7 @@ export class ESPSynth extends MonophonicTemplate {
         this.gui = gui
         this.presets = ESPSynthPresets
         this.name = "ESPSynth"
-        console.log(this.name, " loaded, available preset: ", ESPSynthPresets)
+        //console.log(this.name, " loaded, available preset: ", ESPSynthPresets)
 
         this.frequency = new Tone.Signal()
         this.pitchshift = new Tone.Multiply()
@@ -61,7 +61,7 @@ export class ESPSynth extends MonophonicTemplate {
         this.env.connect(this.vcfEnvelopeDepth)
         this.vcfEnvelopeDepth.connect(this.vcfVelocity)
         this.vcfVelocity.connect(this.vcf.frequency)
-        this.vcaVelocityController.connect(this.vcfVelocity.factor)
+        this.vcfVelocityController.connect(this.vcfVelocity.factor)
 
         //connect vcf to vca
         this.vcf.connect(this.vca)
@@ -85,7 +85,7 @@ export class ESPSynth extends MonophonicTemplate {
         this.dist.connect(this.distout)
 
         //chorus
-        this.chor = new Tone.Chorus(4, 2.5, 0.5)
+        this.chor = new Tone.Chorus(2.5, 5, 0.9)
         this.chorgain = new Tone.Multiply(1)
         this.chorout = new Tone.Add()
         this.distout.connect(this.chorout)
@@ -122,10 +122,10 @@ export class ESPSynth extends MonophonicTemplate {
     lfoControl(x) {
         if (x !== undefined) {
             let controlVal = Math.abs(x-0.5) * 2
-            let lfoDepth = 100
-            this.lfo.min = stepper(controlVal, 0, 1, [[0,0],[1,1]])
-            this.lfo.max = lfoDepth * stepper(controlVal, 0, 1, [[0,0],[1,1]])
+            let lfoDepth = 50
             if (x < 0.47) {
+                this.lfo.min = -lfoDepth * stepper(controlVal, 0, 1, [[0,0],[0.6,0.2],[1,1]])
+                this.lfo.max = lfoDepth * stepper(controlVal, 0, 1, [[0,0],[0.6,0.2],[1,1]])
                 this.vibratoSwitch.value = 1
                 this.wahSwitch.value = 0
             }
@@ -134,8 +134,10 @@ export class ESPSynth extends MonophonicTemplate {
                 this.wahSwitch.value = 0
             }
             else if (x > 0.49) {
+                this.lfo.min =  0
+                this.lfo.max = lfoDepth * stepper(controlVal, 0, 1, [[0,0],[0.6,0.2],[1,1]])
                 this.vibratoSwitch.value = 0
-                this.wahSwitch.value = 50 * stepper(controlVal, 0, 1, [[0,0],[1,1]])
+                this.wahSwitch.value = 100 * controlVal
             }
         }
     }
@@ -143,12 +145,10 @@ export class ESPSynth extends MonophonicTemplate {
     polyLfoControl(x) {
         if (x !== undefined) {
             let controlVal = Math.abs(x-0.5) * 2
-            let lfoDepth = 100
-            //console.log('stepper input', x, 'stepper output', stepper(controlVal, 0, 1, [[0,0],[1,1]]))
-            this.super.set('lfo.min', stepper(controlVal, 0, 1, [[0,0],[1,1]]))
-            this.super.set('lfo.max', lfoDepth * stepper(controlVal, 0, 1, [[0,0],[1,1]]))
-
+            let lfoDepth = 50
             if (x < 0.47) {
+                this.super.set('lfo.min', -lfoDepth * stepper(controlVal, 0, 1, [[0,0],[0.6,0.2],[1,1]]))
+                this.super.set('lfo.max', lfoDepth * stepper(controlVal, 0, 1, [[0,0],[0.6,0.2],[1,1]]))
                 this.super.set('vibratoSwitch.value', 1)
                 this.super.set('wahSwitch.value', 0)
             }
@@ -157,8 +157,10 @@ export class ESPSynth extends MonophonicTemplate {
                 this.super.set('wahSwitch.value', 0)
             }
             else if (x > 0.49) {
+                this.super.set('lfo.min', 0)
+                this.super.set('lfo.max', lfoDepth * stepper(controlVal, 0, 1, [[0,0],[0.6,0.2],[1,1]]))
                 this.super.set('vibratoSwitch.value', 0)
-                this.super.set('wahSwitch.value', 50 * stepper(controlVal, 0, 1, [[0,0],[1,1]]))
+                this.super.set('wahSwitch.value', 100 * controlVal)
             }
         }
     }
@@ -191,18 +193,15 @@ export class ESPSynth extends MonophonicTemplate {
 
     triggerAttackRelease (freq, amp, dur=0.01, time=null){
     freq = Tone.Midi(freq).toFrequency()
+    amp = amp/127
     if(time){
         this.env.triggerAttackRelease(dur, time)
         this.frequency.setValueAtTime(freq, time)
-        //console.log('raw vcf', amp, 'adjusted vcf', stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]))
-        //console.log('raw vca', amp, 'adjusted vca', stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]))
         this.vcfVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.03)
         this.vcaVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]),.03)
     } else{
         this.env.triggerAttackRelease(dur)
         this.frequency.value = freq
-        //console.log('raw vcf', amp, 'adjusted vcf', stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]))
-        //console.log('raw vca', amp, 'adjusted vca', stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]))
         this.vcfVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.03)
         this.vcaVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]),.03)
     }
@@ -327,7 +326,7 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.lfo_speed_knob = this.gui.Knob({
             label:'speed',
-            callback: (x)=>{this.lfo.frequency.value = stepper(x, 0, 20, [[0,0],[1,1]])},
+            callback: (x)=>{this.lfo.frequency.value = x},
             x: 35, y: 23, size:1.1,
             showValue: false,
             min:0.01, max: 20
@@ -341,7 +340,7 @@ export class ESPSynth extends MonophonicTemplate {
 
         this.cutoff_frequency_knob = this.gui.Knob({
             label:'frequency',
-            callback: (x)=>{this.filterCutoffFrequency.value = stepper(x, 50, 2500, [[0,0], [1,1]])},
+            callback: (x)=>{this.filterCutoffFrequency.value = stepper(x, 50, 2500, [[0,0],[0.95,0.75], [1,1]])},
             x: 53, y: 25, size:1.4,
             showValue: false,
             min:50, max: 2500
@@ -357,7 +356,7 @@ export class ESPSynth extends MonophonicTemplate {
             label:'resonance',
             callback: (x)=>{ this.vcf.Q.value = x},
             x: 53, y: 72, size:1.4,
-            min:0.99999, max: 30, curve: 2,
+            min:0.99999, max: 18, curve: 2,
             showValue: false,
         })
         this.resonance_knob.set( 1 )
@@ -417,9 +416,9 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.attack_fader = this.gui.Slider({
             label:'A',
-            callback: (x)=>{this.env.attack = x},
-            x: 76, y: 36, size: 1, curve: 2,
-            min:0.01, max: .5,
+            callback: (x)=>{this.env.attack = stepper(x, 0, 10, [[0,0],[0.01,0.01], [0.4, 0.03], [0.7, 0.25], [0.85, 0.5], [1,1]])},
+            x: 76, y: 36, size: 1, curve: 1,
+            min:0.01, max: 10,
             orientation: 'vertical',
             showValue: false,
         })
@@ -430,9 +429,9 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.decay_fader = this.gui.Slider({
             label:'D',
-            callback: (x)=>{this.env.decay = x},
-            x: 82, y: 36, size: 1, curve: 2,
-            min:0.01, max: 2,
+            callback: (x)=>{this.env.decay = stepper(x, 0, 10, [[0,0],[0.01,0.01], [0.4, 0.03], [0.7, 0.25], [0.85, 0.5], [1,1]])},
+            x: 82, y: 36, size: 1, curve: 1,
+            min:0.01, max: 10,
             orientation: 'vertical',
             showValue: false,
         })
@@ -443,7 +442,7 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.sustain_fader = this.gui.Slider({
             label:'S',
-            callback: (x)=>{this.env.sustain = stepper(x, 0, 1, [[0,0],[1,1]])},
+            callback: (x)=>{this.env.sustain = x},
             x: 88, y: 36, size: 1,
             min:0.0001, max: 1,
             orientation: 'vertical',
@@ -456,7 +455,7 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.release_fader = this.gui.Slider({
             label:'R',
-            callback: (x)=>{this.env.release = stepper(x, 0.1, 1.5, [[0,0], [0.8, 0.5], [1,1]])},
+            callback: (x)=>{this.env.release = stepper(x, 0, 20, [[0,0],[0.01,0.01], [0.4, 0.03], [0.7, 0.25], [0.85, 0.5], [1,1]])},
             x: 94, y: 36, size: 1,
             min:0.1, max: 20,
             orientation: 'vertical',
@@ -600,7 +599,7 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.lfo_speed_knob = this.gui.Knob({
             label:'speed',
-            callback: (x)=>{this.super.set('lfo.frequency.value' , stepper(x, 0, 20, [[0,0],[1,1]]))},
+            callback: (x)=>{this.super.set('lfo.frequency.value' , x)},
             x: 35, y: 23, size:1.1,
             showValue: false,
             min:0.01, max: 20
@@ -614,7 +613,7 @@ export class ESPSynth extends MonophonicTemplate {
 
         this.cutoff_frequency_knob = this.gui.Knob({
             label:'frequency',
-            callback: (x)=>{this.super.set('filterCutoffFrequency.value', stepper(x, 50, 2500, [[0,0], [1,1]]))},
+            callback: (x)=>{this.super.set('filterCutoffFrequency.value', stepper(x, 50, 2500, [[0,0],[0.95,0.75], [1,1]]))},
             x: 53, y: 25, size:1.4,
             showValue: false,
             min:50, max: 2500
@@ -630,7 +629,7 @@ export class ESPSynth extends MonophonicTemplate {
             label:'resonance',
             callback: (x)=>{ this.super.set('vcf.Q.value', x)},
             x: 53, y: 72, size:1.4,
-            min:0.99999, max: 30, curve: 2,
+            min:0.99999, max: 18, curve: 2,
             showValue: false,
         })
         this.resonance_knob.set( 1 )
@@ -690,9 +689,9 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.attack_fader = this.gui.Slider({
             label:'A',
-            callback: (x)=>{this.super.set('env.attack' , x)},
-            x: 76, y: 36, size: 1, curve: 2,
-            min:0.01, max: .5,
+            callback: (x)=>{this.super.set('env.attack' , stepper(x, 0, 10, [[0,0],[0.01,0.01], [0.4, 0.03], [0.7, 0.25], [0.85, 0.5], [1,1]]))},
+            x: 76, y: 36, size: 1, curve: 1,
+            min:0.01, max: 10,
             orientation: 'vertical',
             showValue: false,
         })
@@ -703,9 +702,9 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.decay_fader = this.gui.Slider({
             label:'D',
-            callback: (x)=>{this.super.set('env.decay' , x)},
-            x: 82, y: 36, size: 1, curve: 2,
-            min:0.01, max: 2,
+            callback: (x)=>{this.super.set('env.decay' , stepper(x, 0, 10, [[0,0],[0.01,0.01], [0.4, 0.03], [0.7, 0.25], [0.85, 0.5], [1,1]]))},
+            x: 82, y: 36, size: 1, curve: 1,
+            min:0.01, max: 10,
             orientation: 'vertical',
             showValue: false,
         })
@@ -716,7 +715,7 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.sustain_fader = this.gui.Slider({
             label:'S',
-            callback: (x)=>{this.super.set('env.sustain' , stepper(x, 0, 1, [[0,0],[1,1]]))},
+            callback: (x)=>{this.super.set('env.sustain' , x)},
             x: 88, y: 36, size: 1,
             min:0.0001, max: 1,
             orientation: 'vertical',
@@ -729,7 +728,7 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.release_fader = this.gui.Slider({
             label:'R',
-            callback: (x)=>{this.super.set('env.release' , stepper(x, 0.1, 1.5, [[0,0], [0.8, 0.5], [1,1]]))},
+            callback: (x)=>{this.super.set('env.release' , stepper(x, 0, 20, [[0,0],[0.01,0.01], [0.4, 0.03], [0.7, 0.25], [0.85, 0.5], [1,1]]))},
             x: 94, y: 36, size: 1,
             min:0.1, max: 20,
             orientation: 'vertical',

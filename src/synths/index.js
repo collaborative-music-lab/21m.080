@@ -15,7 +15,9 @@ export { Kick } from './Kick.js';
 export { Cymbal } from './Cymbal.js';
 export { Sympathy } from './Sympathy.js';
 export { DrumSampler } from './DrumSampler.js';
-export * from './waveshapers.js'
+export { AnalogDelay } from './AnalogDelay.js';
+//export * from './waveshapers.js';
+export { Snare } from './Snare.js';
 
 
 

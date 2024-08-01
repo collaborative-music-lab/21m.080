@@ -3,15 +3,10 @@ import { useState, useEffect, useRef } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { historyField } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
-import { okaidia } from '@uiw/codemirror-theme-okaidia';
-import { bbedit } from '@uiw/codemirror-theme-bbedit';
-import { basic } from '@uiw/codemirror-theme-basic';
-import { gruvboxDark, gruvboxLight } from '@uiw/codemirror-theme-gruvbox-dark';
 
 //tone
-import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns,
-        Rumble, Daisies, DatoDuo, ESPSynth, Polyphony, Stripe, Diffuseur, KP, Sympathy,
-        Kick, DrumSampler, Cymbal } from './synths/index.js';
+import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns, AnalogDelay,
+        Rumble, Daisies, DatoDuo, ESPSynth, Polyphony, Stripe, Diffuseur, KP, Sympathy, Kick, DrumSampler, Snare, Cymbal} from './synths/index.js';
 import { drumPatterns } from './lib/drumPatterns.js';
 import {Sequencer} from './Sequencer.js';
 import {MultiVCO} from './MultiVCO.js'
@@ -22,7 +17,7 @@ import * as Theory from './Theory.js';
 import Canvas from "./Canvas.js";
 import { Oscilloscope, Spectroscope, PlotTransferFunction } from './oscilloscope';
 import * as waveshapers from './synths/waveshapers.js'
-
+import {stepper, expr} from  './Utilities.js'
 // Collab-Hub features
 import { CollabHubClient, CollabHubTracker, CollabHubDisplay } from './CollabHub.js';
 
@@ -35,6 +30,45 @@ const LZString = require('lz-string');
 
 //Save history in browser
 const stateFields = { history: historyField };
+
+// List of available themes
+const themeNames = ['gruvboxDark', 'gruvboxLight', 'okaidia', 'bbedit', 
+  'basicDark', 'basicDarkInit', 'basicLight', 'basicLightInit'];
+
+// Load the theme dynamically based on the theme name
+const loadTheme = async (themeName) => {
+  try {
+    let themeModule;
+    switch (themeName) {
+      case 'gruvboxDark':
+      case 'gruvboxLight':
+        themeModule = await import('@uiw/codemirror-theme-gruvbox-dark');
+        return themeName === 'gruvboxDark' ? themeModule.gruvboxDark : themeModule.gruvboxLight;
+      case 'okaidia':
+        themeModule = await import('@uiw/codemirror-theme-okaidia');
+        return themeModule.okaidia;
+      case 'bbedit':
+        themeModule = await import('@uiw/codemirror-theme-bbedit');
+        return themeModule.bbedit;
+      case 'basicDark':
+      case 'basicDarkInit':
+      case 'basicDarkStyle':
+      case 'basicLight':
+      case 'basicLightInit':
+      case 'basicLightStyle':
+      case 'defaultSettingsBasicDark':
+      case 'defaultSettingsBasicLight':
+        themeModule = await import('@uiw/codemirror-theme-basic');
+        return themeModule[themeName];
+      default:
+        throw new Error(`Theme ${themeName} not found`);
+    }
+  } catch (error) {
+    console.error(`Selected theme "${themeName}" does not exist. Try using a number like setTheme(2).`)
+    const fallbackModule = await import('@uiw/codemirror-theme-gruvbox-dark');
+    return fallbackModule.gruvboxDark; // Fallback theme
+  }
+};
 
 function Editor(props) {
     window.p5 = p5;
@@ -60,7 +94,7 @@ function Editor(props) {
     //asciiCallbackInstance.fileInput = fileInputRef.current;
     //asciiCallbackInstance.fileInput.addEventListener('change', asciiCallbackInstance.handleFileChange);
 
-    
+    //midi    
     window.setMidiInput = midi.setMidiInput;
     window.setNoteOnHandler = midi.midiHandlerInstance.setNoteOnHandler.bind(midi.midiHandlerInstance);
     window.setNoteOffHandler = midi.midiHandlerInstance.setNoteOffHandler.bind(midi.midiHandlerInstance);
@@ -74,6 +108,7 @@ function Editor(props) {
     window.ToneWood = ToneWood
     window.DelayOp = DelayOp
     window.Caverns = Caverns
+    window.AnalogDelay = AnalogDelay
     window.Rumble = Rumble
     window.Polyphony = Polyphony
     window.Daisies = Daisies
@@ -85,7 +120,12 @@ function Editor(props) {
     window.MultiVCO = MultiVCO
     window.Kick = Kick
     window.Cymbal = Cymbal
-    window.DrumSampler = DrumSampler
+    window.DrumSampler = DrumSampler   
+    window.Snare = Snare;
+
+    //utilities
+    window.stepper = stepper
+    window.expr = expr
 
     // lib
     window.drumPatterns = drumPatterns;
@@ -99,8 +139,16 @@ function Editor(props) {
     function urlDecode() {
         const URLParams = new URLSearchParams(window.location.search);
         const compressedCode = URLParams.get('code');
-        const encodedContent =  LZString.decompressFromEncodedURIComponent(compressedCode);
+        let encodedContent =  LZString.decompressFromEncodedURIComponent(compressedCode)
         if (encodedContent) {
+            console.log(encodedContent)
+            // encodedContent = encodedContent
+            //     .replace(/-/g, '+')
+            //     .replace(/_/g, '/');
+            // // Adding the padding to the encoding
+            // while (encodedContent.length % 4 !== 0) {
+            //     encodedContent += '=';
+            // }
             localStorage.setItem(`${props.page}Value`, encodedContent);
             const url = window.location.origin + window.location.pathname;
             window.location.assign(url);
@@ -108,6 +156,7 @@ function Editor(props) {
     }
 
     urlDecode();
+    //console.log('test')
     const value = localStorage.getItem(`${props.page}Value`) || props.starterCode;
     
 
@@ -124,6 +173,20 @@ function Editor(props) {
     const [p5Minimized, setP5Minimized] = useState(false);
     const [maximized, setMaximized] = useState('');
 
+    /****** HANDLE THEMES ************/
+
+    const [themeDef, setThemeDef] = useState(); // Default theme
+
+    const setTheme = async (themeName) => {
+        if( typeof themeName === 'number') themeName = themeNames[themeName%themeNames.length]
+        const selectedTheme = await loadTheme(themeName);
+        console.log(`Current codebox theme: ${themeName}. \nChange theme with setTheme(number or string)`)
+        setThemeDef(selectedTheme);     
+    };
+
+    window.setTheme = setTheme
+    /******************/
+
     useEffect(() => {
         // collab-hub socket instance
         window.chClient = new CollabHubClient(); // needs to happen once (!)
@@ -136,7 +199,11 @@ function Editor(props) {
         if (container) {
             setHeight(`${container.clientHeight}px`);
         }
+        loadTheme('gruvboxDark').then((loadedTheme) => {
+      setTheme('gruvboxDark');
+    });
     }, []);
+
 
     function removeComments() {
         // Regular expression to match single-line and multi-line comments
@@ -158,6 +225,15 @@ function Editor(props) {
         let innerVars = [];
         let p5Code = "";
 
+
+        // Match p5{...} blocks and extract the content
+        const p5BlockRegex = /p5\s*{([^}]*)}/g;
+        let match;
+        while ((match = p5BlockRegex.exec(string)) !== null) {
+            p5Code += match[1] + "\n";
+            string = string.replace(match[0], ""); // Remove the p5{...} block from the string
+        }
+
         try {
             ast = acorn.parse(string, { ecmaVersion: 'latest' });
         } catch (error) {
@@ -175,6 +251,7 @@ function Editor(props) {
 
         //Take action when we see a VariableDeclaration Node
         const visitors = {
+            
             VariableDeclaration(node, state, c) {
                 //remove kind (let/var/const)
                 //console.log('1',string)
@@ -231,6 +308,7 @@ function Editor(props) {
             },
 
             FunctionDeclaration(node, state, c) {
+                //console.log('func', string)
                 let name = node.id.name;
                 let start = node.start + incr;
                 let end = node.id.end + incr;
@@ -247,6 +325,7 @@ function Editor(props) {
             },
 
             ClassDeclaration(node, state, c) {
+                //console.log('class', string)
                 let name = node.id.name;
                 let start = node.start + incr;
                 let end = node.id.end + incr;
@@ -263,6 +342,7 @@ function Editor(props) {
             },
 
             ForStatement(node, state, c) {
+                //console.log('for', string)
                 let newState = {
                     innerScope: true,
                     forLoop: true
@@ -310,9 +390,13 @@ function Editor(props) {
 
     function evaluate(string, p5Code) {
         try {
-            //console.log('eval', string, 'p5', p5Code)
+            //console.log('eval', string, 'p5Define', p5DefineCode, 'p5Draw', p5DrawCode);
             eval(string);
-            //eval(p5Code);
+            if (typeof window.gui !== 'undefined') {
+                if( p5Code.length > 2) window.gui.p5Code = p5Code;
+            } else {
+                console.log(`Warning: p5 instance 'gui' does not exist.`);
+            }
         } catch (error) {
             console.log("Error Evaluating Code", error);
         }
@@ -424,7 +508,7 @@ function Editor(props) {
         }
     }
 
-
+    //CODEMIRROR HANDLERS
     //save history in browser and update code value
     const handleCodeChange = (value, viewUpdate) => {
         if (refresh) {
@@ -458,6 +542,7 @@ function Editor(props) {
         curLineNum = data.line.number;
     }
 
+    //GUI HANDLERS
     //Handle Mode Changes + Play & Stop
     const playClicked = () => {
         stopClicked();
@@ -524,9 +609,12 @@ function Editor(props) {
 
     function exportAsLink(code) {
         const liveCode = localStorage.getItem(`${props.page}Value`);
-        const compressedCode = LZString.compressToEncodedURIComponent(liveCode);
-
-        const url = `${window.location.origin}${window.location.pathname}?code=${compressedCode}`;
+        const compressedCode = LZString.compressToEncodedURIComponent(liveCode)
+        // .replace(/\+/g, '-')
+        // .replace(/\//g, '_')
+        // .replace(/=+$/, ''); // Removes padding
+        const url = `https://ianhattwick.com/m080/?code=${compressedCode}`;
+        //const url = `http://localhost:3000/m080/?code=${compressedCode}`;
         navigator.clipboard.writeText(url);
         console.log('URL copied to clipboard');
     }
@@ -664,7 +752,7 @@ function Editor(props) {
                                 options={{
                                     mode: 'javascript',
                                 }}
-                                theme={gruvboxDark}
+                                theme={themeDef}
                                 extensions={[javascript({ jsx: true })]}
                                 onChange={handleCodeChange}
                                 onKeyDown={handleKeyDown}

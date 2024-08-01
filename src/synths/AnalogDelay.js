@@ -1,44 +1,56 @@
-/*
-Caverns
-
-Cascaded Delays
-* input-> all DelayOps -> output
-* delays are cascaded to all following delays
-* DelayOp: input->hpf->feedbackDelay->drive->waveShaper->lpf->output
-
-methods:
-- connect
-- setDelayTime
-- setFeedback: sets internal fb & feedforward to following delays
-- setLowpass
-- setHighpass
-- setDrive: input into soft clipper in delayOp
-- setPanning: uses sine wave by default
-
-properties:
-- 
-*/
+/**
+ * AnalogDelay.js
+ * 
+ * Simple approximation of an analog delay
+ * 
+ * Signal path:
+ * input -> hpf -> gain -> waveShaper -> lpf -> delay -> wet -> output
+ *                                         -> feedback -> hpf
+ * input -> dry -> output
+ * 
+ * @class
+ */
 import p5 from 'p5';
 import * as Tone from 'tone';
 import { DelayOp } from './DelayOp.js';
 
-export class Caverns{
-  constructor(color = [200,200,200]){
-      this.input = new Tone.Multiply(1)
-      this.delay = []
-      for(let i=0;i<8;i++) this.delay.push(new DelayOp())
-      this.cross = []
-      for(let i=0;i<8;i++) this.cross.push(new Tone.Multiply())
-      this.output = new Tone.Multiply(0.125)
-      //connections
-      for(let i=0;i<8;i++) {
-        this.input.connect(this.delay[i].input)
-        this.delay[i].connect(this.output)
-        for(let j=i+1;j<8;j++) this.delay[i].connect(this.cross[j])
-        //this.delay[i].connect(this.cross[i])
-        this.cross[i].connect(this.delay[i].input)
-      }
+export class AnalogDelay {
+  /**
+   * Creates an instance of AnalogDelay.
+   * @constructor
+   * @param {number} [initialTime=0.1] - Initial delay time in seconds.
+   * @param {number} [initialFB=0] - Initial feedback amount.
+   */
+  constructor(initialTime = 0.1, initialFB = 0) {
+    this.input = new Tone.Multiply(1);
+    this.hpf = new Tone.Filter({ type: 'highpass', frequency: 20, Q: 0 });
+    this.gain = new Tone.Multiply(0.1);
+    this.waveShaper = new Tone.WaveShaper((x) => { return x });
+    this.lpf = new Tone.Filter({ type: 'lowpass', frequency: 5000, Q: 0, slope: '-24' });
+    this.delay = new Tone.Delay(initialTime);
+    this.feedback = new Tone.Multiply(initialFB);
+    this.wet = new Tone.Multiply(10);
+    this.dry = new Tone.Multiply(1);
+    this.output = new Tone.Multiply(1);
+
+    // Connecting signal path
+    this.input.connect(this.dry);
+    this.input.connect(this.hpf);
+    this.hpf.connect(this.lpf);
+    this.lpf.connect(this.gain);
+    this.gain.connect(this.waveShaper);
+    this.waveShaper.connect(this.delay);
+    this.delay.connect(this.feedback);
+    this.feedback.connect(this.hpf);
+    this.delay.connect(this.wet);
+    this.wet.connect(this.output);
+    this.dry.connect(this.output);
   }
+
+  /**
+   * Connect the output to a destination.
+   * @param {Tone.Signal | AudioNode} destination - The destination to connect to.
+   */
   connect(destination) {
     if (destination.input) {
       this.output.connect(destination.input);
@@ -46,40 +58,16 @@ export class Caverns{
       this.output.connect(destination);
     }
   }
-  setDelayTime = function(val){
-    for(let i=0;i<8;i++) this.delay[i].delayTime.value = val*(1.25**i)
-  }
-  setFeedback = function(val){
-    for(let i=0;i<8;i++) {
-      this.delay[i].delay.feedback.value = val
-      //this.cross[i].factor.value = val
-    }
-  }
-  setCross = function(val){
-    for(let i=0;i<8;i++) {
-      //this.delay[i].delay.feedback.value = val
-      this.cross[i].factor.value = val
-    }
-  }
-  setLowpass = function(val){
-    for(let i=0;i<8;i++) {
-      this.delay[i].lpf.frequency.value = val
-    }
-  }
-  setHighpass = function(val){
-    for(let i=0;i<8;i++) {
-      this.delay[i].hpf.frequency = val
-    }
-  }
-  setDrive = function(val){
-    for(let i=0;i<8;i++) {
-      this.delay[i].drive.factor.value = val
-    }
-  }
-  setPanning = function(val){
-    for(let i=0;i<8;i++) {
-      this.delay[i].panner.pan.rampTo( Math.sin(i*val),.1)
+
+  /**
+   * Disconnect the output from a destination.
+   * @param {Tone.Signal | AudioNode} destination - The destination to disconnect from.
+   */
+  disconnect(destination) {
+    if (destination.input) {
+      this.output.disconnect(destination.input);
+    } else {
+      this.output.disconnect(destination);
     }
   }
 }
-

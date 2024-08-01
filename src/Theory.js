@@ -59,18 +59,9 @@ const voicings = {
 
 const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const noteToInterval = {
-  'C': 0, 'B#': 0,
-  'C#': 1, 'Db': 1,
-  'D': 2,
-  'D#': 3, 'Eb': 3,
-  'E': 4, 'Fb': 4,
-  'E#': 5, 'F': 5,
-  'F#': 6, 'Gb': 6,
-  'G': 7,
-  'G#': 8, 'Ab': 8,
-  'A': 9,
-  'A#': 10, 'Bb': 10,
-  'B': 11, 'Cb': 11,
+  'C': 0, 'B#': 0, 'C#': 1, 'Db': 1,'D': 2, 'E': 4, 'Fb': 4,
+  'E#': 5, 'F': 5,'F#': 6, 'Gb': 6, 'G': 7,'G#': 8, 'Ab': 8,'A': 9,
+  'A#': 10, 'Bb': 10, 'B': 11, 'Cb': 11,
   };
 
 export const chordIntervals = {
@@ -90,6 +81,7 @@ export const chordScales = {
   "minor": [0, 2, 3, 5, 7, 8, 10], //aeolian
   "lydianDominant": [0, 2, 4, 6, 7, 9, 10], //lydian dominant?
   "mixolydian": [0,2,4,5,7,9,10], //for V7
+  "phrygianDominant": [0,1,4,5,7,8,10], //for minor V7
   "minor7": [0, 2, 3, 5, 7, 9, 10], //dorian
   "major7": [0, 2, 4, 5, 7, 9, 11],
   "minorMaj7": [0, 2, 3, 5, 7, 9, 11], //melodic minor
@@ -138,6 +130,7 @@ export function setProgression(val){
       if(val[i] !== ''){ //remove empty strings
         const romanNumeral = chord.match(/[iIvVb#]+/)[0];
         const quality = getChordType(chord);
+        console.log(quality)
         if( typeof MajorScaleDegrees[romanNumeral] !== "number") error = i
         if( chordScales[quality].constructor !== Array) error = i
         if( error < 0 ) newProgression.push(chord)
@@ -157,7 +150,7 @@ export function setProgression(val){
   //console.log(progression)
 }
 
-export function getCurChord(index){
+export function getChord(index){
   index = index % (pulsePerChord * progression.length)
   return progressionChords[Math.floor( index/pulsePerChord )]
 }
@@ -194,50 +187,50 @@ export function setTonic(val) {
 
 //takes a roman number chord and returns an array of intervals
 //interval array is based on key and current octave
-export function getChord(name,  lowNote = null, _voicing = null){
-  //get the type of chord based on chord name
-  const type = getChordType(name);
-  const scale = chordScales[type];
-  //console.log(type,scale,progression)
+// export function getChordTones(name,  lowNote = null, _voicing = null){
+//   //get the type of chord based on chord name
+//   const type = getChordType(name);
+//   const scale = chordScales[type];
+//   //console.log(type,scale,progression)
 
-  if(_voicing == null) _voicing = voicing
-  //parse chord name
-  const romanNumeralMatch = name.match(/[iIvVb#]+/);
-  const suffix = name.replace(/[iIvVb#]+/, '');
+//   if(_voicing == null) _voicing = voicing
+//   //parse chord name
+//   const romanNumeralMatch = name.match(/[iIvVb#]+/);
+//   const suffix = name.replace(/[iIvVb#]+/, '');
 
-  //error case
-  const romanNumeral = romanNumeralMatch[0];
-  //set keyType
-  if (!romanNumeralMatch) romanNumeral = keyType == 'major' ? 'I' : 'i'
-  //console.log(romanNumeral, suffix, MajorScaleDegrees[romanNumeral])
+//   //error case
+//   const romanNumeral = romanNumeralMatch[0];
+//   //set keyType
+//   if (!romanNumeralMatch) romanNumeral = keyType == 'major' ? 'I' : 'i'
+//   //console.log(romanNumeral, suffix, MajorScaleDegrees[romanNumeral])
   
-  //get interval to chord root based on chord name
-  let degree = 0
-  if (keyType == 'major') {
-    degree =  MajorScaleDegrees[romanNumeral];
-    if(degree == undefined) degree = MinorScaleDegrees[romanNumeral];
-  }
-  else {
-    degree =  MinorScaleDegrees[romanNumeral];
-    if(degree == undefined) degree = MajorScaleDegrees[romanNumeral];
-  }
-  if(degree == undefined) degree = 0
+//   //get interval to chord root based on chord name
+//   let degree = 0
+//   if (keyType == 'major') {
+//     degree =  MajorScaleDegrees[romanNumeral];
+//     if(degree == undefined) degree = MinorScaleDegrees[romanNumeral];
+//   }
+//   else {
+//     degree =  MinorScaleDegrees[romanNumeral];
+//     if(degree == undefined) degree = MajorScaleDegrees[romanNumeral];
+//   }
+//   if(degree == undefined) degree = 0
 
-  // Adjust the chord tones based on the voicing type
-  let chord = applyVoicing(_voicing, scale);
-  //console.log(octave, degree, tonicNumber)
-  chord = chord.map(x=>x+octave*12+degree + tonicNumber)
+//   // Adjust the chord tones based on the voicing type
+//   let chord = applyVoicing(_voicing, scale);
+//   //console.log(octave, degree, tonicNumber)
+//   chord = chord.map(x=>x+octave*12+degree + tonicNumber)
 
-  // Adjust the chord tones to be as close as possible to the previous chord
-  if (previousChord.length > 0) {
-    if(lowNote){ previousChord[0] = lowNote}
-    chord = minimizeMovement(chord, previousChord);
-  }
-  //console.log("post", chord, lowNote)
-  previousChord = chord;
-  return chord
+//   // Adjust the chord tones to be as close as possible to the previous chord
+//   if (previousChord.length > 0) {
+//     if(lowNote){ previousChord[0] = lowNote}
+//     chord = minimizeMovement(chord, previousChord);
+//   }
+//   //console.log("post", chord, lowNote)
+//   previousChord = chord;
+//   return chord
 
-}
+// }
 
 export function rotateVoicing(steps){
   const len = previousChord.length
@@ -259,16 +252,68 @@ function getChordType(name) {
   let majorMinor = name.match(/[iIvV]+/)[0];
   if(!majorMinor) majorMinor = 'I'
 
-  if (suffix.includes('dim'))  return 'diminished';
-  else if (suffix.includes('7b5'))  return 'locrian';
-  else if (suffix.includes('Maj7')) return majorMinor === majorMinor.toUpperCase() ? 'major7' : 'minorMaj7';
-  else if (suffix.includes('7')) return majorMinor === majorMinor.toUpperCase() ? 'mixolydian' : 'minor7';
-  else if (suffix.includes('2')) return 'major9';
+  const defaultMode = getDefaultMode(majorMinor, keyType)
 
+    //look for a specific scale defined in suffix
+  for (const key of Object.keys(chordScales)) {
+    if (suffix.toLowerCase().includes(key.toLowerCase())) {
+      return key;
+    }
+  }
+  //look for special cases
+  if (suffix.includes('dim'))  return 'diminished';
+  if (suffix.includes('m6'))  return 'dorian';
+  if (suffix.includes('min6'))  return 'dorian';
+  if (suffix.includes('m13'))  return 'dorian';
+  if (suffix.includes('min13'))  return 'dorian';
+  if (suffix.includes('m7b9'))  return 'phrygian';
+  if (suffix.includes('7b9'))  return 'phrygianDominant';
+  if (suffix.includes('Maj7#11'))  return 'lydian';
+  if (suffix.includes('m7b5'))  return 'locrian';
+  if (suffix.includes('7b5'))  return 'lydianDominant';
+  if (suffix.includes('Maj7')) {
+    const isMajor = majorMinor === majorMinor.toUpperCase() 
+    if(defaultMode === 'lydian') return defaultMode
+    return isMajor === true ? 'major7' : 'minorMaj7'
+  }
+  if (suffix.includes('7')) {
+    if(defaultMode !== 'none') return defaultMode
+    else return majorMinor === majorMinor.toUpperCase() ? 'mixolydian' : 'minor7'; 
+  }
+  if (suffix.includes('2')) return 'major9';
+
+  if( defaultMode !== 'none') return defaultMode
   return majorMinor === majorMinor.toUpperCase() ? 'major' : 'minor';
 }
 
-function applyVoicing(_voicing,scale) {
+function getDefaultMode(numeral, key){
+  if (key === 'major'){
+    switch(numeral){
+    case 'I': return 'major'
+    case 'ii': return 'dorian'
+    case 'iii': return 'phrygian'
+    case 'IV': return 'lydian'
+    case 'V': return 'mixolydian'
+    case 'vi': return 'minor'
+    case 'vii': return 'locrian'
+    }
+  }
+  if (key === 'minor'){
+    switch(numeral){
+    case 'i': return 'minor'
+    case 'ii': return 'locrian'
+    case 'III': return 'major'
+    case 'iv': return 'dorian'
+    case 'v': return 'locrian'
+    case 'V': return 'phrygianDominant'
+    case 'VI': return 'lydian'
+    case 'VII': return 'mixolydian'
+    }
+  }
+  return 'none'
+}
+
+function applyVoicing(name, _voicing,scale) {
   //console.log(_voicing, scale)
   // Apply different voicings (closed, drop2, drop3, etc.)
   let cVoicing = voicings[_voicing]
@@ -330,22 +375,36 @@ export class Chord {
     this.length = this.chordTones.length
   }
 
+  interval(num, min = 48, max = null){
+    if(max === null) max = min + 12
+    return this.getInterval(num,min,max)
+  }
+
   getInterval(num, min = 0, max = 127){ 
     num = getInterval(num, this.scale) + this.root + this.octave*12 
     if(num<min) {
       const count = Math.floor((min-num)/12)+1
       for(let i=0;i<count;i++)num += 12
-        console.log('min', count)
+        //console.log('min', count)
     }
     else if(num>max) {
       const count = Math.floor((num-max)/12)+1
       for(let i=0;i<count;i++)num -= 12
-        console.log('max', count)
+        //console.log('max', count)
     }
     return num
   }
 
-  getChordTones(lowNote) {
+  root(lowNote = 36){
+    return this.root + lowNote
+  }
+
+  tones(lowNote = 48){
+    return this.getChordTones(lowNote)
+  }
+
+  getChordTones(lowNote=48, highNote = null) {
+    if(highNote === null) highNote  = lowNote + 12
     const chordTones = this.getChord(this.name, lowNote, this.voicing)
     //console.log(chordTones)
     return chordTones;
@@ -365,7 +424,18 @@ export class Chord {
     if(_voicing == null) _voicing = voicing
 
     // Adjust the chord tones based on the voicing type
-    let chord = applyVoicing(_voicing, this.scale);
+    //let chord = applyVoicing(name, _voicing, this.scale);
+
+    let chord = [this.scale[0], this.scale[2], this.scale[4]];
+
+    //check for numeric extensions
+    const regex = /\d/;
+    if( regex.test(name) && this.scale.length >= 7 ) {
+      const match = name.match(/\d+/); // Match one or more digits
+      if (match) {
+        chord.push( this.scale [parseInt(match[0], 10)%7]); // Convert the matched string to a number
+      }
+    }
     //console.log(octave, this.scale, tonicNumber)
     chord = chord.map(x=> x+ this.octave*12 + this.root + tonicNumber)
     //console.log(chord)

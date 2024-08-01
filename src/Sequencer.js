@@ -5,7 +5,7 @@ export class Sequencer{
     this.gui = null
     this.subdivision = subdivision
     this.control = control
-    this.callback = this.callback = function(i,time){
+    this.callback = this.callback = function(){
       console.log('To set custom callback: this.callback = (your function here)')
     }
     this.setCallback(this.control)
@@ -20,6 +20,7 @@ export class Sequencer{
     this.timeGrain = this.beatsPerBar * this.subdivisionsPerBeat
     this.env = new Tone.Envelope()
     this.loop =  new Tone.Loop((time) => {
+       this.callback(time)
   //
       //Index calculations
         //console.log(Tone.Transport.position)
@@ -40,31 +41,34 @@ export class Sequencer{
         
         //console.log(this.values_index)
     //
-        if (this.enables.length === 0){
+        if (this.enables.length == 0){
           this.val = this.values[this.values_index]
-          //console.log(this.val)
+          console.log(this.val)
         }
 
-      else if (this.enable[this.enable_index]){
-        //console.log(this.values[this.values_index])
-        this.val = this.values[this.values_index]
-        console.log(this.val)
-        
-      }
-      else {
-        console.log(0)
-        this.val = 0
-      }
-      this.updateGui()
+        else if (this.enables[this.enables_index]){
+          //console.log(this.values[this.values_index])
+          this.val = this.values[this.values_index]
+          console.log(this.val)
+          
+        }
+        else {
+          console.log(0)
+          this.val = 0
+        }
 
+       if(this.interface !== undefined){
+        this.interface.updateGui(this.values_index, this.enables_index)
+
+      }
                 
     //
     }, this.subdivision);
   //console.log("sequencer ready")
-}
+  }
   setGui(name, gui){
-    if(name === 'stepSequence') {this.interface = new stepSequence(this,gui)}
-    else if (name === 'circularSequence') {this.interface = new circularSequence(this, gui)}
+    if(name === "stepSequence") this.interface = new stepSequence(this,gui)
+    else if (name === "circularSequence") this.interface = new circularSequence(this, gui)
   }
 
 
@@ -85,7 +89,7 @@ export class Sequencer{
 
     else if (control.name === 'Synth'){
       //console.log(true)
-      this.callback = function(i, time){
+      this.callback = function(time){
         if (this.val) {
           //console.log(this.control)
           //console.log(this.val)
@@ -134,7 +138,9 @@ export class Sequencer{
     }
   }
 } 
-
+// so the idea is make methods that check to see if you should execute a sequence for midi, delay, cutoff
+// frequencies, scale degrees, etc., and return a true or false value. Given that true or false the loop
+// should execute different things. So the midi method should be
 
 
 class stepSequence{

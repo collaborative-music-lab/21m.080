@@ -40,7 +40,7 @@ export class Sequencer{
       
       //console.log(this.values_index)
   //
-      if (this.enable.length = 0){
+      if (this.enable.length == 0){
         this.val = this.values[this.values_index]
         console.log(this.val)
       }
@@ -56,7 +56,7 @@ export class Sequencer{
         this.val = 0
       }
       this.updateGui()
-      
+      this.setCallback()
       this.callback()
 
       

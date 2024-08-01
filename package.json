@@ -1,5 +1,5 @@
 {
-  "name": "codemirror2",
+  "name": "m080",
   "version": "0.1.0",
   "private": true,
   "homepage": "https://ianhattwick.com/m080",
@@ -37,7 +37,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "generate-docs": "node_modules/.bin/jsdoc --configure .jsdoc.json --verbose"
   },
   "eslintConfig": {
     "extends": [
@@ -60,7 +61,10 @@
   "devDependencies": {
     "@babel/generator": "^7.22.9",
     "@babel/parser": "^7.22.7",
-    "@babel/plugin-proposal-private-property-in-object": "^7.18.6"
+    "@babel/plugin-proposal-private-property-in-object": "^7.18.6",
+    "jsdoc": "^4.0.3",
+    "minami": "^1.2.3",
+    "taffydb": "^2.7.3"
   },
   "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
   "main": "index.js",

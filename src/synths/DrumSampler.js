@@ -21,7 +21,7 @@
 import * as Tone from 'tone';
 import { DrumTemplate } from './DrumTemplate';
 import DrumSamplerPresets from './synthPresets/DrumSamplerPresets.json';
-
+import {parseStringSequence, parseStringBeat} from '../Theory'
 
 export class DrumSampler extends DrumTemplate{
   constructor(kit = "acoustic", gui=null) {
@@ -82,6 +82,7 @@ export class DrumSampler extends DrumTemplate{
             this.loadPreset('default');
         }
   }//constructor
+  loadKit(kit){ this.loadSamples(kit)}
   loadSamples(kit){
     this.kit = kit
     this.drumFolders = {
@@ -146,7 +147,6 @@ export class DrumSampler extends DrumTemplate{
   }
   
   sequence(arr, subdivision) {
-    arr = arr.replace(/\s/g, ""); // Remove all whitespace
 
     // Initialize arrays for each drum voice
     if (subdivision) this.subdivision = subdivision;
@@ -164,21 +164,9 @@ export class DrumSampler extends DrumTemplate{
         "tom3": [],
         "openHat": []
     };
-    this.seq.original = arr
-    //replace the expression  *@4 with ****
-    this.seq.original = this.seq.original.replace(/(.)@(\d+)/g, (match, p1, p2) => {
-        // p1 is the character before the @
-        // p2 is the number after the @, so repeat p1 p2 times
-        return p1.repeat(Number(p2));
-    });
+    this.seq.original = parseStringSequence(arr)
 
-    //split original string into an array of strings
-    //items within [] are one entry of the array
-    const regex = /\[.*?\]|./g;
-    this.seq.original.match(regex);
-    this.seq.original = this.seq.original.match(regex);
-
-    //console.log(this.seq.original)
+    console.log(this.seq.original)
 
     // Create a Tone.Loop
     if (this.loop.state === "stopped") {
@@ -187,24 +175,33 @@ export class DrumSampler extends DrumTemplate{
 
             let curBeat = this.seq.original[this.index%this.seq.original.length];
 
-            //handle when a beat contains more than one element
-            if (curBeat.length>1) {
-              if (curBeat.charAt(0) === '[' && curBeat.charAt(curBeat.length - 1) === ']') {
-              // Remove the brackets and split by the comma
-                curBeat =curBeat.slice(1, -1).split(',');
-              }
+            const event = parseStringBeat(curBeat, time)
+            console.log(event)
 
-            curBeat.forEach(arr => {
-                const length = arr.length;
-                for (let i = 0; i < length; i++) {
-                    const val = arr[i];
-                    //console.log(this.index%8, arr,val)
-                    this.triggerDrum(val, time + i * (Tone.Time(this.subdivision) / length));
-                }
-            });
-          } else { //for beats with only one element
-              this.triggerDrum(curBeat, time);
-          }
+            for (const val of event) {
+              //console.log(val[0], val[1])
+              this.triggerDrum(val[0], time + val[1] * (Tone.Time(this.subdivision)));
+            }
+
+            //this.triggerDrum(val, time + i * (Tone.Time(this.subdivision) / length));
+          //   //handle when a beat contains more than one element
+          //   if (curBeat.length>1) {
+          //     if (curBeat.charAt(0) === '[' && curBeat.charAt(curBeat.length - 1) === ']') {
+          //     // Remove the brackets and split by the comma
+          //       curBeat =curBeat.slice(1, -1).split(',');
+          //     }
+
+          //   curBeat.forEach(arr => {
+          //       const length = arr.length;
+          //       for (let i = 0; i < length; i++) {
+          //           const val = arr[i];
+          //           //console.log(this.index%8, arr,val)
+          //           this.triggerDrum(val, time + i * (Tone.Time(this.subdivision) / length));
+          //       }
+          //   });
+          // } else { //for beats with only one element
+          //     this.triggerDrum(curBeat, time);
+          // }
         }, this.subdivision).start(0);
 
         // Start the Transport
@@ -243,6 +240,7 @@ export class DrumSampler extends DrumTemplate{
     voice.start( time )
   }
 
+  start(){ this.loop.start()}
   stop(){ this.loop.stop()}
 
   //drawBeat does'nt really work but is an attempt to draw the 

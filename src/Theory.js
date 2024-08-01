@@ -38,6 +38,7 @@ getChordRoot(name): returns midi note of root %12
 getInterval(num,scale): returns MIDI note number of scale degree (from 0)
 
 */
+import * as Tone from 'tone';
 
 let tonic = 'C';
 let tonicNumber = 0; //midi note of tonic, 0-11
@@ -512,4 +513,61 @@ function getInterval(num,scale){
     return num
   }
   return 0
+}
+
+
+
+/************************************
+ * String parsing functions
+ * ************************************/
+/** parseStringSequence
+ * 
+ * takes an input string and:
+ * - replaces groups like *@4 with ****
+ * - splits the string into an array of strings, one string per beat
+ * - preserves characters inside [] inside one beat
+ */
+export function parseStringSequence(str){
+    str = str.replace(/\s/g, ""); // Remove all whitespace
+
+    //replace the expression  *@4 with ****
+    str = str.replace(/(.)@(\d+)/g, (match, p1, p2) => {
+        // p1 is the character before the @
+        // p2 is the number after the @, so repeat p1 p2 times
+        return p1.repeat(Number(p2));
+    });
+
+    //split original string into an array of strings
+    //items within [] are one entry of the array
+    const regex = /\[.*?\]|./g;
+    str.match(regex);
+    str = str.match(regex);
+
+    return str
+}
+
+export function parseStringBeat(curBeat, time){
+  let outArr = []
+  //handle when a beat contains more than one element
+      if (curBeat.length>1) {
+        if (curBeat.charAt(0) === '[' && curBeat.charAt(curBeat.length - 1) === ']') {
+        // Remove the brackets and split by the comma
+          curBeat =curBeat.slice(1, -1).split(',');
+        }
+      curBeat.forEach(arr => {
+          const length = arr.length;
+          for (let i = 0; i < length; i++) {
+              const val = arr[i];
+              outArr.push([val,i/length])
+              console.log('out', outArr)
+              //console.log(this.index%8, arr,val)
+              //return [val, i]
+              //callback(val, time + i * (Tone.Time(subdiv) / length));
+          }
+      });
+    } else { //for beats with only one element
+      outArr.push([curBeat, 0])
+        //callback(curBeat, time);
+    }
+    return  outArr 
 }

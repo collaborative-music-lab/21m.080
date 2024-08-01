@@ -21,7 +21,7 @@
 import * as Tone from 'tone';
 import { DrumTemplate } from './DrumTemplate';
 import DrumSamplerPresets from './synthPresets/DrumSamplerPresets.json';
-
+import {parseStringSequence, parseStringBeat} from '../Theory'
 
 export class DrumSampler extends DrumTemplate{
   constructor(kit = "acoustic", gui=null) {
@@ -82,6 +82,8 @@ export class DrumSampler extends DrumTemplate{
             this.loadPreset('default');
         }
   }//constructor
+
+  loadKit(kit){ this.loadSamples(kit)}
   loadSamples(kit){
     this.kit = kit
     this.drumFolders = {
@@ -126,6 +128,7 @@ export class DrumSampler extends DrumTemplate{
     this.tom2.load( this.baseUrl.concat("/tom2.mp3") )
     this.tom3.load( this.baseUrl.concat("/tom3.mp3") )
   }
+
   //
   trigger(voice, vel, time) {
     if (this.kick.loaded) {
@@ -146,7 +149,6 @@ export class DrumSampler extends DrumTemplate{
   }
   
   sequence(arr, subdivision) {
-    arr = arr.replace(/\s/g, ""); // Remove all whitespace
 
     // Initialize arrays for each drum voice
     if (subdivision) this.subdivision = subdivision;
@@ -164,21 +166,9 @@ export class DrumSampler extends DrumTemplate{
         "tom3": [],
         "openHat": []
     };
-    this.seq.original = arr
-    //replace the expression  *@4 with ****
-    this.seq.original = this.seq.original.replace(/(.)@(\d+)/g, (match, p1, p2) => {
-        // p1 is the character before the @
-        // p2 is the number after the @, so repeat p1 p2 times
-        return p1.repeat(Number(p2));
-    });
+    this.seq.original = parseStringSequence(arr)
 
-    //split original string into an array of strings
-    //items within [] are one entry of the array
-    const regex = /\[.*?\]|./g;
-    this.seq.original.match(regex);
-    this.seq.original = this.seq.original.match(regex);
-
-    //console.log(this.seq.original)
+    console.log(this.seq.original)
 
     // Create a Tone.Loop
     if (this.loop.state === "stopped") {
@@ -187,24 +177,33 @@ export class DrumSampler extends DrumTemplate{
 
             let curBeat = this.seq.original[this.index%this.seq.original.length];
 
-            //handle when a beat contains more than one element
-            if (curBeat.length>1) {
-              if (curBeat.charAt(0) === '[' && curBeat.charAt(curBeat.length - 1) === ']') {
-              // Remove the brackets and split by the comma
-                curBeat =curBeat.slice(1, -1).split(',');
-              }
+            const event = parseStringBeat(curBeat, time)
+            console.log(event)
 
-            curBeat.forEach(arr => {
-                const length = arr.length;
-                for (let i = 0; i < length; i++) {
-                    const val = arr[i];
-                    //console.log(this.index%8, arr,val)
-                    this.triggerDrum(val, time + i * (Tone.Time(this.subdivision) / length));
-                }
-            });
-          } else { //for beats with only one element
-              this.triggerDrum(curBeat, time);
-          }
+            for (const val of event) {
+              //console.log(val[0], val[1])
+              this.triggerDrum(val[0], time + val[1] * (Tone.Time(this.subdivision)));
+            }
+
+            //this.triggerDrum(val, time + i * (Tone.Time(this.subdivision) / length));
+          //   //handle when a beat contains more than one element
+          //   if (curBeat.length>1) {
+          //     if (curBeat.charAt(0) === '[' && curBeat.charAt(curBeat.length - 1) === ']') {
+          //     // Remove the brackets and split by the comma
+          //       curBeat =curBeat.slice(1, -1).split(',');
+          //     }
+
+          //   curBeat.forEach(arr => {
+          //       const length = arr.length;
+          //       for (let i = 0; i < length; i++) {
+          //           const val = arr[i];
+          //           //console.log(this.index%8, arr,val)
+          //           this.triggerDrum(val, time + i * (Tone.Time(this.subdivision) / length));
+          //       }
+          //   });
+          // } else { //for beats with only one element
+          //     this.triggerDrum(curBeat, time);
+          // }
         }, this.subdivision).start(0);
 
         // Start the Transport
@@ -242,6 +241,127 @@ export class DrumSampler extends DrumTemplate{
     voice.volume.setValueAtTime( Tone.gainToDb(amplitude), time)
     voice.start( time )
   }
+
+
+  start(){ this.loop.start()}
+
+  // /**
+  //  * Sequences the drum voices based on the input string or object, subdivision, and the initial sequence.
+  //  * Rewrites the current sequence by default.
+  //  * @param {string|object} input Input string or object to append to the initial sequence of the drum voices.
+  //  * @param {string} subdivision Subdivision of the sequence.
+  //  * @param {object} init Initial sequence of the drum voices. Empty by default.
+  //  * @returns 
+  //  */
+  // sequence(input, subdivision, init={
+  //   "kick" : [],
+  //   "snare" : [],
+  //   "hihat" : [],
+  //   "tom1" : [],
+  //   "tom2" : [],
+  //   "tom3" : [],
+  //   "openHat" : []
+  // }) {
+  //   // Initialize arrays for each drum voice
+  //   this.seq = init
+  //   if(subdivision) this.subdivision = subdivision
+
+  //   // String input parsing
+  //   if (typeof input === "string") {
+  //     // Remove all spaces from the input string
+  //     let str_arr = input.replaceAll(" ","")
+
+  //     // Parse the input string
+  //     for (this.i=0; this.i<str_arr.length; this.i++) {
+  //       if(str_arr[this.i] === 'O') {this.seq['kick'].push(1)} else if(str_arr[this.i] === 'o') {this.seq['kick'].push(.5)} else this.seq['kick'].push(0)
+  //       if(str_arr[this.i] === 'X') {this.seq['snare'].push(1)}  else if(str_arr[this.i] === 'x') {this.seq['snare'].push(.5)} else this.seq['snare'].push(0)
+  //       if(str_arr[this.i] === '*') {this.seq['hihat'].push(1)} else this.seq['hihat'].push(0)
+  //       if(str_arr[this.i] === '1') {this.seq['tom1'].push(1)} else this.seq['tom1'].push(0)
+  //       if(str_arr[this.i] === '2') {this.seq['tom2'].push(1)} else this.seq['tom2'].push(0)
+  //       if(str_arr[this.i] === '3') {this.seq['tom3'].push(1)} else this.seq['tom3'].push(0)
+  //       if(str_arr[this.i] === '^') {this.seq['openHat'].push(1)} else this.seq['openHat'].push(0)
+  //     }
+  //   } else if (typeof input === "object") {
+  //     // Object input parsing
+      
+  //     // get the input length
+  //     let len = 0
+  //     for (const [name, arr] of Object.entries(input)) {
+  //       if (name in this.seq) {
+  //         len = arr.length
+  //         break;
+  //       }
+  //     }
+
+  //     // append the input to the sequence
+  //     for (const [name, arr] of Object.entries(this.seq)) {
+  //       if (name in input) {
+  //         this.seq[name].push.apply(arr, input[name]);
+  //       } else {
+  //         this.seq[name].push.apply(arr, Array(len).fill(0));
+  //       }
+  //     }
+  //   } else {
+  //     console.error("Invalid input type. Please provide a string or an object.")
+  //     return;
+  //   }
+    
+  //   // Create a Tone.Loop if stopped
+  //   if( this.loop.state === "stopped"){
+  //     this.loop = new Tone.Loop(time => {
+  //       this.index = Math.floor(Tone.Transport.ticks / Tone.Time(this.subdivision).toTicks());
+
+  //       // Iterate over the sequence and trigger the voices
+  //       for (const [name, arr] of Object.entries(this.seq)){
+  //         if (arr) {
+  //           const val = arr[this.index % arr.length]
+  //           if( name === "kick" && val > 0) this.triggerVoice( this.kick, val, time)
+  //           else if( name === "snare" && val > 0 ) this.triggerVoice( this.snare, val, time)
+  //           else if( name === "hihat"&& val > 0 ) this.triggerVoice( this.hihat, val, time)
+  //           else if( name === "tom1" && val > 0) this.triggerVoice( this.tom1, val, time)
+  //           else if( name === "tom2" && val > 0) this.triggerVoice( this.tom2, val, time)
+  //           else if( name === "tom3" && val > 0) this.triggerVoice( this.tom3, val, time)
+  //           else if( name === "openHat" && val > 0) this.triggerVoice( "openHat", val, time)
+  //         }
+  //       }
+  //     }, this.subdivision).start(0);
+
+  //     // Start the Transport
+  //     Tone.Transport.start();
+  //   }
+
+  //   console.log(this.seq)
+  // }
+
+  // /**
+  //  * Updates the current sequence with the input object. Doesn't rewrite the non-provided voices patterns.
+  //  * @param {object} input  Object input to update the current sequence.
+  //  * @returns 
+  //  */
+  // update(input) {
+  //   if (typeof input !== "object") {
+  //     console.error("Invalid input type. Can only update seq using objects.")
+  //     return;
+  //   }
+
+  //   let seq = this.seq
+  //   // update the sequence from input
+  //   for (const [name, arr] of Object.entries(input)) {
+  //     if (name in this.seq) {
+  //       seq[name] = arr
+  //     }
+  //   }
+  //   this.seq = seq
+  //   console.log(this.seq)
+  // }
+
+  // /**
+  //  * Appends the input to the current sequence
+  //  * @param {string|object} input Input string or object to append to the current sequence.
+  //  */
+  // append(input){
+  //   this.sequence(input, null, this.seq);
+  // }
 
   stop(){ this.loop.stop()}
 
@@ -359,6 +479,7 @@ export class DrumSampler extends DrumTemplate{
       this.output.connect(destination);
     }
   }
+
 	disconnect(destination) {
     if (destination.input) {
       this.output.disconnect(destination.input);

@@ -12,6 +12,7 @@ export { Stripe } from './Stripe.js';
 export { Diffuseur } from './Diffuseur.js';
 export { KP } from './KP.js';
 export { Kick } from './Kick.js';
+export { Cymbal } from './Cymbal.js';
 export { Sympathy } from './Sympathy.js';
 export { DrumSampler } from './DrumSampler.js';
 export { AnalogDelay } from './AnalogDelay.js';

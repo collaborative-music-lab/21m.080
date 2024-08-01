@@ -68,8 +68,8 @@ export class Sequencer{
   //console.log("sequencer ready")
   }
   setGui(name, gui){
-    if(name === "stepSequence") this.interface = new stepSequence(this,gui)
-    else if (name === "circularSequence") this.interface = new circularSequence(this, gui)
+    if(name === 'stepSequence') {this.interface = new stepSequence(this,gui)}
+    else if (name === 'circularSequence') {this.interface = new circularSequence(this, gui)}
   }
 
 
@@ -139,9 +139,7 @@ export class Sequencer{
     }
   }
 } 
-// so the idea is make methods that check to see if you should execute a sequence for midi, delay, cutoff
-// frequencies, scale degrees, etc., and return a true or false value. Given that true or false the loop
-// should execute different things. So the midi method should be
+
 
 
 class stepSequence{

@@ -388,7 +388,7 @@ function Editor(props) {
             //console.log('eval', string, 'p5Define', p5DefineCode, 'p5Draw', p5DrawCode);
             eval(string);
             if (typeof window.gui !== 'undefined') {
-                window.gui.p5Code = p5Code;
+                if( p5Code.length > 2) window.gui.p5Code = p5Code;
             } else {
                 console.log(`Warning: p5 instance 'gui' does not exist.`);
             }

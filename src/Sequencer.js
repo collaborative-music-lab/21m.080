@@ -57,12 +57,11 @@ export class Sequencer{
       }
       this.updateGui()
 
-      }
                 
     //
     }, this.subdivision);
   //console.log("sequencer ready")
-  }
+}
   setGui(name, gui){
     if(name === 'stepSequence') {this.interface = new stepSequence(this,gui)}
     else if (name === 'circularSequence') {this.interface = new circularSequence(this, gui)}

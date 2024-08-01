@@ -1205,6 +1205,108 @@ p5.prototype.Radio = function (options = {}) {
     return new RadioButton(this, options);
 };
 
+/**************************************** DROPDOWN MENU ******************************************/
+
+export class Dropdown extends Button {
+    constructor(p, options) {
+        super(p, options);
+        this.dropdownOptions = options.dropdownOptions || ['on', 'off'];
+        this.value = options.value || this.dropdownOptions[0]; // Default to the first dropdown option
+        this.isOpen = false; // Track whether the dropdown is open
+        this.cur_size = this.size || 30; // Increase the size for better readability
+        this.border = options.border || activeTheme.radioBorder || 2;
+        this.accentColor = options.accentColor || [200, 50, 0]; // Default accent color
+
+        // Send initial value to collab-hub if linked
+        if (this.linkName) { 
+            this.ch.control(this.linkName, this.value);
+        }
+        if (this.linkFunc) this.linkFunc();
+    }
+
+    draw() {
+        if (this.hide === true) return;
+
+        this.cur_x = (this.x / 100) * this.p.width;
+        this.cur_y = (this.y / 100) * this.p.height;
+
+        this.p.textSize(this.cur_size * 0.9); // Larger text size
+        let textWidth = this.p.textWidth(this.value);
+        this.boxWidth = Math.max(textWidth + 20, 100); // Ensure a minimum width for the dropdown
+        this.boxHeight = this.cur_size;
+
+        // Draw the main dropdown box
+        this.p.fill(255); // Background color
+        this.p.stroke(0); // Border color
+        this.p.strokeWeight(this.border);
+        this.p.rect(this.cur_x, this.cur_y, this.boxWidth, this.boxHeight);
+
+        this.drawText(this.value, this.cur_x + this.boxWidth / 2, this.cur_y + this.boxHeight / 2);
+
+        if (this.isOpen) {
+            for (let i = 0; i < this.dropdownOptions.length; i++) {
+                let option = this.dropdownOptions[i];
+                let y = this.cur_y + (i + 1) * (this.boxHeight + 2); // Increase spacing between options
+
+                if (this.value === option) {
+                    this.p.fill(this.accentColor); // Selected option background
+                } else {
+                    this.p.fill(200); // Unselected option background color (light grey)
+                }
+
+                this.p.stroke(0);
+                this.p.rect(this.cur_x, y, this.boxWidth, this.boxHeight);
+                this.p.fill(0); // Text color
+                this.drawText(option, this.cur_x + this.boxWidth / 2, y + this.boxHeight / 2);
+            }
+        }
+    }
+
+    isPressed() {
+        if (this.hide === true) return;
+
+        if (this.p.mouseX >= this.cur_x && this.p.mouseX <= this.cur_x + this.boxWidth &&
+            this.p.mouseY >= this.cur_y && this.p.mouseY <= this.cur_y + this.boxHeight) {
+            this.isOpen = !this.isOpen; // Toggle dropdown open/close state
+        } else if (this.isOpen) {
+            // Check if click is on one of the options
+            for (let i = 0; i < this.dropdownOptions.length; i++) {
+                let y = this.cur_y + (i + 1) * (this.boxHeight + 2); // Calculate the position of each option
+                if (this.p.mouseX >= this.cur_x && this.p.mouseX <= this.cur_x + this.boxWidth &&
+                    this.p.mouseY >= y && this.p.mouseY <= y + this.boxHeight) {
+                    this.value = this.dropdownOptions[i];
+                    this.isOpen = false;
+                    this.runCallBack();
+                    this.mapValue(this.value, this.mapto);
+                    if (this.maptoDefined === 'false') postButtonError('Dropdown');
+
+                    // Send updates to collab-hub if linked
+                    if (this.linkName) {
+                        this.ch.control(this.linkName, this.value);
+                    }
+                    if (this.linkFunc) this.linkFunc();
+                    return; // Exit after selecting an option
+                }
+            }
+
+            // Close dropdown if clicked outside
+            this.isOpen = false;
+        } else {
+            this.isOpen = false; // Close dropdown if clicked outside
+        }
+    }
+
+    isReleased() {
+        // Override to prevent calling the superclass method
+    }
+}
+
+p5.prototype.Dropdown = function (options = {}) {
+    return new Dropdown(this, options);
+};
+
+
+
 /**************************************** LINES ******************************************/
 export class Line extends Element {
     constructor(p, x1,y1,x2,y2, options) {

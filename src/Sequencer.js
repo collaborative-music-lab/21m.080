@@ -40,26 +40,22 @@ export class Sequencer{
         
         //console.log(this.values_index)
     //
-        if (this.enables.length == 0){
+        if (this.enables.length === 0){
           this.val = this.values[this.values_index]
           //console.log(this.val)
         }
 
-        else if (this.enables[this.enables_index]){
-          //console.log(this.values[this.values_index])
-          this.val = this.values[this.values_index]
-          //console.log(this.val)
-          
-        }
-        else {
-          //console.log(0)
-          this.val = 0
-        }
-
-        this.callback(this.values_index, time)
-
-       if(this.interface !== undefined){
-        this.interface.updateGui(this.values_index, this.enables_index)
+      else if (this.enable[this.enable_index]){
+        //console.log(this.values[this.values_index])
+        this.val = this.values[this.values_index]
+        console.log(this.val)
+        
+      }
+      else {
+        console.log(0)
+        this.val = 0
+      }
+      this.updateGui()
 
       }
                 

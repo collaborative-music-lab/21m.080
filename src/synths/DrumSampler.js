@@ -31,6 +31,7 @@ export class DrumSampler {
     this.hatDecay = .05
     this.loop = new Tone.Loop(time => {},this.subdivision)
   }//constructor
+
   loadSamples(kit){
     this.kit = kit
     this.drumFolders = {
@@ -75,6 +76,7 @@ export class DrumSampler {
     this.tom2.load( this.baseUrl.concat("/tom2.mp3") )
     this.tom3.load( this.baseUrl.concat("/tom3.mp3") )
   }
+
   //
   trigger(voice, vel, time) {
     if (this.kick.loaded) {
@@ -93,6 +95,7 @@ export class DrumSampler {
       console.error("Sampler is not loaded yet.");
     }
   }
+
   triggerVoice(voice, amplitude, time){
     if( voice == this.hihat) this.hatEnv.triggerAttackRelease(this.hatDecay,time)
     else if( voice === "openHat") {
@@ -103,53 +106,125 @@ export class DrumSampler {
   	voice.volume.value = Tone.gainToDb(amplitude)
     voice.start( time )
   }
-  sequence(arr, subdivision) {
-  	arr = arr.replace(" ","")
-    // Initialize arrays for each drum voice
-    if(subdivision) this.subdivision = subdivision
-    //this.loop.playbackRate = subdivision
-    //this.loop.stop()
-    this.seq = {
-      "kick" : [],
-      "snare" : [],
-      "hihat" : [],
-      "tom1" : [],
-      "tom2" : [],
-      "tom3" : [],
-      "openHat" : []
-    }
 
-    // // Parse the input string
-    for (this.i=0; this.i<arr.length; this.i++) {
-      if(arr[this.i] === 'O') {this.seq['kick'].push(1)} else if(arr[this.i] === 'o') {this.seq['kick'].push(.5)} else this.seq['kick'].push(0)
-      if(arr[this.i] === 'X') {this.seq['snare'].push(1)}  else if(arr[this.i] === 'x') {this.seq['snare'].push(.5)} else this.seq['snare'].push(0)
-      if(arr[this.i] === '*') {this.seq['hihat'].push(1)} else this.seq['hihat'].push(0)
-      if(arr[this.i] === '1') {this.seq['tom1'].push(1)} else this.seq['tom1'].push(0)
-      if(arr[this.i] === '2') {this.seq['tom2'].push(1)} else this.seq['tom2'].push(0)
-      if(arr[this.i] === '3') {this.seq['tom3'].push(1)} else this.seq['tom3'].push(0)
-      if(arr[this.i] === '^') {this.seq['openHat'].push(1)} else this.seq['openHat'].push(0)
+  /**
+   * Sequences the drum voices based on the input string or object, subdivision, and the initial sequence.
+   * Rewrites the current sequence by default.
+   * @param {string|object} input Input string or object to append to the initial sequence of the drum voices.
+   * @param {string} subdivision Subdivision of the sequence.
+   * @param {object} init Initial sequence of the drum voices. Empty by default.
+   * @returns 
+   */
+  sequence(input, subdivision, init={
+    "kick" : [],
+    "snare" : [],
+    "hihat" : [],
+    "tom1" : [],
+    "tom2" : [],
+    "tom3" : [],
+    "openHat" : []
+  }) {
+    // Initialize arrays for each drum voice
+    this.seq = init
+    if(subdivision) this.subdivision = subdivision
+
+    // String input parsing
+    if (typeof input === "string") {
+      // Remove all spaces from the input string
+      let str_arr = input.replaceAll(" ","")
+
+      // Parse the input string
+      for (this.i=0; this.i<str_arr.length; this.i++) {
+        if(str_arr[this.i] === 'O') {this.seq['kick'].push(1)} else if(str_arr[this.i] === 'o') {this.seq['kick'].push(.5)} else this.seq['kick'].push(0)
+        if(str_arr[this.i] === 'X') {this.seq['snare'].push(1)}  else if(str_arr[this.i] === 'x') {this.seq['snare'].push(.5)} else this.seq['snare'].push(0)
+        if(str_arr[this.i] === '*') {this.seq['hihat'].push(1)} else this.seq['hihat'].push(0)
+        if(str_arr[this.i] === '1') {this.seq['tom1'].push(1)} else this.seq['tom1'].push(0)
+        if(str_arr[this.i] === '2') {this.seq['tom2'].push(1)} else this.seq['tom2'].push(0)
+        if(str_arr[this.i] === '3') {this.seq['tom3'].push(1)} else this.seq['tom3'].push(0)
+        if(str_arr[this.i] === '^') {this.seq['openHat'].push(1)} else this.seq['openHat'].push(0)
+      }
+    } else if (typeof input === "object") {
+      // Object input parsing
+      
+      // get the input length
+      let len = 0
+      for (const [name, arr] of Object.entries(input)) {
+        if (name in this.seq) {
+          len = arr.length
+          break;
+        }
+      }
+
+      // append the input to the sequence
+      for (const [name, arr] of Object.entries(this.seq)) {
+        if (name in input) {
+          this.seq[name].push.apply(arr, input[name]);
+        } else {
+          this.seq[name].push.apply(arr, Array(len).fill(0));
+        }
+      }
+    } else {
+      console.error("Invalid input type. Please provide a string or an object.")
+      return;
     }
-    //
-    // Create a Tone.Loop
-    if( this.loop.state == "stopped"){
+    
+    // Create a Tone.Loop if stopped
+    if( this.loop.state === "stopped"){
       this.loop = new Tone.Loop(time => {
         this.index = Math.floor(Tone.Transport.ticks / Tone.Time(this.subdivision).toTicks());
-  //
+
+        // Iterate over the sequence and trigger the voices
         for (const [name, arr] of Object.entries(this.seq)){
-        	const val = arr[this.index % arr.length]
-        	if( name === "kick" && val > 0) this.triggerVoice( this.kick, val, time)
-        	else if( name === "snare" && val > 0 ) this.triggerVoice( this.snare, val, time)
-        	else if( name === "hihat"&& val > 0 ) this.triggerVoice( this.hihat, val, time)
-        	else if( name === "tom1" && val > 0) this.triggerVoice( this.tom1, val, time)
-        	else if( name === "tom2" && val > 0) this.triggerVoice( this.tom2, val, time)
-        	else if( name === "tom3" && val > 0) this.triggerVoice( this.tom3, val, time)
-        	else if( name === "openHat" && val > 0) this.triggerVoice( "openHat", val, time)
+          if (arr) {
+            const val = arr[this.index % arr.length]
+            if( name === "kick" && val > 0) this.triggerVoice( this.kick, val, time)
+            else if( name === "snare" && val > 0 ) this.triggerVoice( this.snare, val, time)
+            else if( name === "hihat"&& val > 0 ) this.triggerVoice( this.hihat, val, time)
+            else if( name === "tom1" && val > 0) this.triggerVoice( this.tom1, val, time)
+            else if( name === "tom2" && val > 0) this.triggerVoice( this.tom2, val, time)
+            else if( name === "tom3" && val > 0) this.triggerVoice( this.tom3, val, time)
+            else if( name === "openHat" && val > 0) this.triggerVoice( "openHat", val, time)
+          }
         }
       }, this.subdivision).start(0);
+
       // Start the Transport
       Tone.Transport.start();
     }
+
+    console.log(this.seq)
   }
+
+  /**
+   * Updates the current sequence with the input object. Doesn't rewrite the non-provided voices patterns.
+   * @param {object} input  Object input to update the current sequence.
+   * @returns 
+   */
+  update(input) {
+    if (typeof input !== "object") {
+      console.error("Invalid input type. Can only update seq using objects.")
+      return;
+    }
+
+    let seq = this.seq
+    // update the sequence from input
+    for (const [name, arr] of Object.entries(input)) {
+      if (name in this.seq) {
+        seq[name] = arr
+      }
+    }
+    this.seq = seq
+    console.log(this.seq)
+  }
+
+  /**
+   * Appends the input to the current sequence
+   * @param {string|object} input Input string or object to append to the current sequence.
+   */
+  append(input){
+    this.sequence(input, null, this.seq);
+  }
+
   stop(){ this.loop.stop()}
 
   connect(destination) {
@@ -159,6 +234,7 @@ export class DrumSampler {
       this.output.connect(destination);
     }
   }
+
 	disconnect(destination) {
     if (destination.input) {
       this.output.disconnect(destination.input);

@@ -5,7 +5,7 @@ export class Sequencer{
     this.gui = null
     this.subdivision = subdivision
     this.control = control
-    this.callback = this.callback = function(){
+    this.callback = this.callback = function(i,time){
       console.log('To set custom callback: this.callback = (your function here)')
     }
     this.setCallback(this.control)
@@ -20,7 +20,6 @@ export class Sequencer{
     this.timeGrain = this.beatsPerBar * this.subdivisionsPerBeat
     this.env = new Tone.Envelope()
     this.loop =  new Tone.Loop((time) => {
-       this.callback(time)
   //
       //Index calculations
         //console.log(Tone.Transport.position)
@@ -43,19 +42,21 @@ export class Sequencer{
     //
         if (this.enables.length == 0){
           this.val = this.values[this.values_index]
-          console.log(this.val)
+          //console.log(this.val)
         }
 
         else if (this.enables[this.enables_index]){
           //console.log(this.values[this.values_index])
           this.val = this.values[this.values_index]
-          console.log(this.val)
+          //console.log(this.val)
           
         }
         else {
-          console.log(0)
+          //console.log(0)
           this.val = 0
         }
+
+        this.callback(this.values_index, time)
 
        if(this.interface !== undefined){
         this.interface.updateGui(this.values_index, this.enables_index)
@@ -89,7 +90,7 @@ export class Sequencer{
 
     else if (control.name === 'Synth'){
       //console.log(true)
-      this.callback = function(time){
+      this.callback = function(i, time){
         if (this.val) {
           //console.log(this.control)
           //console.log(this.val)

@@ -1,4 +1,45 @@
-/* Theory.js
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Theory.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Classes</li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="AnalogDelay_AnalogDelay.html">AnalogDelay</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Cymbal.html">Cymbal</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cymbal.html#trigger">trigger</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="DatoDuo.html">DatoDuo</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DatoDuo.html#initGui">initGui</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DatoDuo.html#setDetune">setDetune</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="DrumSampler.html">DrumSampler</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DrumSampler.html#initGui">initGui</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DrumSampler.html#loadKit">loadKit</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DrumSampler.html#sequence">sequence</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DrumSampler.html#start">start</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DrumSampler.html#stop">stop</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DrumSampler.html#trigger">trigger</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="MonophonicTemplate.html">MonophonicTemplate</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MonophonicTemplate.html#connect">connect</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MonophonicTemplate.html#createKnob">createKnob</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MonophonicTemplate.html#disconnect">disconnect</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MonophonicTemplate.html#hideGui">hideGui</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MonophonicTemplate.html#initGui">initGui</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MonophonicTemplate.html#listPresets">listPresets</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MonophonicTemplate.html#loadPreset">loadPreset</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MonophonicTemplate.html#sequence">sequence</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MonophonicTemplate.html#setADSR">setADSR</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MonophonicTemplate.html#setFilterADSR">setFilterADSR</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MonophonicTemplate.html#setSubdivision">setSubdivision</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MonophonicTemplate.html#showGui">showGui</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MonophonicTemplate.html#start">start</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MonophonicTemplate.html#stop">stop</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MonophonicTemplate.html#triggerAttack">triggerAttack</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MonophonicTemplate.html#triggerAttackRelease">triggerAttackRelease</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MonophonicTemplate.html#triggerRelease">triggerRelease</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Oscilloscope.html">Oscilloscope</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Sequencer.html">Sequencer</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Sequencer.html#setCallback">setCallback</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Sequencer.html#setGui">setGui</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Sequencer.html#start">start</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Sequencer.html#stop">stop</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Spectroscope.html">Spectroscope</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="circularSequence.html">circularSequence</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="circularSequence.html#initGui">initGui</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="extends%2520MonophonicTemplate.html">extends MonophonicTemplate</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="module-Theory.Chord.html">Chord</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-Theory.Chord.html#interval">interval</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-Theory.Chord.html#root">root</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-Theory.Chord.html#setChord">setChord</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-Theory.Chord.html#tones">tones</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="stepSequence.html">stepSequence</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="stepSequence.html#initGui">initGui</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="stepSequence.html#togglePlay">togglePlay</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="stepSequence.html#updateGui">updateGui</a></span></li><li class="nav-heading">Modules</li><li class="nav-heading"><span class="nav-item-type type-module">M</span><span class="nav-item-name"><a href="module-Theory.html">Theory</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-Theory.html#.getChord">getChord</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-Theory.html#.parseStringSequence">parseStringSequence</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-Theory.html#.pitchNameToMidi">pitchNameToMidi</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-Theory.html#.setProgression">setProgression</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-Theory.html#.setProgressionRate">setProgressionRate</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-Theory.html#.setTonic">setTonic</a></span></li><li class="nav-heading"><span class="nav-item-type type-module">M</span><span class="nav-item-name"><a href="module-TransferFunctionPlotter.html">TransferFunctionPlotter</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">Theory.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/* Theory.js
 
 Implements a system for specifying chord and progressions 
 as Roman numerals.
@@ -137,7 +178,7 @@ export function setProgression(val){
     val = val.split(' ')
   }
   //iteratate through array, check for errors
-  for(let i=0;i<val.length;i++){
+  for(let i=0;i&lt;val.length;i++){
     let chord = val[i]
     try{
       if(val[i] !== ''){ //remove empty strings
@@ -146,7 +187,7 @@ export function setProgression(val){
         console.log(quality)
         if( typeof MajorScaleDegrees[romanNumeral] !== "number") error = i
         if( chordScales[quality].constructor !== Array) error = i
-        if( error < 0 ) newProgression.push(chord)
+        if( error &lt; 0 ) newProgression.push(chord)
       } 
     } catch{
       console.log("error with element ", val[i])
@@ -154,10 +195,10 @@ export function setProgression(val){
     }
   }
 
-  if(error < 0) {
+  if(error &lt; 0) {
     progression = newProgression
     progressionChords = []
-    for(let i=0;i<progression.length;i++) progressionChords.push(new Chord(progression[i]))
+    for(let i=0;i&lt;progression.length;i++) progressionChords.push(new Chord(progression[i]))
   }
   else console.log("error in progression element", val[error])
   //console.log(progression)
@@ -276,7 +317,7 @@ export function rotateVoicing(steps){
   let newChord = Array.from({length:len},(x,i)=>{
     x=previousChord[(i+steps+len)%len]
     if((i+steps)>=len)x+=12
-    else if( (i+steps) < 0)x-=12
+    else if( (i+steps) &lt; 0)x-=12
     return x
   })
   
@@ -356,7 +397,7 @@ function applyVoicing(name, _voicing,scale) {
   let cVoicing = voicings[_voicing]
   let voicedChord = Array(cVoicing.length)
 
-  for(let i=0;i<cVoicing.length;i++){
+  for(let i=0;i&lt;cVoicing.length;i++){
     voicedChord[i] = getInterval(cVoicing[i],scale)
   }
   //console.log(voicedChord)
@@ -367,17 +408,17 @@ function minimizeMovement(chord, previousChord) {
   let distance = Math.abs(chord[0]%12-previousChord[0]%12)
   let lowNote = 0
 
-  for(let i=1;i<chord.length;i++){
-    if(Math.abs(chord[i]%12-previousChord[0]%12) < distance){
+  for(let i=1;i&lt;chord.length;i++){
+    if(Math.abs(chord[i]%12-previousChord[0]%12) &lt; distance){
       distance = Math.abs(chord[i]%12-previousChord[0]%12)
         lowNote = i
     }
   }
 
-  while(chord[lowNote] < previousChord[0]-2)chord = chord.map(x=>x+12)
+  while(chord[lowNote] &lt; previousChord[0]-2)chord = chord.map(x=>x+12)
  
-  for(let i=0;i<chord.length;i++){
-    if(chord[i] < previousChord[0])chord[i]+=12
+  for(let i=0;i&lt;chord.length;i++){
+    if(chord[i] &lt; previousChord[0])chord[i]+=12
   }
 
   return chord.sort((a, b) => a - b);
@@ -436,14 +477,14 @@ export class Chord {
 
   getInterval(num, min = 0, max = 127){ 
     num = getInterval(num, this.scale) + this.root + this.octave*12 
-    if(num<min) {
+    if(num&lt;min) {
       const count = Math.floor((min-num)/12)+1
-      for(let i=0;i<count;i++)num += 12
+      for(let i=0;i&lt;count;i++)num += 12
         //console.log('min', count)
     }
     else if(num>max) {
       const count = Math.floor((num-max)/12)+1
-      for(let i=0;i<count;i++)num -= 12
+      for(let i=0;i&lt;count;i++)num -= 12
         //console.log('max', count)
     }
     return num
@@ -501,7 +542,7 @@ export class Chord {
 
     //check for numeric extensions
     const regex = /\d/;
-    if( regex.test(name) && this.scale.length >= 7 ) {
+    if( regex.test(name) &amp;&amp; this.scale.length >= 7 ) {
       const match = name.match(/\d+/); // Match one or more digits
       if (match) {
         chord.push( this.scale [parseInt(match[0], 10)%7]); // Convert the matched string to a number
@@ -556,14 +597,14 @@ function getChordTones(root, quality, scale){
   let chord = []
   let len = 3
   if( /\d/.test(quality)) len = 4
-  for(let i=0;i<len;i++) chord[i] = scale[i*2]+root
+  for(let i=0;i&lt;len;i++) chord[i] = scale[i*2]+root
 }
 
 function getInterval(num,scale){
   let len = scale.length
   if (typeof num === 'number') {
     let _octave = Math.floor(num/len)
-    if(num<0) num = 7+num%7 //check negative numbers
+    if(num&lt;0) num = 7+num%7 //check negative numbers
     num = scale[num%len] + _octave*12
     return num
   } else if (typeof num === 'string') {
@@ -573,7 +614,7 @@ function getInterval(num,scale){
     //get scale degree
     num = Number(match[2])
     let _octave = Math.floor(num/len)
-    if(num<0) num = 7+num%7
+    if(num&lt;0) num = 7+num%7
     num = scale[num%len] + _octave*12
 
     //apply accidentals
@@ -631,7 +672,7 @@ export function parsePitchStringSequence(str) {
     let arr = str.match(regex);
 
     // Step 3: Process '@' elements
-    for (let i = 0; i < arr.length; i++) {
+    for (let i = 0; i &lt; arr.length; i++) {
         if (arr[i].startsWith("@")) {
             const repeatCount = parseInt(arr[i].slice(1), 10)-1; // Get the number after '@'
             const elementToRepeat = arr[i - 1]; // Get the previous element
@@ -655,7 +696,7 @@ export function parseStringBeat(curBeat, time){
       console.log(curBeat)
       curBeat.forEach(arr => {
           const length = arr.length;
-          for (let i = 0; i < length; i++) {
+          for (let i = 0; i &lt; length; i++) {
               const val = arr[i];
               outArr.push([val,i/length])
               //console.log('out', outArr)
@@ -679,7 +720,7 @@ export function parsePitchStringBeat(curBeat, time){
       curBeat.forEach(arr => {
          const regex = /\[.*?\]|[A-Ga-g][#b]?\d*|@(\d+)|./g;
          arr = arr.match(regex);
-         for (let i = 0; i < arr.length; i++) {
+         for (let i = 0; i &lt; arr.length; i++) {
               if (arr[i].startsWith("@")) {
                   const repeatCount = parseInt(arr[i].slice(1), 10)-1; // Get the number after '@'
                   const elementToRepeat = arr[i - 1]; // Get the previous element
@@ -689,7 +730,7 @@ export function parsePitchStringBeat(curBeat, time){
               }
           }
           const length = arr.length;
-          for (let i = 0; i < length; i++) {
+          for (let i = 0; i &lt; length; i++) {
               const val = arr[i];
               outArr.push([val,i/length])
           }
@@ -742,3 +783,22 @@ export function pitchNameToMidi(name) {
 
     return midiNote;
 }
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.3</a> on Thu Aug 01 2024 23:05:02 GMT-0400 (Eastern Daylight Time) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

@@ -10,7 +10,7 @@ import { MonophonicTemplate } from './MonophonicTemplate';
 /**
  * Base class for drum synths.
  * @constructor
- * @extends MonophonicTemplate
+ * extends MonophonicTemplate
  */
 export class DrumTemplate extends MonophonicTemplate {
 

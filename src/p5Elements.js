@@ -207,7 +207,7 @@ const unScaleOutput = function (input, outLow, outHigh, inLow, inHigh, curve) {
     return val * (outHigh - outLow) + outLow;
   }
 
-/**
+/*
  * returns an element by querying its id
  * - the id of an element is unique
  * - multiple elements with the same label are id as label, label1, etc.

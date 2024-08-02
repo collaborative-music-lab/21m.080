@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Cymbal - Documentation</title>
+    <title>DatoDuo - Documentation</title>
 
     <script src="scripts/prettify/prettify.js"></script>
     <script src="scripts/prettify/lang-css.js"></script>
@@ -29,7 +29,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">Cymbal</h1>
+    <h1 class="page-title">DatoDuo</h1>
     
 
     
@@ -42,17 +42,11 @@
 <header>
     
         <h2>
-        Cymbal
+        DatoDuo
         </h2>
         
-            <div class="class-description"><p>Class representing a cymbal drum synth.</p>
-<p>Synth architecture:</p>
-<ul>
-<li>3 oscillators</li>
-<li>3 noise sources</li>
-<li>2 bandpass filters</li>
-<li>2 amplitude envelopes</li>
-</ul></div>
+            <div class="class-description"><p>Class representing the DatoDuo monophonic subtractive synthesizer.
+Extends the MonophonicTemplate class.</p></div>
         
     
 </header>
@@ -67,11 +61,15 @@
     <h2>Constructor</h2>
     
 
-    <h4 class="name" id="Cymbal"><span class="type-signature"></span>new Cymbal<span class="signature">(gui)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="DatoDuo"><span class="type-signature"></span>new DatoDuo<span class="signature">(gui<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
 
 
+
+<div class="description">
+    <p>Create a DatoDuo synthesizer.</p>
+</div>
 
 
 
@@ -106,7 +104,342 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="synths_Cymbal.js.html">synths/Cymbal.js</a>, <a href="synths_Cymbal.js.html#line19">line 19</a>
+        <a href="synths_DatoDuo.js.html">synths/DatoDuo.js</a>, <a href="synths_DatoDuo.js.html#line18">line 18</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>gui</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>object</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    null
+                
+                </td>
+            
+
+            <td class="description last">
+                <p>The GUI object for controlling the synthesizer.</p>
+                
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+    
+    </div>
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Classes</h3>
+
+        <dl>
+            <dt><a href="DatoDuo.html">DatoDuo</a></dt>
+            <dd></dd>
+        </dl>
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+<div class="section-method">
+
+    
+
+    <h4 class="name" id="initGui"><span class="type-signature"></span>initGui<span class="signature">(gui<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Initializes the GUI controls for the synthesizer.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="synths_DatoDuo.js.html">synths/DatoDuo.js</a>, <a href="synths_DatoDuo.js.html#line229">line 229</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>gui</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>object</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    this.gui
+                
+                </td>
+            
+
+            <td class="description last">
+                <p>The GUI object to use.</p>
+                
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+        
+            
+<div class="section-method">
+
+    
+
+    <h4 class="name" id="setDetune"><span class="type-signature"></span>setDetune<span class="signature">(detune)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Sets the detune value for the synthesizer.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="synths_DatoDuo.js.html">synths/DatoDuo.js</a>, <a href="synths_DatoDuo.js.html#line212">line 212</a>
     </li></ul></dd>
     
 
@@ -150,13 +483,13 @@
 
         <tr>
             
-                <td class="name"><code>gui</code></td>
+                <td class="name"><code>detune</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type"><code>GUI</code></span>
+<span class="param-type"><code>number</code></span>
 
 
             
@@ -167,7 +500,7 @@
             
 
             <td class="description last">
-                <p>The p5 GUI instance to create GUI elements.</p>
+                <p>The detune value.</p>
                 
             </td>
         </tr>
@@ -175,130 +508,6 @@
     
     </tbody>
 </table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-</div>
-    
-    </div>
-
-    
-        <h3 class="subsection-title">Extends</h3>
-
-        
-
-
-    <ul>
-        <li><a href="DrumTemplate.html">DrumTemplate</a></li>
-    </ul>
-
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Classes</h3>
-
-        <dl>
-            <dt><a href="Cymbal.html">Cymbal</a></dt>
-            <dd></dd>
-        </dl>
-    
-
-     
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Methods</h3>
-
-        
-            
-<div class="section-method">
-
-    
-
-    <h4 class="name" id="trigger"><span class="type-signature"></span>trigger<span class="signature">()</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    <p>Function to trigger the drum sound.</p>
-</div>
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="DrumTemplate.html#trigger">DrumTemplate#trigger</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="synths_DrumTemplate.js.html">synths/DrumTemplate.js</a>, <a href="synths_DrumTemplate.js.html#line25">line 25</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
 
 
 

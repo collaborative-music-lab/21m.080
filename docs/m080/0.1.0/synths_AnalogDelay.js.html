@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Cymbal - Documentation</title>
+    <title>synths/AnalogDelay.js - Documentation</title>
 
     <script src="scripts/prettify/prettify.js"></script>
     <script src="scripts/prettify/lang-css.js"></script>
@@ -29,302 +29,92 @@
 
 <div id="main">
     
-    <h1 class="page-title">Cymbal</h1>
+    <h1 class="page-title">synths/AnalogDelay.js</h1>
     
 
     
 
 
 
-
-<section>
-
-<header>
     
-        <h2>
-        Cymbal
-        </h2>
-        
-            <div class="class-description"><p>Class representing a cymbal drum synth.</p>
-<p>Synth architecture:</p>
-<ul>
-<li>3 oscillators</li>
-<li>3 noise sources</li>
-<li>2 bandpass filters</li>
-<li>2 amplitude envelopes</li>
-</ul></div>
-        
-    
-</header>
-
-<article>
-    <div class="container-overview">
-    
-        
-<div class="section-method">
-
-    
-    <h2>Constructor</h2>
-    
-
-    <h4 class="name" id="Cymbal"><span class="type-signature"></span>new Cymbal<span class="signature">(gui)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="synths_Cymbal.js.html">synths/Cymbal.js</a>, <a href="synths_Cymbal.js.html#line19">line 19</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>gui</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><code>GUI</code></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">
-                <p>The p5 GUI instance to create GUI elements.</p>
-                
-            </td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-</div>
-    
-    </div>
-
-    
-        <h3 class="subsection-title">Extends</h3>
-
-        
-
-
-    <ul>
-        <li><a href="DrumTemplate.html">DrumTemplate</a></li>
-    </ul>
-
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Classes</h3>
-
-        <dl>
-            <dt><a href="Cymbal.html">Cymbal</a></dt>
-            <dd></dd>
-        </dl>
-    
-
-     
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Methods</h3>
-
-        
-            
-<div class="section-method">
-
-    
-
-    <h4 class="name" id="trigger"><span class="type-signature"></span>trigger<span class="signature">()</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    <p>Function to trigger the drum sound.</p>
-</div>
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="DrumTemplate.html#trigger">DrumTemplate#trigger</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="synths_DrumTemplate.js.html">synths/DrumTemplate.js</a>, <a href="synths_DrumTemplate.js.html#line25">line 25</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-</div>
-        
-    
-
-    
-
-    
-</article>
-
-</section>
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * AnalogDelay.js
+ * 
+ * Simple approximation of an analog delay
+ * 
+ * Signal path:
+ * input -> hpf -> gain -> waveShaper -> lpf -> delay -> wet -> output
+ *                                         -> feedback -> hpf
+ * input -> dry -> output
+ * 
+ * @class
+ */
+import p5 from 'p5';
+import * as Tone from 'tone';
+import { DelayOp } from './DelayOp.js';
+
+export class AnalogDelay {
+  /**
+   * Creates an instance of AnalogDelay.
+   * @constructor
+   * @param {number} [initialTime=0.1] - Initial delay time in seconds.
+   * @param {number} [initialFB=0] - Initial feedback amount.
+   */
+  constructor(initialTime = 0.1, initialFB = 0) {
+    this.input = new Tone.Multiply(1);
+    this.hpf = new Tone.Filter({ type: 'highpass', frequency: 20, Q: 0 });
+    this.gain = new Tone.Multiply(0.1);
+    this.waveShaper = new Tone.WaveShaper((x) => { return x });
+    this.lpf = new Tone.Filter({ type: 'lowpass', frequency: 5000, Q: 0, slope: '-24' });
+    this.delay = new Tone.Delay(initialTime);
+    this.feedback = new Tone.Multiply(initialFB);
+    this.wet = new Tone.Multiply(10);
+    this.dry = new Tone.Multiply(1);
+    this.output = new Tone.Multiply(1);
+
+    // Connecting signal path
+    this.input.connect(this.dry);
+    this.input.connect(this.hpf);
+    this.hpf.connect(this.lpf);
+    this.lpf.connect(this.gain);
+    this.gain.connect(this.waveShaper);
+    this.waveShaper.connect(this.delay);
+    this.delay.connect(this.feedback);
+    this.feedback.connect(this.hpf);
+    this.delay.connect(this.wet);
+    this.wet.connect(this.output);
+    this.dry.connect(this.output);
+  }
+
+  /**
+   * Connect the output to a destination.
+   * @param {Tone.Signal | AudioNode} destination - The destination to connect to.
+   */
+  connect(destination) {
+    if (destination.input) {
+      this.output.connect(destination.input);
+    } else {
+      this.output.connect(destination);
+    }
+  }
+
+  /**
+   * Disconnect the output from a destination.
+   * @param {Tone.Signal | AudioNode} destination - The destination to disconnect from.
+   */
+  disconnect(destination) {
+    if (destination.input) {
+      this.output.disconnect(destination.input);
+    } else {
+      this.output.disconnect(destination);
+    }
+  }
+}
+</code></pre>
+        </article>
+    </section>
 
 
 

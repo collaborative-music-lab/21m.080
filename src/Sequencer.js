@@ -1,5 +1,18 @@
 import * as Tone from 'tone'
+
+/**
+ * Class representing a Sequencer.
+ */
 export class Sequencer{
+
+  /**
+   * Creates a sequencer.
+   * 
+   * @param {object|null} [control=null] - The control object that the sequencer will manipulate (e.g., a Synth, Filter, etc.).
+   * @param {number[]} [values=[]] - An array of values that the sequencer will step through.
+   * @param {string} [subdivision='8n'] - The rhythmic subdivision for the sequencer (e.g., '8n' for eighth notes).
+   * @param {boolean[]} [enables=[]] - An array of boolean values that enable or disable specific steps in the sequence.
+   */
   constructor(control = null, values = [], subdivision = '8n', enables = []){
     //console.log('enter construct')
     this.gui = null
@@ -67,22 +80,38 @@ export class Sequencer{
     }, this.subdivision);
   //console.log("sequencer ready")
   }
+  /**
+   * Sets the GUI interface for the sequencer.
+   * 
+   * @param {string} name - The name of the GUI interface to use (e.g., 'stepSequence', 'circularSequence').
+   * @param {object} gui - The GUI object.
+   */
   setGui(name, gui){
     if(name === "stepSequence") this.interface = new stepSequence(this,gui)
     else if (name === "circularSequence") this.interface = new circularSequence(this, gui)
   }
 
-
+  /**
+   * Starts the sequencer loop and the Tone.js Transport.
+   */
   start() {
     // Start the loop and the transport
     this.loop.start(0);
     Tone.Transport.start();
   }
 
+  /**
+   * Stops the loop
+   */
   stop() {
-    Tone.Transport.stop()
+    this.loop.stop()
   }
 
+  /**
+   * Sets the callback function that will be triggered on each step of the sequence.
+   * 
+   * @param {object|function} control - The control object or function to use as the callback.
+   */
   setCallback(control) {
     if (control == null) {
       return
@@ -143,8 +172,16 @@ export class Sequencer{
 // frequencies, scale degrees, etc., and return a true or false value. Given that true or false the loop
 // should execute different things. So the midi method should be
 
-
+/**
+ * Class representing a step sequencer GUI with a linear layout
+ */
 class stepSequence{
+  /**
+   * Creates a step sequencer interface.
+   * 
+   * @param {object} target - The target sequencer object that this GUI will control.
+   * @param {object} gui - The GUI object used to create controls.
+   */
   constructor(target, gui){
     this.gui = gui
     this.target = target
@@ -152,6 +189,12 @@ class stepSequence{
     this.prevVal = 0
     this.prevEnable = 0
   }
+  /**
+   * Initializes the GUI controls for the step sequencer.
+   * 
+   * @param {number} [x=10] - The x-coordinate for the start of the GUI layout.
+   * @param {number} [y=10] - The y-coordinate for the start of the GUI layout.
+   */
   initGui( x = 10, y = 10) {
     //make your sequencer.gui here
     this.x = x
@@ -173,6 +216,13 @@ class stepSequence{
     this.playText = this.gui.Text({label:"play", x:50,y:20})
   }
 
+  /**
+   * Updates the GUI to reflect the current state of the sequencer.
+   * Called in the sequencer's loop.
+   * 
+   * @param {number} values - The current index of the values array.
+   * @param {number} enables - The current index of the enables array.
+   */
   updateGui(values, enables){
     this.values_array[values].accentColor = [0, 250, 0]
     this.values_array[this.prevVal].accentColor = [0, 0, 200]
@@ -207,7 +257,11 @@ class stepSequence{
       showLabel: 0, showValue: 0
     });
   }
-
+  /**
+   * Toggles the playback state of the sequencer.
+   * 
+   * @param {boolean} x - If true, starts the sequencer; otherwise, stops it.
+   */
   togglePlay(x){
     if (x){
       return this.target.start()
@@ -216,11 +270,26 @@ class stepSequence{
   }
 }
 
+/**
+ * Class representing a step sequencer GUI with a circular layout
+ */
 class circularSequence extends stepSequence{
+  /**
+   * Creates a circular step sequencer interface.
+   * 
+   * @param {object} target - The target sequencer object that this GUI will control.
+   * @param {object} gui - The GUI object used to create controls.
+   */
   constructor(target, gui){
     super(target, gui)
   }
 
+  /**
+   * Initializes the GUI controls for the step sequencer.
+   * 
+   * @param {number} [x=10] - The x-coordinate for the start of the GUI layout.
+   * @param {number} [y=10] - The y-coordinate for the start of the GUI layout.
+   */
   initGui(x = 25, y = 25) {
     this.x = x;
     this.y = y;

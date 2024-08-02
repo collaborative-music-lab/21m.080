@@ -1,19 +1,23 @@
 // MonophonicTemplate.js
-/*
 
-Base class for synths. Includes:
+import * as Tone from 'tone';
+import {parsePitchStringSequence, parsePitchStringBeat,getChord, pitchNameToMidi} from '../Theory'
+
+/**
+ * Represents a Monophonic Synth
+ * 
+ * Base class for synths. Includes:
 - methods for loading and saving presets
 - connect/disconnect
 - setting ADSR values for env and vcf_env objects
 - show/hide gui, and custom createKnob function
 
-For presets:
+## Working with presets
 - all synths can load presets saved in the synth/synthPresets folder.
 
 To add preset functionality to a synth:
 - create the preset file `synths/synthPresets/yourSynthPresets.json' j
-- your preset file nedds an open/close brace {} in it
-- 
+    - your preset file needs an open/close brace {} in it
 
 - make sure to:
     - import your presets and assign to this.presets 
@@ -29,13 +33,7 @@ To add preset functionality to a synth:
 
 When saving presets you will need to manually download and copy
 the preset file into synth/synthPresets/
-*/
 
-import * as Tone from 'tone';
-import {parsePitchStringSequence, parsePitchStringBeat,getChord, pitchNameToMidi} from '../Theory'
-
-/**
- * Represents a Monophonic Synth
  * @constructor
  */
 export class MonophonicTemplate {
@@ -309,11 +307,11 @@ export class MonophonicTemplate {
 	};
 
     /**
-     * Creates a pitch sequence from string input.
-     * @returns {void}
-     * @example synth.sequence()
+     * Sequences the provided array of notes and initializes a Tone.Loop with the given subdivision.
+     *
+     * @param {string} arr - The sequence of notes as a string.
+     * @param {string} [subdivision] - The rhythmic subdivision for the loop (e.g., '16n', '8n').
      */
-
     sequence(arr, subdivision) {
 
         if (subdivision) this.subdivision = subdivision;
@@ -341,30 +339,52 @@ export class MonophonicTemplate {
         }
     }
 
-    start(){ this.loop.start()}
-    stop(){ this.loop.stop()}
-    setSubdivision(sub){
-        this.loop.subdivision = sub
-        this.subdivision = sub
-        switch(sub){
-        case '16n': this.loop.playbackRate = 2; break;
-        case '8n': this.loop.playbackRate = 1; break;
-        case '4n': this.loop.playbackRate = .5; break;
-        case '2n': this.loop.playbackRate = .25; break;
-        }
+    /**
+ * Starts the loop for the synthesizer.
+ */
+start() {
+    this.loop.start();
+}
+
+/**
+ * Stops the loop for the synthesizer.
+ */
+stop() {
+    this.loop.stop();
+}
+
+/**
+ * Sets the subdivision for the loop and adjusts the playback rate accordingly.
+ * 
+ * @param {string} sub - The subdivision to set (e.g., '16n', '8n', '4n', '2n').
+ */
+setSubdivision(sub) {
+    this.loop.subdivision = sub;
+    this.subdivision = sub;
+    switch (sub) {
+        case '16n':
+            this.loop.playbackRate = 2;
+            break;
+        case '8n':
+            this.loop.playbackRate = 1;
+            break;
+        case '4n':
+            this.loop.playbackRate = 0.5;
+            break;
+        case '2n':
+            this.loop.playbackRate = 0.25;
+            break;
     }
+}
+
 
     parseNoteString(val, time){
         console.log(val)
         if(val[0] === ".") return
 
-
         const note = pitchNameToMidi(val[0])
         const div = val[1]
-        //console.log('midi', note, val[0])
 
-        
-        
         this.triggerAttackRelease(note, 100, .01, time + div * (Tone.Time(this.subdivision)));
     }
 }

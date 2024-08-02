@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Cymbal - Documentation</title>
+    <title>Sequencer - Documentation</title>
 
     <script src="scripts/prettify/prettify.js"></script>
     <script src="scripts/prettify/lang-css.js"></script>
@@ -29,7 +29,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">Cymbal</h1>
+    <h1 class="page-title">Sequencer</h1>
     
 
     
@@ -42,17 +42,10 @@
 <header>
     
         <h2>
-        Cymbal
+        Sequencer
         </h2>
         
-            <div class="class-description"><p>Class representing a cymbal drum synth.</p>
-<p>Synth architecture:</p>
-<ul>
-<li>3 oscillators</li>
-<li>3 noise sources</li>
-<li>2 bandpass filters</li>
-<li>2 amplitude envelopes</li>
-</ul></div>
+            <div class="class-description"><p>Class representing a Sequencer.</p></div>
         
     
 </header>
@@ -67,11 +60,15 @@
     <h2>Constructor</h2>
     
 
-    <h4 class="name" id="Cymbal"><span class="type-signature"></span>new Cymbal<span class="signature">(gui)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="Sequencer"><span class="type-signature"></span>new Sequencer<span class="signature">(control<span class="signature-attributes">opt</span>, values<span class="signature-attributes">opt</span>, subdivision<span class="signature-attributes">opt</span>, enables<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
 
 
+
+<div class="description">
+    <p>Creates a sequencer.</p>
+</div>
 
 
 
@@ -106,7 +103,316 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="synths_Cymbal.js.html">synths/Cymbal.js</a>, <a href="synths_Cymbal.js.html#line19">line 19</a>
+        <a href="Sequencer.js.html">Sequencer.js</a>, <a href="Sequencer.js.html#line6">line 6</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>control</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>object</code></span>
+|
+
+<span class="param-type"><code>null</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    null
+                
+                </td>
+            
+
+            <td class="description last">
+                <p>The control object that the sequencer will manipulate (e.g., a Synth, Filter, etc.).</p>
+                
+            </td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>values</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>Array.&lt;number></code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    []
+                
+                </td>
+            
+
+            <td class="description last">
+                <p>An array of values that the sequencer will step through.</p>
+                
+            </td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>subdivision</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>string</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    '8n'
+                
+                </td>
+            
+
+            <td class="description last">
+                <p>The rhythmic subdivision for the sequencer (e.g., '8n' for eighth notes).</p>
+                
+            </td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>enables</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>Array.&lt;boolean></code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    []
+                
+                </td>
+            
+
+            <td class="description last">
+                <p>An array of boolean values that enable or disable specific steps in the sequence.</p>
+                
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+    
+    </div>
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Classes</h3>
+
+        <dl>
+            <dt><a href="Sequencer.html">Sequencer</a></dt>
+            <dd></dd>
+        </dl>
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+<div class="section-method">
+
+    
+
+    <h4 class="name" id="setCallback"><span class="type-signature"></span>setCallback<span class="signature">(control)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Sets the callback function that will be triggered on each step of the sequence.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Sequencer.js.html">Sequencer.js</a>, <a href="Sequencer.js.html#line115">line 115</a>
     </li></ul></dd>
     
 
@@ -150,13 +456,16 @@
 
         <tr>
             
-                <td class="name"><code>gui</code></td>
+                <td class="name"><code>control</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type"><code>GUI</code></span>
+<span class="param-type"><code>object</code></span>
+|
+
+<span class="param-type"><code>function</code></span>
 
 
             
@@ -167,7 +476,7 @@
             
 
             <td class="description last">
-                <p>The p5 GUI instance to create GUI elements.</p>
+                <p>The control object or function to use as the callback.</p>
                 
             </td>
         </tr>
@@ -192,56 +501,20 @@
 
 
 </div>
-    
-    </div>
-
-    
-        <h3 class="subsection-title">Extends</h3>
-
-        
-
-
-    <ul>
-        <li><a href="DrumTemplate.html">DrumTemplate</a></li>
-    </ul>
-
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Classes</h3>
-
-        <dl>
-            <dt><a href="Cymbal.html">Cymbal</a></dt>
-            <dd></dd>
-        </dl>
-    
-
-     
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Methods</h3>
-
         
             
 <div class="section-method">
 
     
 
-    <h4 class="name" id="trigger"><span class="type-signature"></span>trigger<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="setGui"><span class="type-signature"></span>setGui<span class="signature">(name, gui)</span><span class="type-signature"></span></h4>
 
     
 
 
 
 <div class="description">
-    <p>Function to trigger the drum sound.</p>
+    <p>Sets the GUI interface for the sequencer.</p>
 </div>
 
 
@@ -256,11 +529,6 @@
 
     
 
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="DrumTemplate.html#trigger">DrumTemplate#trigger</a>
-    </li></ul></dd>
     
 
     
@@ -282,7 +550,251 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="synths_DrumTemplate.js.html">synths/DrumTemplate.js</a>, <a href="synths_DrumTemplate.js.html#line25">line 25</a>
+        <a href="Sequencer.js.html">Sequencer.js</a>, <a href="Sequencer.js.html#line89">line 89</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>name</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>string</code></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                <p>The name of the GUI interface to use (e.g., 'stepSequence', 'circularSequence').</p>
+                
+            </td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>gui</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>object</code></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                <p>The GUI object.</p>
+                
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+        
+            
+<div class="section-method">
+
+    
+
+    <h4 class="name" id="start"><span class="type-signature"></span>start<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Starts the sequencer loop and the Tone.js Transport.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Sequencer.js.html">Sequencer.js</a>, <a href="Sequencer.js.html#line97">line 97</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+        
+            
+<div class="section-method">
+
+    
+
+    <h4 class="name" id="stop"><span class="type-signature"></span>stop<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Stops the loop</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Sequencer.js.html">Sequencer.js</a>, <a href="Sequencer.js.html#line106">line 106</a>
     </li></ul></dd>
     
 

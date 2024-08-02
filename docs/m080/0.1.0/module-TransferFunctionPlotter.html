@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Cymbal - Documentation</title>
+    <title>TransferFunctionPlotter - Documentation</title>
 
     <script src="scripts/prettify/prettify.js"></script>
     <script src="scripts/prettify/lang-css.js"></script>
@@ -29,7 +29,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">Cymbal</h1>
+    <h1 class="page-title">TransferFunctionPlotter</h1>
     
 
     
@@ -41,18 +41,8 @@
 
 <header>
     
-        <h2>
-        Cymbal
-        </h2>
         
-            <div class="class-description"><p>Class representing a cymbal drum synth.</p>
-<p>Synth architecture:</p>
-<ul>
-<li>3 oscillators</li>
-<li>3 noise sources</li>
-<li>2 bandpass filters</li>
-<li>2 amplitude envelopes</li>
-</ul></div>
+            
         
     
 </header>
@@ -61,15 +51,12 @@
     <div class="container-overview">
     
         
+            <div class="description"><p>Plots a transfer function on a specified SVG element with axis labels.</p></div>
+        
+
+        
+            
 <div class="section-method">
-
-    
-    <h2>Constructor</h2>
-    
-
-    <h4 class="name" id="Cymbal"><span class="type-signature"></span>new Cymbal<span class="signature">(gui)</span><span class="type-signature"></span></h4>
-
-    
 
 
 
@@ -106,7 +93,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="synths_Cymbal.js.html">synths/Cymbal.js</a>, <a href="synths_Cymbal.js.html#line19">line 19</a>
+        <a href="oscilloscope.js.html">oscilloscope.js</a>, <a href="oscilloscope.js.html#line379">line 379</a>
     </li></ul></dd>
     
 
@@ -150,13 +137,13 @@
 
         <tr>
             
-                <td class="name"><code>gui</code></td>
+                <td class="name"><code>myFunction</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type"><code>GUI</code></span>
+<span class="param-type"><code>function</code></span>
 
 
             
@@ -167,7 +154,33 @@
             
 
             <td class="description last">
-                <p>The p5 GUI instance to create GUI elements.</p>
+                <p>The transfer function to plot. Takes a number input and returns a number.</p>
+                
+            </td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>_target</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>string</code></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                <p>The ID of the HTML element where the transfer function will be plotted.</p>
                 
             </td>
         </tr>
@@ -192,31 +205,14 @@
 
 
 </div>
+        
     
     </div>
 
     
-        <h3 class="subsection-title">Extends</h3>
-
-        
-
-
-    <ul>
-        <li><a href="DrumTemplate.html">DrumTemplate</a></li>
-    </ul>
-
 
     
 
-    
-
-    
-        <h3 class="subsection-title">Classes</h3>
-
-        <dl>
-            <dt><a href="Cymbal.html">Cymbal</a></dt>
-            <dd></dd>
-        </dl>
     
 
      
@@ -225,98 +221,6 @@
 
     
 
-    
-        <h3 class="subsection-title">Methods</h3>
-
-        
-            
-<div class="section-method">
-
-    
-
-    <h4 class="name" id="trigger"><span class="type-signature"></span>trigger<span class="signature">()</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    <p>Function to trigger the drum sound.</p>
-</div>
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="DrumTemplate.html#trigger">DrumTemplate#trigger</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="synths_DrumTemplate.js.html">synths/DrumTemplate.js</a>, <a href="synths_DrumTemplate.js.html#line25">line 25</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-</div>
-        
     
 
     

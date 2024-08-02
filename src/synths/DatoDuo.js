@@ -272,7 +272,10 @@ export class DatoDuo extends MonophonicTemplate {
     this.freq_fader = this.gui.Slider({
       label:'freq',
       //callback: (x)=>{this.cutoffSig.value = stepper(x, 200, 1200, [[0,0], [0.6, 0.8], [1,1]])},
-      callback: (x)=>{this.filterDepth.value = x},
+      callback: (x)=>{
+        this.filterDepth.factor.value = x
+        this.cutoffSig.value = x
+      },
       mapto: this.cutoffSig,
       x: 49, y: 10, size: 2,
       min:50, max: 2500, curve: 2,
@@ -436,7 +439,10 @@ export class DatoDuo extends MonophonicTemplate {
     this.freq_fader = this.gui.Slider({
       label:'freq',
       //callback: (x)=>{this.cutoffSig.value = stepper(x, 200, 1200, [[0,0], [0.6, 0.8], [1,1]])},
-      callback: (x)=>{this.super.set('filterDepth.value' , x)},
+      callback: (x)=>{
+        this.super.set('filterDepth.factor.value' , x)
+        this.super.set('cutoffSig.value' , x)
+      },
       mapto: this.cutoffSig,
       x: 49, y: 10, size: 2,
       min:50, max: 2500, curve: 2,
@@ -452,9 +458,9 @@ export class DatoDuo extends MonophonicTemplate {
       label:'release',
       callback: (x)=>{ 
         this.super.set('env.decay' , stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]]))
-        this.super.set('env.release' , stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]]))
+        this.super.set('env.release' , stepper(x, 0.1, 10, [[0,0], [0.8, 0.5], [1,5]]))
         this.super.set('vcf_env.decay' , stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]]))
-        this.super.set('vcf_env.release' , stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]]))
+        this.super.set('vcf_env.release' , stepper(x, 0.1, 10, [[0,0], [0.8, 0.5], [1,5]]))
       },
       x: 59, y: 10, size: 2,
       min:0.1, max: 1.5,

@@ -341,8 +341,22 @@ export class MonophonicTemplate {
         }
     }
 
+    start(){ this.loop.start()}
+    stop(){ this.loop.stop()}
+    setSubdivision(sub){
+        this.loop.subdivision = sub
+        this.subdivision = sub
+        switch(sub){
+        case '16n': this.loop.playbackRate = 2; break;
+        case '8n': this.loop.playbackRate = 1; break;
+        case '4n': this.loop.playbackRate = .5; break;
+        case '2n': this.loop.playbackRate = .25; break;
+        }
+    }
+
     parseNoteString(val, time){
         console.log(val)
+        if(val[0] === ".") return
 
 
         const note = pitchNameToMidi(val[0])
@@ -350,7 +364,7 @@ export class MonophonicTemplate {
         //console.log('midi', note, val[0])
 
         
-        if(note === ".") return
+        
         this.triggerAttackRelease(note, 100, .01, time + div * (Tone.Time(this.subdivision)));
     }
 }

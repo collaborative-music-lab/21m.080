@@ -60,7 +60,7 @@ const voicings = {
 
 const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const noteToInterval = {
-  'C': 0, 'B#': 0, 'C#': 1, 'Db': 1,'D': 2, 'D#':3, 'Eb':3, 'E': 4, 'Fb': 4,
+  'C': 0, 'B#': 12, 'C#': 1, 'Db': 1,'D': 2, 'D#':3, 'Eb':3, 'E': 4, 'Fb': 4,
   'E#': 5, 'F': 5,'F#': 6, 'Gb': 6, 'G': 7,'G#': 8, 'Ab': 8,'A': 9,
   'A#': 10, 'Bb': 10, 'B': 11, 'Cb': 11,
   };
@@ -554,7 +554,9 @@ export function parsePitchStringSequence(str) {
     // - Matches items inside brackets as one element
     // - Groups numbers, 'b', and '#' with the preceding pitch
     // - Ensures '@' and the number following it are in their own array element
-    const regex = /\[.*?\]|[A-Ga-g][#b]?\d*|@(\d+)|./g;
+    //const regex = /\[.*?\]|[A-Ga-g][#b]?\d*|@(\d+)|./g;
+    // - Preserves periods '.' as their own array elements
+    const regex = /\[.*?\]|[A-Ga-g][#b]?\d*|@(\d+)|\./g;
     let arr = str.match(regex);
 
     // Step 3: Process '@' elements

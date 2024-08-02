@@ -450,7 +450,12 @@ export class DatoDuo extends MonophonicTemplate {
 
     this.release_fader = this.gui.Slider({
       label:'release',
-      callback: (x)=>{ this.super.set('filterEnvelope.release' , stepper(x, 0.1, 1.5, [[0,0], [0.8, 0.5], [1,1]]))},
+      callback: (x)=>{ 
+        this.super.set('env.decay' , stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]]))
+        this.super.set('env.release' , stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]]))
+        this.super.set('vcf_env.decay' , stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]]))
+        this.super.set('vcf_env.release' , stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]]))
+      },
       x: 59, y: 10, size: 2,
       min:0.1, max: 1.5,
       orientation: 'vertical',

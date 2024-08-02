@@ -5,10 +5,13 @@
 
 import p5 from 'p5';
 import * as Tone from 'tone';
+import { MonophonicTemplate } from './MonophonicTemplate';
 
-export class Polyphony{
+export class Polyphony extends MonophonicTemplate{
 	constructor(voice,num=8, gui= null){
-		this.gui = gui
+		super()
+        this.gui = gui
+        this.name = voice.name
 		this.numVoices = num
 		//audio
 		this.voice = []
@@ -115,7 +118,7 @@ export class Polyphony{
 	//SET PARAMETERS
 
 	set(param, value, time = null) {
-		//console.log('set', param, value)
+		console.log('set', param, value)
 		let keys = param.split('.');
 		//console.log('keys', keys)
 		for (let i = 0; i < this.numVoices; i++) {
@@ -167,19 +170,4 @@ export class Polyphony{
 		}
 	}
 
-	connect(destination) {
-		if (destination.input) {
-			this.output.connect(destination.input);
-		} else {
-			this.output.connect(destination);
-		}
-	}
-
-	disconnect(destination) {
-		if (destination.input) {
-			this.output.disconnect(destination.input);
-		} else {
-			this.output.disconnect(destination);
-		}
-	}
 }

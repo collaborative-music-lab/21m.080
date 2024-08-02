@@ -60,7 +60,7 @@ const voicings = {
 
 const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const noteToInterval = {
-  'C': 0, 'B#': 0, 'C#': 1, 'Db': 1,'D': 2, 'E': 4, 'Fb': 4,
+  'C': 0, 'B#': 0, 'C#': 1, 'Db': 1,'D': 2, 'D#':3, 'Eb':3, 'E': 4, 'Fb': 4,
   'E#': 5, 'F': 5,'F#': 6, 'Gb': 6, 'G': 7,'G#': 8, 'Ab': 8,'A': 9,
   'A#': 10, 'Bb': 10, 'B': 11, 'Cb': 11,
   };
@@ -546,28 +546,117 @@ export function parseStringSequence(str){
     return str
 }
 
+export function parsePitchStringSequence(str) {
+    // Step 1: Remove all whitespace
+    str = str.replace(/\s/g, "");
+
+    // Step 2: Split into an array
+    // - Matches items inside brackets as one element
+    // - Groups numbers, 'b', and '#' with the preceding pitch
+    // - Ensures '@' and the number following it are in their own array element
+    const regex = /\[.*?\]|[A-Ga-g][#b]?\d*|@(\d+)|./g;
+    let arr = str.match(regex);
+
+    // Step 3: Process '@' elements
+    for (let i = 0; i < arr.length; i++) {
+        if (arr[i].startsWith("@")) {
+            const repeatCount = parseInt(arr[i].slice(1), 10)-1; // Get the number after '@'
+            const elementToRepeat = arr[i - 1]; // Get the previous element
+            const repeatedElements = new Array(repeatCount).fill(elementToRepeat); // Repeat the element
+            arr.splice(i, 1, ...repeatedElements); // Replace '@' element with the repeated elements
+            i += repeatCount - 1; // Adjust index to account for the newly inserted elements
+        }
+    }
+
+    return arr;
+}
+
+
 export function parseStringBeat(curBeat, time){
   let outArr = []
   //handle when a beat contains more than one element
-      if (curBeat.length>1) {
-        if (curBeat.charAt(0) === '[' && curBeat.charAt(curBeat.length - 1) === ']') {
-        // Remove the brackets and split by the comma
-          curBeat =curBeat.slice(1, -1).split(',');
-        }
+    const bracketCheck = /^\[.*\]$/;
+    if (bracketCheck.test(curBeat)) {
+      //remove brackets and split into arrays by commas
+      curBeat =curBeat.slice(1, -1).split(',');
+      console.log(curBeat)
       curBeat.forEach(arr => {
           const length = arr.length;
           for (let i = 0; i < length; i++) {
               const val = arr[i];
               outArr.push([val,i/length])
-              console.log('out', outArr)
-              //console.log(this.index%8, arr,val)
-              //return [val, i]
-              //callback(val, time + i * (Tone.Time(subdiv) / length));
-          }
+              //console.log('out', outArr)
+            }
       });
     } else { //for beats with only one element
       outArr.push([curBeat, 0])
         //callback(curBeat, time);
     }
+    console.log(outArr)
     return  outArr 
+}
+
+export function parsePitchStringBeat(curBeat, time){
+  let outArr = []
+  //handle when a beat contains more than one element
+    const bracketCheck = /^\[.*\]$/;
+    if (bracketCheck.test(curBeat)) {
+      //remove brackets and split into arrays by commas
+      curBeat =curBeat.slice(1, -1).split(',');
+      curBeat.forEach(arr => {
+         const regex = /\[.*?\]|[A-Ga-g][#b]?\d*|@(\d+)|./g;
+         arr = arr.match(regex);
+         for (let i = 0; i < arr.length; i++) {
+              if (arr[i].startsWith("@")) {
+                  const repeatCount = parseInt(arr[i].slice(1), 10)-1; // Get the number after '@'
+                  const elementToRepeat = arr[i - 1]; // Get the previous element
+                  const repeatedElements = new Array(repeatCount).fill(elementToRepeat); // Repeat the element
+                  arr.splice(i, 1, ...repeatedElements); // Replace '@' element with the repeated elements
+                  i += repeatCount - 1; // Adjust index to account for the newly inserted elements
+              }
+          }
+          const length = arr.length;
+          for (let i = 0; i < length; i++) {
+              const val = arr[i];
+              outArr.push([val,i/length])
+          }
+      });
+      console.log(outArr)
+    } else { //for beats with only one element
+      outArr.push([curBeat, 0])
+    }
+    return  outArr 
+}
+
+export function pitchNameToMidi(name) {
+   
+    const pitchClasses = noteToInterval
+
+    // Normalize input to remove spaces
+    name = name.trim()
+    
+    // Determine the pitch class and accidental if present
+    let pitchClass = name.match(/[A-G]?[a-g]?[#b]?/)[0];
+
+    // Determine the octave:
+    // - Uppercase letters (C-B) should be octave 3
+    // - Lowercase letters (c-a) should be octave 4
+    let octave;
+    if (/[A-G]/.test(name[0])) {
+        octave = 3;
+    } else {
+        octave = 4;
+    }
+
+    //convert first character to uppercase
+    pitchClass = pitchClass.charAt(0).toUpperCase() + pitchClass.slice(1)
+
+    // Adjust for any explicit octave provided (e.g., "C4" or "c5")
+    let explicitOctave = name.match(/\d+$/);
+    if (explicitOctave) octave = parseInt(explicitOctave[0], 10)
+
+    // Adjust the MIDI note for flats (# and b are already handled in pitchClasses)
+    let midiNote = pitchClasses[pitchClass] + (octave+1) * 12;
+
+    return midiNote;
 }

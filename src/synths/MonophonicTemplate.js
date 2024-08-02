@@ -32,6 +32,7 @@ the preset file into synth/synthPresets/
 */
 
 import * as Tone from 'tone';
+import {parsePitchStringSequence, parsePitchStringBeat,getChord, pitchNameToMidi} from '../Theory'
 
 /**
  * Represents a Monophonic Synth
@@ -46,6 +47,10 @@ export class MonophonicTemplate {
         this.type = 'Synth'
         this.name = ""
         this.presetsData = null
+        //for .sequence()
+        this.subdivision = '8n' 
+        this.loop = new Tone.Loop(time => {},this.subdivision)
+
     }
 
     /**
@@ -302,4 +307,50 @@ export class MonophonicTemplate {
 	    downloadAnchorNode.click();
 	    downloadAnchorNode.remove();
 	};
+
+    /**
+     * Creates a pitch sequence from string input.
+     * @returns {void}
+     * @example synth.sequence()
+     */
+
+    sequence(arr, subdivision) {
+
+        if (subdivision) this.subdivision = subdivision;
+
+        this.seq = parsePitchStringSequence(arr)
+
+        console.log(this.seq)
+
+        // Create a Tone.Loop
+        if (this.loop.state === "stopped") {
+            this.loop = new Tone.Loop(time => {
+                this.index = Math.floor(Tone.Transport.ticks / Tone.Time(this.subdivision).toTicks());
+
+                let curBeat = this.seq[this.index%this.seq.length];
+
+                const event = parsePitchStringBeat(curBeat, time)
+                //console.log(event)
+
+                for (const val of event)  this.parseNoteString(val, time)
+
+            }, this.subdivision).start(0);
+
+            // Start the Transport
+            Tone.Transport.start();
+        }
+    }
+
+    parseNoteString(val, time){
+        console.log(val)
+
+
+        const note = pitchNameToMidi(val[0])
+        const div = val[1]
+        //console.log('midi', note, val[0])
+
+        
+        if(note === ".") return
+        this.triggerAttackRelease(note, 100, .01, time + div * (Tone.Time(this.subdivision)));
+    }
 }

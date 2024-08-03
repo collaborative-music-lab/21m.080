@@ -60,6 +60,10 @@ export class Polyphony extends MonophonicTemplate{
 			this.voice[this.v].triggerAttackRelease(val, vel, dur)
 		}
 		//this.v = this.getActiveVoice(val)
+		// setTimeout((val)=>{
+		// 	console.log('time', val)
+		// 	this.freeVoice(this.getActiveVoice(val))
+		// },this.voice[0].env.attack + dur + this.voice[0].env.release )
 	}
 
 	//
@@ -81,18 +85,20 @@ export class Polyphony extends MonophonicTemplate{
 		for (let i = 0; i < this.numVoices; i++) {
 			if(this.activeNotes[i] == num ) this.triggerRelease(num)	
 		}
-		//look for free voice
-		for (let i = 0; i < this.numVoices; i++) {
-			const index = (i + this.voiceCounter) % this.numVoices;
-			if (this.activeNotes[index] < 0) {
-				this.activeNotes[index] = num;
-		    	this.voiceCounter = (index + 1) % this.numVoices; // Prepare for the next voice
-		      	//console.log('free voice, assigned to voice', index)
-				return index;
-			}
-		}
+
+		// //look for free voice
+		// for (let i = 0; i < this.numVoices; i++) {
+		// 	const index = (i + this.voiceCounter) % this.numVoices;
+		// 	if (this.activeNotes[index] < 0) {
+		// 		this.activeNotes[index] = num;
+		//     	this.voiceCounter = (index + 1) % this.numVoices; // Prepare for the next voice
+		//       	//console.log('free voice, assigned to voice', index)
+		// 		return index;
+		// 	}
+		// }
 
 	    this.voiceCounter = (this.voiceCounter + 1) % this.numVoices; // Prepare for the next voice
+		this.activeNotes[this.voiceCounter] = num;
 		return this.voiceCounter
 		
 		// Fallback if the above logic didn't return
@@ -105,7 +111,8 @@ export class Polyphony extends MonophonicTemplate{
 		}//getNewVoice
 
 	//returns the voice playing the selected note
-	getActiveVoice= function(num){    
+	getActiveVoice= function(num){ 
+	//console.log(num)   
 		for(let i=0;i<this.numVoices;i++){
 			if(this.activeNotes[i] == num){
 				this.activeNotes[i] = -1
@@ -115,10 +122,15 @@ export class Polyphony extends MonophonicTemplate{
 		return -1
 	}//getActiveVoice
 
+	freeVoice = function(num){
+		console.log("free ", num)
+		this.activeNotes[num] = -1
+	}
+
 	//SET PARAMETERS
 
 	set(param, value, time = null) {
-		console.log('set', param, value)
+		//console.log('set', param, value)
 		let keys = param.split('.');
 		//console.log('keys', keys)
 		for (let i = 0; i < this.numVoices; i++) {

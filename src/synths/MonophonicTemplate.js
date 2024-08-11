@@ -48,7 +48,7 @@ export class MonophonicTemplate {
         //for .sequence()
         this.subdivision = '8n' 
         this.loop = new Tone.Loop(time => {},this.subdivision)
-
+        this.octave = 0
     }
 
     /**
@@ -390,6 +390,6 @@ setSubdivision(sub) {
         else note = intervalToMidi(val[0])
         const div = val[1]
 
-        this.triggerAttackRelease(note, 100, .01, time + div * (Tone.Time(this.subdivision)));
+        this.triggerAttackRelease(note + this.octave*12, 100, .01, time + div * (Tone.Time(this.subdivision)));
     }
 }

@@ -68,7 +68,7 @@ const loadTheme = async (themeName) => {
     const fallbackModule = await import('@uiw/codemirror-theme-gruvbox-dark');
     return fallbackModule.gruvboxDark; // Fallback theme
   }
-};
+}; //loadTheme
 
 function Editor(props) {
     window.p5 = p5;
@@ -132,6 +132,11 @@ function Editor(props) {
 
     var curLineNum = 0;
 
+    /************************************************
+     * 
+     * Code caching and URL decoding
+     * 
+     *************************************************/ 
     // Save history in browser
     const serializedState = localStorage.getItem(`${props.page}EditorState`);
 
@@ -160,6 +165,30 @@ function Editor(props) {
     const value = localStorage.getItem(`${props.page}Value`) || props.starterCode;
     
 
+
+    /************************************************
+     * 
+     * Handle Themes
+     * 
+     *************************************************/ 
+
+    const [themeDef, setThemeDef] = useState(); // Default theme
+
+    const setTheme = async (themeName) => {
+        if( typeof themeName === 'number') themeName = themeNames[themeName%themeNames.length]
+        const selectedTheme = await loadTheme(themeName);
+        console.log(`Current codebox theme: ${themeName}. \nChange theme with setTheme(number or string)`)
+        setThemeDef(selectedTheme);     
+    };
+
+    window.setTheme = setTheme
+    
+    /************************************************
+     * 
+     * Main useEffect and code parsing
+     * 
+     *************************************************/
+
     //const value = 'let CHANNEL = 3'
     const [height, setHeight] = useState(false);
     const [code, setCode] = useState(value); //full string of user code
@@ -172,20 +201,6 @@ function Editor(props) {
     const [codeMinimized, setCodeMinimized] = useState(false);
     const [p5Minimized, setP5Minimized] = useState(false);
     const [maximized, setMaximized] = useState('');
-
-    /****** HANDLE THEMES ************/
-
-    const [themeDef, setThemeDef] = useState(); // Default theme
-
-    const setTheme = async (themeName) => {
-        if( typeof themeName === 'number') themeName = themeNames[themeName%themeNames.length]
-        const selectedTheme = await loadTheme(themeName);
-        console.log(`Current codebox theme: ${themeName}. \nChange theme with setTheme(number or string)`)
-        setThemeDef(selectedTheme);     
-    };
-
-    window.setTheme = setTheme
-    /******************/
 
     useEffect(() => {
         // collab-hub socket instance
@@ -545,40 +560,40 @@ function Editor(props) {
     //GUI HANDLERS
     //Handle Mode Changes + Play & Stop
     const playClicked = () => {
-        stopClicked();
+        // stopClicked();
         traverse(code);
     }
-    const stopClicked = () => {
-        clearCanvases();
-        for (const key in vars) {
-            let variable = vars[key];
-            try {
-                variable.stop();
-            } catch (error) {
-                try {
-                    variable.disconnect()
-                } catch (error) {
-                    //console.log(variable)//No action needed
-                }
-            }
-        }
+    // const stopClicked = () => {
+    //     clearCanvases();
+    //     for (const key in vars) {
+    //         let variable = vars[key];
+    //         try {
+    //             variable.stop();
+    //         } catch (error) {
+    //             try {
+    //                 variable.disconnect()
+    //             } catch (error) {
+    //                 //console.log(variable)//No action needed
+    //             }
+    //         }
+    //     }
 
-        for (const [key, instances] of Object.entries(innerScopeVars)) {
-            for (const instance of instances) {
-                try {
-                    instance.stop();
-                } catch (error) {
-                    try {
-                        instance.disconnect()
-                    } catch (error) {
-                        //console.log(variable)//No action needed
-                    }
-                }
-            }
-            innerScopeVars[key] = [];
-        }
-        vars = {};
-    }
+    //     for (const [key, instances] of Object.entries(innerScopeVars)) {
+    //         for (const instance of instances) {
+    //             try {
+    //                 instance.stop();
+    //             } catch (error) {
+    //                 try {
+    //                     instance.disconnect()
+    //                 } catch (error) {
+    //                     //console.log(variable)//No action needed
+    //                 }
+    //             }
+    //         }
+    //         innerScopeVars[key] = [];
+    //     }
+    //     vars = {};
+    // }
 
     //Handle refresh/max/min buttons
     const refreshClicked = () => {
@@ -586,7 +601,11 @@ function Editor(props) {
         localStorage.setItem(`${props.page}Value`, props.starterCode);
     }
 
-    /******** EXPORT DATA ******/
+    /************************************************
+     * 
+     * Code Exporting
+     * 
+     *************************************************/
     function exportCode() {
         const selectedOption = document.getElementById('exportOptions').value;
         //const codeContent = document.getElementById('codeContent').innerText;
@@ -674,7 +693,11 @@ function Editor(props) {
         */
     }
 
-    /**** RESIZE CANVAS ****/
+    /************************************************
+     * 
+     * Resize Canvas
+     * 
+     *************************************************/
     const codeMinClicked = () => {
         setCodeMinimized(!codeMinimized);
         for (let id of canvases) {
@@ -706,7 +729,11 @@ function Editor(props) {
         }
     }
 
-    /**** CREATE HTML ******/
+    /************************************************
+     * 
+     * HTML
+     * 
+     *************************************************/
     return (
         <div id="flex" className="flex-container" >
             {!codeMinimized &&
@@ -714,8 +741,6 @@ function Editor(props) {
                     <span className="span-container">
                         <span className="span-container">
                             <button className="button-container" onClick={playClicked}>Run</button>
-                            {/* <button className={liveCSS} onClick={liveClicked}>Live</button>
-                            <button className="button-container" onClick={stopClicked}>Stop</button> */}
                             <MidiKeyboard />
                             <button className="button-container" onClick={refreshClicked}>Starter Code</button>
                         </span>

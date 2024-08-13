@@ -1,7 +1,7 @@
 // MonophonicTemplate.js
 
 import * as Tone from 'tone';
-import {parsePitchStringSequence, parsePitchStringBeat,getChord, pitchNameToMidi} from '../Theory'
+import {parsePitchStringSequence, parsePitchStringBeat,getChord, pitchNameToMidi, intervalToMidi} from '../Theory'
 
 /**
  * Represents a Monophonic Synth
@@ -48,7 +48,7 @@ export class MonophonicTemplate {
         //for .sequence()
         this.subdivision = '8n' 
         this.loop = new Tone.Loop(time => {},this.subdivision)
-
+        this.octave = 0
     }
 
     /**
@@ -317,7 +317,6 @@ export class MonophonicTemplate {
         if (subdivision) this.subdivision = subdivision;
 
         this.seq = parsePitchStringSequence(arr)
-
         console.log(this.seq)
 
         // Create a Tone.Loop
@@ -379,12 +378,18 @@ setSubdivision(sub) {
 
 
     parseNoteString(val, time){
-        console.log(val)
+        //console.log(val)
         if(val[0] === ".") return
+        //return
 
-        const note = pitchNameToMidi(val[0])
+        const usesPitchNames = /^[a-ac-zA-Z]$/.test(val[0][0]);
+
+        let note = ''
+
+        if( usesPitchNames) note =  pitchNameToMidi(val[0])
+        else note = intervalToMidi(val[0])
         const div = val[1]
 
-        this.triggerAttackRelease(note, 100, .01, time + div * (Tone.Time(this.subdivision)));
+        this.triggerAttackRelease(note + this.octave*12, 100, .01, time + div * (Tone.Time(this.subdivision)));
     }
 }

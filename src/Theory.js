@@ -1,15 +1,22 @@
 /* Theory.js
 
-Implements a system for specifying chord and progressions 
+*/
+
+/** Theory.js
+ * 
+ * Implements a system for specifying chord and progressions 
 as Roman numerals.
 
-Includes the classes 'chord', and 'progression'
+Includes the class 'chord'
 
 Variables:
 - tonic: tonic as string
 - tonicNumber: tonic as MIDI number
 - keytype: major or minor depending on tonic capital
 - octave: default octave for chords/scales
+- harmonicRhythm: how fast chord changes occur
+  - can be a number or an array of numbers
+  - in number of beats
 
 - progression: chord progression (array of strings ['i','iv','V7','VII7'])
 - chords: array of Chord objects
@@ -37,9 +44,6 @@ minimizeMovement(chord, previousChord): shifts chord so lowest note is higher th
 getChordRoot(name): returns midi note of root %12
 getInterval(num,scale): returns MIDI note number of scale degree (from 0)
 
-*/
-
-/**
  * @file This file implements functions for working with concepts from music theory
  * @module Theory
  */
@@ -53,9 +57,10 @@ let octave = 4;
 let voicing = 'closed'
 let previousChord = [];
 
-let progression = ['I']
 let pulsePerChord = 16
+let harmonicRhythm = 8
 let progressionChords = []
+let progression = []
 
 const voicings = { 
   "closed": [0,2,4,6],
@@ -163,6 +168,31 @@ export function setProgression(val){
   //console.log(progression)
 }
 
+export function printProgression(){
+  console.log(progressionChords)
+}
+
+//gets the index of the current chord based on tranpost position
+function getChordIndex(){
+  let index = Math.floor(Tone.Transport.ticks / Tone.Time(harmonicRhythm/4).toTicks());
+  // console.log(index)
+  return index
+}
+
+/**
+ * Retrieves an index for an array, based on the transport position.
+
+ * 
+ * @param {number} length - The length of the array we are indexing.
+ *                         The index is wrapped around based on the length
+ * @returns {string} - The subdivision for our sequence
+ */
+export function getIndex(length=8, sub='8n'){
+  let index = Math.floor(Tone.Transport.ticks / Tone.Time(sub).toTicks());
+  //console.log('index', length, sub, index%length, Tone.Transport.ticks)
+  return index%length
+}
+
 /**
  * Sets the number of pulses per chord in the progression.
 
@@ -170,7 +200,7 @@ export function setProgression(val){
  * @param {number} num - The number of pulses to set for each chord in the progression.
  */
 export function setProgressionRate(num) {
-  pulsePerChord = num;
+  harmonicRhythm = num;
 }
 
 /**
@@ -182,8 +212,9 @@ export function setProgressionRate(num) {
  * @returns {Chord} - The chord object corresponding to the provided index.
  */
 export function getChord(index){
-  index = index % (pulsePerChord * progression.length)
-  return progressionChords[Math.floor( index/pulsePerChord )]
+  let index2 = getChordIndex()// index % (pulsePerChord * progression.length)
+  if (progressionChords.length < 1) progressionChords.push( new Chord('I'))
+  return progressionChords[Math.floor( index2%progressionChords.length )]
 }
 
 /**
@@ -221,53 +252,6 @@ export function setTonic(val) {
 
   console.log(`Tonic: ${tonic}, Number: ${tonicNumber}, Key Type: ${keyType}, Octave: ${octave}`);
 }
-
-//takes a roman number chord and returns an array of intervals
-//interval array is based on key and current octave
-// export function getChordTones(name,  lowNote = null, _voicing = null){
-//   //get the type of chord based on chord name
-//   const type = getChordType(name);
-//   const scale = chordScales[type];
-//   //console.log(type,scale,progression)
-
-//   if(_voicing == null) _voicing = voicing
-//   //parse chord name
-//   const romanNumeralMatch = name.match(/[iIvVb#]+/);
-//   const suffix = name.replace(/[iIvVb#]+/, '');
-
-//   //error case
-//   const romanNumeral = romanNumeralMatch[0];
-//   //set keyType
-//   if (!romanNumeralMatch) romanNumeral = keyType == 'major' ? 'I' : 'i'
-//   //console.log(romanNumeral, suffix, MajorScaleDegrees[romanNumeral])
-  
-//   //get interval to chord root based on chord name
-//   let degree = 0
-//   if (keyType == 'major') {
-//     degree =  MajorScaleDegrees[romanNumeral];
-//     if(degree == undefined) degree = MinorScaleDegrees[romanNumeral];
-//   }
-//   else {
-//     degree =  MinorScaleDegrees[romanNumeral];
-//     if(degree == undefined) degree = MajorScaleDegrees[romanNumeral];
-//   }
-//   if(degree == undefined) degree = 0
-
-//   // Adjust the chord tones based on the voicing type
-//   let chord = applyVoicing(_voicing, scale);
-//   //console.log(octave, degree, tonicNumber)
-//   chord = chord.map(x=>x+octave*12+degree + tonicNumber)
-
-//   // Adjust the chord tones to be as close as possible to the previous chord
-//   if (previousChord.length > 0) {
-//     if(lowNote){ previousChord[0] = lowNote}
-//     chord = minimizeMovement(chord, previousChord);
-//   }
-//   //console.log("post", chord, lowNote)
-//   previousChord = chord;
-//   return chord
-
-// }
 
 export function rotateVoicing(steps){
   const len = previousChord.length
@@ -415,11 +399,11 @@ export class Chord {
     this.name = name;
     this.octave = _octave;
     this.voicing = _voicing;
-    this.root = getChordRoot(name); //integer 0-11
+    this.rootValue = getChordRoot(name); //integer 0-11
     this.quality = getChordType(name) //'Maj7'
     this.scale = chordScales[this.quality];
     if(this.name == 'V7') this.scale = chordScales['mixolydian']
-    this.chordTones = this.getChordTones(this.root,this.quality,this.scale);
+    this.chordTones = this.getChordTones(this.rootValue,this.quality,this.scale);
     this.length = this.chordTones.length
   }
   /**
@@ -435,7 +419,7 @@ export class Chord {
   }
 
   getInterval(num, min = 0, max = 127){ 
-    num = getInterval(num, this.scale) + this.root + this.octave*12 
+    num = getInterval(num, this.scale) + this.rootValue + this.octave*12 
     if(num<min) {
       const count = Math.floor((min-num)/12)+1
       for(let i=0;i<count;i++)num += 12
@@ -456,7 +440,7 @@ export class Chord {
    * @returns {number} - The root note as a MIDI note number.
    */
   root(lowNote = 36){
-    return this.root + lowNote
+    return this.rootValue + lowNote
   }
 
   /**
@@ -508,7 +492,7 @@ export class Chord {
       }
     }
     //console.log(octave, this.scale, tonicNumber)
-    chord = chord.map(x=> x+ this.octave*12 + this.root + tonicNumber)
+    chord = chord.map(x=> x+ this.octave*12 + this.rootValue + tonicNumber)
     //console.log(chord)
     // Adjust the chord tones to be as close as possible to the previous chord
     if (previousChord.length > 0) {
@@ -563,12 +547,12 @@ function getInterval(num,scale){
   let len = scale.length
   if (typeof num === 'number') {
     let _octave = Math.floor(num/len)
-    if(num<0) num = 7+num%7 //check negative numbers
+    if(num<0) num = len+num%len //check negative numbers
     num = scale[num%len] + _octave*12
     return num
   } else if (typeof num === 'string') {
     //parse num to look for # and b notes
-    const match = num.match(/^([^\d]+)?(\d+)$/);
+    const match = num.match(/^([^\d-]+)?(-?\d+)$/);
 
     //get scale degree
     num = Number(match[2])
@@ -579,7 +563,6 @@ function getInterval(num,scale){
     //apply accidentals
     if(match[1]== '#')num+=1
     else if (match[1] == 'b') num-=1
-
     return num
   }
   return 0
@@ -618,8 +601,13 @@ export function parseStringSequence(str){
 }
 
 export function parsePitchStringSequence(str) {
+    
+    const firstElement = str.replace(/\[/g, "")[0]
+    const usesPitchNames = /^[a-ac-zA-Z]$/.test(firstElement);
+
     // Step 1: Remove all whitespace
-    str = str.replace(/\s/g, "");
+    if( usesPitchNames ) str = str.replace(/\s/g, "");
+    //str = str.replace(/\,/g, "");
 
     // Step 2: Split into an array
     // - Matches items inside brackets as one element
@@ -627,8 +615,14 @@ export function parsePitchStringSequence(str) {
     // - Ensures '@' and the number following it are in their own array element
     //const regex = /\[.*?\]|[A-Ga-g][#b]?\d*|@(\d+)|./g;
     // - Preserves periods '.' as their own array elements
-    const regex = /\[.*?\]|[A-Ga-g][#b]?\d*|@(\d+)|\./g;
+    let regex = /\[.*?\]|[A-Ga-g][#b]?\d*|@(\d+)|\./g;
+    if( !usesPitchNames){ //true if first element is a number
+      regex = /\[.*?\]|-?[b#]?\d+[b#]?|@(\d+)|\./g;
+    } 
+
     let arr = str.match(regex);
+
+    console.log(str, arr)
 
     // Step 3: Process '@' elements
     for (let i = 0; i < arr.length; i++) {
@@ -644,7 +638,7 @@ export function parsePitchStringSequence(str) {
     return arr;
 }
 
-
+//handles rhythm sequences
 export function parseStringBeat(curBeat, time){
   let outArr = []
   //handle when a beat contains more than one element
@@ -665,20 +659,29 @@ export function parseStringBeat(curBeat, time){
       outArr.push([curBeat, 0])
         //callback(curBeat, time);
     }
-    console.log(outArr)
     return  outArr 
 }
 
+//handles pitch sequences
 export function parsePitchStringBeat(curBeat, time){
+  console.log(curBeat)
+  const firstElement = curBeat.replace(/\[/g, "")[0]
+  const usesPitchNames = /^[a-ac-zA-Z]$/.test(firstElement);
+
   let outArr = []
   //handle when a beat contains more than one element
     const bracketCheck = /^\[.*\]$/;
     if (bracketCheck.test(curBeat)) {
       //remove brackets and split into arrays by commas
       curBeat =curBeat.slice(1, -1).split(',');
+      console.log(curBeat)
       curBeat.forEach(arr => {
-         const regex = /\[.*?\]|[A-Ga-g][#b]?\d*|@(\d+)|./g;
-         arr = arr.match(regex);
+        let regex = /\[.*?\]|[A-Ga-g][#b]?\d*|@(\d+)|./g;
+        if( !usesPitchNames){ //true if first element is a number
+          regex = /\[.*?\]|-?\d+[#b]?|@(\d+)|\./g;
+        } 
+        arr = arr.match(regex)
+
          for (let i = 0; i < arr.length; i++) {
               if (arr[i].startsWith("@")) {
                   const repeatCount = parseInt(arr[i].slice(1), 10)-1; // Get the number after '@'
@@ -688,16 +691,25 @@ export function parsePitchStringBeat(curBeat, time){
                   i += repeatCount - 1; // Adjust index to account for the newly inserted elements
               }
           }
+          // console.log(arr)
+          
           const length = arr.length;
           for (let i = 0; i < length; i++) {
               const val = arr[i];
               outArr.push([val,i/length])
           }
       });
-      console.log(outArr)
+      //console.log(outArr)
     } else { //for beats with only one element
       outArr.push([curBeat, 0])
     }
+    // // Assuming outArr is your input array
+    // outArr.forEach((arr, i) => {
+    //     const correctedPitchElement = rearrangeAccidentals(arr[0], usesPitchNames);
+    //     outArr[i] = [correctedPitchElement, arr[1]];
+    // });
+
+    //console.log(curBeat, outArr)
     return  outArr 
 }
 
@@ -742,3 +754,66 @@ export function pitchNameToMidi(name) {
 
     return midiNote;
 }
+
+/**
+ * Converts an to a MIDI note number, taking into account the current chord.
+
+ *
+ * @param {string} interval - The interval to convert. This will include a integer number, 
+ *                        and an optional accidental (# or b).
+ * @returns {number} - The corresponding MIDI note number.
+ */
+export function intervalToMidi(interval) {
+    // Normalize input to remove spaces
+    interval = interval.trim()
+    
+    // Determine the pitch class and accidental if present
+    const degree = interval.match(/\[.*?\]|-?\d?|@(\d+)|\./g)[0];
+    const accidental = interval.match(/[b#]+/g);
+
+    
+
+    let midiNote = getChord().interval(degree,24,127)
+
+    if (accidental !== null) {
+      if (Array.isArray(accidental)) {
+        for (const sign of accidental) {
+          if (sign === "#") midiNote += 1;
+          else if (sign === "b") midiNote -= 1;
+        }
+      } else {
+        if (accidental === "#") midiNote += 1;
+        else if (accidental === "b") midiNote -= 1;
+      }
+    }
+
+    // Adjust the MIDI note for flats (# and b are already handled in pitchClasses)
+    //let midiNote = pitchClasses[pitchClass] + (octave+1) * 12;
+    //return 60
+    return midiNote;
+}
+
+//parses a symbol and makes sure it is in correct order
+function rearrangeAccidentals(arr, usesPitchNames) {
+
+    // Regular expression to separate sign, letters, numbers, and accidentals
+    const match = arr.match(/^(-?)([A-Za-ac-z]*)(\d*)([#b]*)$/);
+    console.log(arr, usesPitchNames, match)
+    if (match) {
+        const [, sign, letters, numbers, accidentals] = match;
+        //console.log(`letters ${accidentals}${numbers} ${usesPitchNames}`);
+        if (usesPitchNames) {
+            // For pitch names: letter/accidental/octaveNumber
+            //console.log(`letters ${sign}${letters}${accidentals}${numbers}`);
+            return `${letters}${accidentals}${numbers}`;
+        } else {
+            // For scale degrees: sign,number,accidental
+            //console.log(`numbers ${sign}${letters}${numbers}${accidentals}`);
+            return `${sign}${numbers}${accidentals}`;
+        }
+    }
+
+    // Return the original string if no match
+    return arr;
+}
+

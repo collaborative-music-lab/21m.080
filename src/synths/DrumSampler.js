@@ -78,10 +78,6 @@ export class DrumSampler extends DrumTemplate{
     this.hatDecay = .05
     this.loop = new Tone.Loop(time => {},this.subdivision)
 
-    this.initGui()
-    this.hideGui()
-    this.loadPreset('default')
-
     if (this.gui !== null) {
             this.initGui()
             this.hideGui();
@@ -197,36 +193,16 @@ export class DrumSampler extends DrumTemplate{
     if (this.loop.state === "stopped") {
         this.loop = new Tone.Loop(time => {
             this.index = Math.floor(Tone.Transport.ticks / Tone.Time(this.subdivision).toTicks());
-
+            console.log('index', this.index)
             let curBeat = this.seq.original[this.index%this.seq.original.length];
 
             const event = parseStringBeat(curBeat, time)
-            console.log(event)
+            //console.log(event)
 
             for (const val of event) {
               //console.log(val[0], val[1])
               this.triggerDrum(val[0], time + val[1] * (Tone.Time(this.subdivision)));
             }
-
-            //this.triggerDrum(val, time + i * (Tone.Time(this.subdivision) / length));
-          //   //handle when a beat contains more than one element
-          //   if (curBeat.length>1) {
-          //     if (curBeat.charAt(0) === '[' && curBeat.charAt(curBeat.length - 1) === ']') {
-          //     // Remove the brackets and split by the comma
-          //       curBeat =curBeat.slice(1, -1).split(',');
-          //     }
-
-          //   curBeat.forEach(arr => {
-          //       const length = arr.length;
-          //       for (let i = 0; i < length; i++) {
-          //           const val = arr[i];
-          //           //console.log(this.index%8, arr,val)
-          //           this.triggerDrum(val, time + i * (Tone.Time(this.subdivision) / length));
-          //       }
-          //   });
-          // } else { //for beats with only one element
-          //     this.triggerDrum(curBeat, time);
-          // }
         }, this.subdivision).start(0);
 
         // Start the Transport

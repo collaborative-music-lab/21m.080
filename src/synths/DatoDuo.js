@@ -26,7 +26,7 @@ export class DatoDuo extends MonophonicTemplate {
     this.presets = DatoDuoPresets
     this.isGlide = false
     this.name = "DatoDuo"
-    console.log(this.name, " loaded, available preset: ", DatoDuoPresets)
+    //console.log(this.name, " loaded, available preset: ", DatoDuoPresets)
 
     this.frequency = new Tone.Signal()
     this.tonePitchshift = new Tone.Multiply()
@@ -40,7 +40,8 @@ export class DatoDuo extends MonophonicTemplate {
     this.filterDepth = new Tone.Multiply()
     this.filterMultiplier = new Tone.Multiply()
     this.filter = new Tone.Filter()
-    this.velocity = new Tone.Signal()
+    this.velocity = new Tone.Signal(1)
+    this.velocityMult = new Tone.Multiply(1)
     this.env = new Tone.Envelope()
     this.amp = new Tone.Multiply()
     this.output = new Tone.Multiply(0.05).toDestination()
@@ -85,11 +86,14 @@ export class DatoDuo extends MonophonicTemplate {
     //Connect the ASDR (VCA)
     this.filter.connect(this.amp)
 
-    this.env.connect(this.amp.factor)
+    this.velocity.connect(this.velocityMult.factor)
+    this.env.connect(this.velocityMult)
+    this.velocityMult.connect(this.amp.factor)
     this.env.attack = 0.01
     this.env.delay = 0.1
     this.env.sustain = 0
     this.env.release = 0.9
+    this.env.releaseCurve = 'cosine'
 
     //effects chain
 
@@ -138,7 +142,7 @@ export class DatoDuo extends MonophonicTemplate {
 
   //envelopes
   triggerAttack (freq, amp, time=null){
-    amp = amp/127
+    amp = Math.pow(amp / 127,2);
     freq = Tone.Midi(freq).toFrequency()
     if(time){
       this.env.triggerAttack(time)
@@ -169,11 +173,13 @@ export class DatoDuo extends MonophonicTemplate {
   }
   // Override triggerAttackRelease method
     triggerAttackRelease(freq, amp, dur = 0.01, time = null) {
-        amp = amp / 127;
+      //console.log('ar', freq)
+        amp = Math.pow(amp / 127,2);
         freq = Tone.Midi(freq).toFrequency();
         if (time) {
             this.env.triggerAttackRelease(dur, time);
             this.vcf_env.triggerAttackRelease(dur, time);
+            this.velocity.setValueAtTime(amp, time)
             if (this.isGlide) {
                 this.frequency.linearRampToValueAtTime(freq, this.rampTime + time);
             } else {
@@ -308,9 +314,9 @@ export class DatoDuo extends MonophonicTemplate {
       label:'release',
       callback: (x)=>{ 
         this.env.decay = stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]])
-        this.env.release = stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]])
+        this.env.release = stepper(x, 0.1, 30, [[0,0], [0.8, 0.5], [1,5]])
         this.vcf_env.decay = stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]])
-        this.vcf_env.release = stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]])
+        this.vcf_env.release = stepper(x, 0.1, 30, [[0,0], [0.8, 0.5], [1,5]])
       },
       x: 59, y: 10, size: 2,
       min:0.1, max: 1.5,
@@ -475,9 +481,9 @@ export class DatoDuo extends MonophonicTemplate {
       label:'release',
       callback: (x)=>{ 
         this.super.set('env.decay' , stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]]))
-        this.super.set('env.release' , stepper(x, 0.1, 10, [[0,0], [0.8, 0.5], [1,5]]))
+        this.super.set('env.release' , stepper(x, 0.1, 25, [[0,0], [0.8, 0.5], [1,5]]))
         this.super.set('vcf_env.decay' , stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]]))
-        this.super.set('vcf_env.release' , stepper(x, 0.1, 10, [[0,0], [0.8, 0.5], [1,5]]))
+        this.super.set('vcf_env.release' , stepper(x, 0.1, 25, [[0,0], [0.8, 0.5], [1,5]]))
       },
       x: 59, y: 10, size: 2,
       min:0.1, max: 1.5,

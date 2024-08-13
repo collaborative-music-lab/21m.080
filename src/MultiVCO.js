@@ -83,7 +83,7 @@ export class MultiVCO{
             console.log("Index out of range")
         }
         else {
-            this.freqScalars[index].factor = shift
+            this.freqScalars[index].factor.value = shift
         }
     }
 

@@ -1,8 +1,7 @@
 /*
  * 6 voice subtractive synthesizer
- * TODOO: GUI and sound design
- * TODOO: add velocity sensitivity
- * TODOO: Create my own chorus + distortion
+ *
+ * 
 */
 
 import p5 from 'p5';
@@ -22,56 +21,55 @@ export class ESPSynth extends MonophonicTemplate {
 
         this.frequency = new Tone.Signal()
         this.pitchshift = new Tone.Multiply()
-        this.multiOsc = new MultiVCO(waves, pitches)
+        this.vco = new MultiVCO(waves, pitches)
         this.lfo = new Tone.LFO().start()
         this.vibratoSwitch = new Tone.Multiply()
         this.wahSwitch = new Tone.Multiply()
         this.vcf = new Tone.Filter()
-        this.filterCutoffFrequency = new Tone.Signal()
+        this.cutoff = new Tone.Signal()
         this.env = new Tone.Envelope()
-        this.vcfVelocityController = new Tone.Signal(1)
-        this.vcaVelocityController = new Tone.Signal(1)
-        this.vcfEnvelopeDepth = new Tone.Multiply()
+        this.vcfVelocityDepth = new Tone.Signal(1)
+        this.vcaVelocityDepth = new Tone.Signal(1)
+        this.vcfEnvDepth = new Tone.Multiply()
         this.vcfVelocity = new Tone.Multiply(1)
-        this.vcaEnvelopeDepth = new Tone.Multiply()
+        this.vcaEnvDepth = new Tone.Multiply()
         this.vcaVelocity = new Tone.Multiply(1)
         this.vca = new Tone.Multiply()
-        this.outputGain = new Tone.Multiply()
-        this.output = new Tone.Multiply(0.05).toDestination()
+        this.output = new Tone.Multiply(1)
 
         //connect input signal to multiVCO
         this.frequency.connect(this.pitchshift)
-        this.pitchshift.connect(this.multiOsc.frequency)
+        this.pitchshift.connect(this.vco.frequency)
         this.pitchshift.value = 1
 
         //connect vco to vcf
-        this.multiOsc.connect(this.vcf)
-        this.filterCutoffFrequency.connect(this.vcf.frequency)
+        this.vco.connect(this.vcf)
+        this.cutoff.connect(this.vcf.frequency)
         this.vcf.rolloff = -24
         this.vcf.Q.value = 1
 
         //enable the lfo to impact pitch or filter
         this.lfo.connect(this.vibratoSwitch) //switch between 0 and 1
-        this.vibratoSwitch.connect(this.multiOsc.frequency)
+        this.vibratoSwitch.connect(this.vco.frequency)
         this.lfo.connect(this.wahSwitch)
         this.wahSwitch.connect(this.vcf.frequency)
 
         //Set up filter envelope
 
-        this.env.connect(this.vcfEnvelopeDepth)
-        this.vcfEnvelopeDepth.connect(this.vcfVelocity)
+        this.env.connect(this.vcfEnvDepth)
+        this.vcfEnvDepth.connect(this.vcfVelocity)
         this.vcfVelocity.connect(this.vcf.frequency)
-        this.vcfVelocityController.connect(this.vcfVelocity.factor)
+        this.vcfVelocityDepth.connect(this.vcfVelocity.factor)
 
         //connect vcf to vca
         this.vcf.connect(this.vca)
 
         //set up amplitude envelope
-        this.vcaEnvelopeDepth.factor.value = 1
-        this.env.connect(this.vcaEnvelopeDepth)
-        this.vcaEnvelopeDepth.connect(this.vcaVelocity)
+        this.vcaEnvDepth.factor.value = 1
+        this.env.connect(this.vcaEnvDepth)
+        this.vcaEnvDepth.connect(this.vcaVelocity)
         this.vcaVelocity.connect(this.vca.factor)
-        this.vcaVelocityController.connect(this.vcaVelocity.factor)
+        this.vcaVelocityDepth.connect(this.vcaVelocity.factor)
 
         //effects chain
 
@@ -93,8 +91,7 @@ export class ESPSynth extends MonophonicTemplate {
         this.chorgain.connect(this.chor)
         this.chor.connect(this.chorout)
 
-        this.chorout.connect(this.outputGain)
-        this.outputGain.connect(this.output)
+        this.chorout.connect(this.output)
 
         //velocity
         this.velo = 10
@@ -172,13 +169,13 @@ export class ESPSynth extends MonophonicTemplate {
         if(time){
             this.env.triggerAttack(time)
             this.frequency.setValueAtTime(freq, time)
-            this.vcfVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.03)
-            this.vcaVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]),.03)
+            this.vcfVelocityDepth.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.03)
+            this.vcaVelocityDepth.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]),.03)
         } else{
             this.env.triggerAttack()
             this.frequency.value = freq
-            this.vcfVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.03)
-            this.vcaVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]),.03)
+            this.vcfVelocityDepth.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.03)
+            this.vcaVelocityDepth.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]),.03)
         }
     }
 
@@ -197,13 +194,13 @@ export class ESPSynth extends MonophonicTemplate {
     if(time){
         this.env.triggerAttackRelease(dur, time)
         this.frequency.setValueAtTime(freq, time)
-        this.vcfVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.03)
-        this.vcaVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]),.03)
+        this.vcfVelocityDepth.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.03)
+        this.vcaVelocityDepth.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]),.03)
     } else{
         this.env.triggerAttackRelease(dur)
         this.frequency.value = freq
-        this.vcfVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.03)
-        this.vcaVelocityController.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]),.03)
+        this.vcfVelocityDepth.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.03)
+        this.vcaVelocityDepth.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]),.03)
     }
     }//attackRelease
 
@@ -241,7 +238,7 @@ export class ESPSynth extends MonophonicTemplate {
 
         this.triangle_fader = this.gui.Slider({
             label:'tri',
-            callback: (x)=>{this.multiOsc.setGain(0, x)},
+            callback: (x)=>{this.vco.setGain(0, x)},
             x: 11, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -253,7 +250,7 @@ export class ESPSynth extends MonophonicTemplate {
 
         this.saw_fader = this.gui.Slider({
             label:'saw',
-            callback: (x)=>{this.multiOsc.setGain(1, x)},
+            callback: (x)=>{this.vco.setGain(1, x)},
             x: 17, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -265,7 +262,7 @@ export class ESPSynth extends MonophonicTemplate {
 
         this.square_fader = this.gui.Slider({
             label:'squ',
-            callback: (x)=>{this.multiOsc.setGain(2, x)},
+            callback: (x)=>{this.vco.setGain(2, x)},
             x: 23, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -277,7 +274,7 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.octave_down_fader = this.gui.Slider({
             label:'-1',
-            callback: (x)=>{this.multiOsc.setGain(3, x)},
+            callback: (x)=>{this.vco.setGain(3, x)},
             x: 29, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -289,7 +286,7 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.two_octave_down_fader = this.gui.Slider({
             label:'-2',
-            callback: (x)=>{this.multiOsc.setGain(4, x)},
+            callback: (x)=>{this.vco.setGain(4, x)},
             x: 35, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -301,7 +298,7 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.noise_fader = this.gui.Slider({
             label:'noise',
-            callback: (x)=>{this.multiOsc.setGain(5, x)},
+            callback: (x)=>{this.vco.setGain(5, x)},
             x: 41, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -340,13 +337,13 @@ export class ESPSynth extends MonophonicTemplate {
 
         this.cutoff_frequency_knob = this.gui.Knob({
             label:'frequency',
-            callback: (x)=>{this.filterCutoffFrequency.value = stepper(x, 50, 2500, [[0,0],[0.95,0.75], [1,1]])},
+            callback: (x)=>{this.cutoff.value = stepper(x, 50, 2500, [[0,0],[0.95,0.75], [1,1]])},
             x: 53, y: 25, size:1.4,
             showValue: false,
             min:50, max: 2500
         })
         this.cutoff_frequency_knob.set( 1200 )
-        this.filterCutoffFrequency.value = 1200
+        this.cutoff.value = 1200
         this.cutoff_frequency_knob.borderColor = [178,192,191]
         this.cutoff_frequency_knob.accentColor = [255,162,1]
         this.cutoff_frequency_knob.border = 5
@@ -367,7 +364,7 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.asdr_int_knob = this.gui.Knob({
             label:'VCF Env Depth',
-            callback: (x)=>{this.vcfEnvelopeDepth.factor.value = x},
+            callback: (x)=>{this.vcfEnvDepth.factor.value = x},
             x: 66, y: 34, size:0.85, curve: 3,
             min:0, max: 5000,
             showValue: false,
@@ -379,13 +376,13 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.volume_knob = this.gui.Knob({
             label:'volume',
-            callback: (x)=>{this.outputGain.value = x},
+            callback: (x)=>{this.output.factor.value = x},
             x: 66, y: 68, size:0.85,
             min:0.0001, max: 1.5,
             showValue: false,
         })
         this.volume_knob.set( 1 )
-        this.outputGain.value = 1
+        this.output.factor.value = 1
         this.volume_knob.borderColor = [178,192,191]
         this.volume_knob.accentColor = [255,162,1]
         this.volume_knob.border = 5
@@ -515,7 +512,7 @@ export class ESPSynth extends MonophonicTemplate {
 
         this.triangle_fader = this.gui.Slider({
             label:'tri',
-            callback: (x)=>{this.super.set('multiOsc.gainStages.0.factor.value', x)},
+            callback: (x)=>{this.super.set('vco.gainStages.0.factor.value', x)},
             x: 11, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -527,7 +524,7 @@ export class ESPSynth extends MonophonicTemplate {
 
         this.saw_fader = this.gui.Slider({
             label:'saw',
-            callback: (x)=>{this.super.set('multiOsc.gainStages.1.factor.value', x)},
+            callback: (x)=>{this.super.set('vco.gainStages.1.factor.value', x)},
             x: 17, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -539,7 +536,7 @@ export class ESPSynth extends MonophonicTemplate {
 
         this.square_fader = this.gui.Slider({
             label:'squ',
-            callback: (x)=>{this.super.set('multiOsc.gainStages.2.factor.value', x)},
+            callback: (x)=>{this.super.set('vco.gainStages.2.factor.value', x)},
             x: 23, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -551,7 +548,7 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.octave_down_fader = this.gui.Slider({
             label:'-1',
-            callback: (x)=>{this.super.set('multiOsc.gainStages.3.factor.value', x)},
+            callback: (x)=>{this.super.set('vco.gainStages.3.factor.value', x)},
             x: 29, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -563,7 +560,7 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.two_octave_down_fader = this.gui.Slider({
             label:'-2',
-            callback: (x)=>{this.super.set('multiOsc.gainStages.4.factor.value', x)},
+            callback: (x)=>{this.super.set('vco.gainStages.4.factor.value', x)},
             x: 35, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -575,7 +572,7 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.noise_fader = this.gui.Slider({
             label:'noise',
-            callback: (x)=>{this.super.set('multiOsc.gainStages.5.factor.value', x)},
+            callback: (x)=>{this.super.set('vco.gainStages.5.factor.value', x)},
             x: 41, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -613,13 +610,13 @@ export class ESPSynth extends MonophonicTemplate {
 
         this.cutoff_frequency_knob = this.gui.Knob({
             label:'frequency',
-            callback: (x)=>{this.super.set('filterCutoffFrequency.value', stepper(x, 50, 2500, [[0,0],[0.95,0.75], [1,1]]))},
+            callback: (x)=>{this.super.set('cutoff.value', stepper(x, 50, 2500, [[0,0],[0.95,0.75], [1,1]]))},
             x: 53, y: 25, size:1.4,
             showValue: false,
             min:50, max: 2500
         })
         this.cutoff_frequency_knob.set( 1200 )
-        this.super.set('filterCutoffFrequency.value' , 1200)
+        this.super.set('cutoff.value' , 1200)
         this.cutoff_frequency_knob.borderColor = [178,192,191]
         this.cutoff_frequency_knob.accentColor = [255,162,1]
         this.cutoff_frequency_knob.border = 5
@@ -640,7 +637,7 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.asdr_int_knob = this.gui.Knob({
             label:'VCF Env Depth',
-            callback: (x)=>{this.super.set('vcfEnvelopeDepth.factor.value', x)},
+            callback: (x)=>{this.super.set('vcfEnvDepth.factor.value', x)},
             x: 66, y: 34, size:0.85, curve: 3,
             min:0, max: 5000,
             showValue: false,
@@ -652,13 +649,13 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.volume_knob = this.gui.Knob({
             label:'volume',
-            callback: (x)=>{this.super.set('outputGain.value',  x)},
+            callback: (x)=>{this.super.set('output.factor.value',  x)},
             x: 66, y: 68, size:0.85,
             min:0.0001, max: 1.5,
             showValue: false,
         })
         this.volume_knob.set( 1 )
-        this.super.set('outputGain.value', 1)
+        this.super.set('output.factor.value', 1)
         this.volume_knob.borderColor = [178,192,191]
         this.volume_knob.accentColor = [255,162,1]
         this.volume_knob.border = 5

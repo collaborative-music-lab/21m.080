@@ -29,13 +29,13 @@ export class DatoDuo extends MonophonicTemplate {
     //console.log(this.name, " loaded, available preset: ", DatoDuoPresets)
 
     this.frequency = new Tone.Signal()
-    this.tonePitchshift = new Tone.Multiply()
-    this.sawPitchshift = new Tone.Multiply()
+    this.tonePitchShift = new Tone.Multiply()
+    this.sawPitchShift = new Tone.Multiply()
     this.pulseWav = new Tone.PulseOscillator().start()
     this.sawWav = new Tone.Oscillator({type:'sawtooth'}).start()
     this.toneMixer = new Tone.Multiply()
     this.sawMixer = new Tone.Multiply()
-    this.cutoffSig = new Tone.Signal()
+    this.cutoff = new Tone.Signal()
     this.vcf_env = new Tone.Envelope()
     this.filterDepth = new Tone.Multiply()
     this.filterMultiplier = new Tone.Multiply()
@@ -50,15 +50,15 @@ export class DatoDuo extends MonophonicTemplate {
 
     //connect the initial signal to multipliers for pitch shift
     //connect those to the oscillators
-    this.frequency.connect(this.tonePitchshift)
-    this.tonePitchshift.connect(this.pulseWav.frequency)
-    this.frequency.connect(this.sawPitchshift)
-    this.sawPitchshift.connect(this.sawWav.frequency)
-    this.rampTime = .01
+    this.frequency.connect(this.tonePitchShift)
+    this.tonePitchShift.connect(this.pulseWav.frequency)
+    this.frequency.connect(this.sawPitchShift)
+    this.sawPitchShift.connect(this.sawWav.frequency)
+    this.rampTime = .004
 
     this.frequency.value = 500;
-    this.tonePitchshift.factor.value = 1;
-    this.sawPitchshift.factor.value = 1;
+    this.tonePitchShift.factor.value = 1;
+    this.sawPitchShift.factor.value = 1;
 
     //connect the oscillators to a mixer and add them together
     this.pulseWav.connect(this.toneMixer)
@@ -66,19 +66,19 @@ export class DatoDuo extends MonophonicTemplate {
     this.sawWav.connect(this.sawMixer)
     this.sawMixer.connect(this.filter)
 
-    this.toneMixer.factor.value = 1
-    this.sawMixer.factor.value = 1
+    this.toneMixer.factor.value = .25
+    this.sawMixer.factor.value = .25
 
     //Connect the filter (VCF)
     this.vcf_env.connect(this.filterDepth)
-    this.cutoffSig.connect(this.filter.frequency)
+    this.cutoff.connect(this.filter.frequency)
     this.filterDepth.connect(this.filter.frequency)
 
-    this.cutoffSig.value = 1500
+    this.cutoff.value = 1500
     this.filterDepth.factor.value = 5000
     this.vcf_env.attack = 0.02
-    this.vcf_env.decay = 0.1
-    this.vcf_env.sustain = .5
+    this.vcf_env.decay = 0.01
+    this.vcf_env.sustain = .0
     this.vcf_env.release = 0.2
     this.filter.rolloff = -24
     this.filter.Q.value = 1
@@ -108,30 +108,24 @@ export class DatoDuo extends MonophonicTemplate {
     this.delayFilter = new Tone.Filter()
     this.lfo = new Tone.LFO("8n", 400, 2000)
 
-    this.distout = new Tone.Add()
-    this.crushout = new Tone.Add()
-    this.delayout = new Tone.Add()
-
     //distortion
-    this.amp.connect(this.distout)
-    this.amp.connect(this.distgain)
-    this.distgain.connect(this.dist)
-    this.dist.connect(this.distout)
+    this.amp.connect(this.dist)
+    this.dist.connect(this.distgain)
+    this.distgain.connect(this.crusher)
 
     //bitcrusher
-    this.distout.connect(this.crushout)
-    this.distout.connect(this.crushgain)
-    this.crushgain.connect(this.crusher)
-    this.crusher.connect(this.crushout)
+    //this.distout.connect(this.crushout)
+    //this.distout.connect(this.crushgain)
+    //this.crushgain.connect(this.crusher)
+    this.crusher.connect(this.output)
 
     //delay
-    this.crushout.connect(this.delayout)
-    this.crushout.connect(this.delaygain)
+    //this.crushout.connect(this.delayout)
+    this.crusher.connect(this.delaygain)
     this.delaygain.connect(this.delay)
     this.delay.connect(this.delayFilter)
     this.lfo.connect(this.delayFilter.frequency)
-    this.delayFilter.connect(this.delayout)
-    this.delayout.connect(this.output)
+    this.delayFilter.connect(this.output)
 
     if (this.gui !== null) {
         this.initGui()
@@ -216,13 +210,10 @@ export class DatoDuo extends MonophonicTemplate {
    * @param {number} detune - The detune value.
    */
   setDetune(detune){
-    this.sawPitchshift.factor.value = detune
+    this.sawPitchShift.factor.value = detune
   }
   setPulsewidth(width) {
     this.pulseWav.width = width;
-  }
-  setPulsewidth(width){
-    this.pulseWav.width = width
   }
   setOutputGain(out){
     this.output.factor.value = out
@@ -235,25 +226,32 @@ export class DatoDuo extends MonophonicTemplate {
   initGui(gui = this.gui) {
     this.gui = gui
 
-    this.distortion_toggle =  this.gui.Toggle({
-      label:'Accent',
-      mapto: this.dist.wet,
+    this.distortion_toggle =  this.gui.Knob({
+      label:'Distortion',
+      callback: x=>{
+        this.dist.distortion = x
+        this.distgain.factor.value = 1-(x*.4)
+      },
+      //mapto: this.dist.distortion,
       x: 85, y:20, size: 0.8,
+      min:0, max:.9,
       link: 'dist'
     })
     this.distortion_toggle.accentColor = [51,145,219]
-    this.dist.wet.value = 0
+    this.dist.wet.value = 1
 
-    this.crusher_toggle =  this.gui.Toggle({
+    this.crusher_toggle =  this.gui.Knob({
       label:'bitcrusher',
-      mapto: this.crusher.wet,
+      callback: x=>{this.crusher.bits.value = Math.floor(x)},
+      //mapto: this.crusher.bits,
       x: 90, y:50, size: 0.8,
+      min:2, max:16,
       link: 'crusher'
     })
     this.crusher_toggle.accentColor = [46,152,99]
-    this.crusher.wet.value = 0
+    this.crusher.wet.value = 1
 
-    this.glide_toggle =  this.gui.Toggle({
+    this.glide_toggle =  this.gui.Momentary({
       label:'Glide',
       callback: (x)=>{this.isGlide = x}, //IDK how to implemement this in class
       x: 15, y:20, size: 0.8,
@@ -286,7 +284,8 @@ export class DatoDuo extends MonophonicTemplate {
       callback: (x)=>{this.pulseWav.width.value = stepper(x, 0, 1, [[0,0], [0.4, 0.6], [1,1]])},
       orientation: 'vertical',
       showValue: false, 
-      link: 'wave'
+      link: 'wave',
+      border: 12
     })
     this.wave_fader.accentColor = [247, 5, 5]
     this.wave_fader.borderColor = [20, 20, 20]
@@ -294,17 +293,18 @@ export class DatoDuo extends MonophonicTemplate {
 
     this.freq_fader = this.gui.Slider({
       label:'freq',
-      //callback: (x)=>{this.cutoffSig.value = stepper(x, 200, 1200, [[0,0], [0.6, 0.8], [1,1]])},
+      //callback: (x)=>{this.cutoff.value = stepper(x, 200, 1200, [[0,0], [0.6, 0.8], [1,1]])},
       callback: (x)=>{
         this.filterDepth.factor.value = x
-        this.cutoffSig.value = x
+        this.cutoff.value = x
       },
-      mapto: this.cutoffSig,
+      mapto: this.cutoff,
       x: 49, y: 10, size: 2,
       min:50, max: 2500, curve: 2,
       orientation: 'vertical',
       showValue: false,
-      link: 'freq'
+      link: 'freq',
+      border: 12
     })
     this.freq_fader.accentColor = [247, 5, 5]
     this.freq_fader.borderColor = [20, 20, 20]
@@ -322,7 +322,8 @@ export class DatoDuo extends MonophonicTemplate {
       min:0.1, max: 1.5,
       orientation: 'vertical',
       showValue: false,
-      link: 'release'
+      link: 'release',
+      border: 12
     })
     this.release_fader.accentColor = [247, 5, 5]
     this.release_fader.borderColor = [20, 20, 20]
@@ -331,7 +332,7 @@ export class DatoDuo extends MonophonicTemplate {
     this.resonance_knob = this.gui.Knob({
       label:'res',
       callback: (x)=>{ this.filter.Q.value = x},
-      x: 49.5, y: 86, size:.25,
+      x: 49.5, y: 86, size:.5,
       min:0.99999, max: 30, curve: 2,
       showValue: false,
       link: 'res'
@@ -341,8 +342,12 @@ export class DatoDuo extends MonophonicTemplate {
 
     this.detune_knob = this.gui.Knob({
       label:'detune',
-      mapto: this.tonePitchshift.factor,
-      x: 22, y: 50, size:.25,
+      callback: x=>{
+        this.sawPitchShift.factor.value = stepper(x,0.99999,2,[[0,0],[.25,.02],[.45,.49],[.55,.51],[.75,.98],[1,1]])/2
+        //console.log(stepper(x,0.99999,2,[[0,0],[.25,.02],[.45,.49],[.55,.51],[.75,.98],[1,1]]))
+      },
+      //mapto: this.tonePitchShift.factor,
+      x: 22, y: 50, size:.5,
       min:0.99999, max: 2, curve: 1,
       showValue: false,
       link: 'detune'
@@ -353,7 +358,7 @@ export class DatoDuo extends MonophonicTemplate {
     this.speaker_knob = this.gui.Knob({
       label:'gain',
       mapto: this.output.factor,
-      x: 78, y: 50, size:.25,
+      x: 78, y: 50, size:.5,
       min:0, max: 0.1, curve: 2,
       showValue: false,
       link: 'gain'
@@ -365,16 +370,30 @@ export class DatoDuo extends MonophonicTemplate {
 
     this.kick = "audio/drums-003.mp3"
     this.snare = "audio/snare.mp3"
-    this.kickPlayer = new Tone.Player(this.kick).toDestination()
-    this.snarePlayer = new Tone.Player(this.snare).toDestination()
-    this.kickPlayer.playbackRate = 1
-    this.snarePlayer.playbackRate = 1
+    //this.kickPlayer = new Tone.Player(this.kick).toDestination()
+    this.kickPlayer = new Tone.Sampler({
+      urls: {
+        C4: "drums-003.mp3"
+      },
+      baseUrl: "/m080/audio/"
+    }).toDestination()
+    this.snarePlayer = new Tone.Sampler({
+      urls: {
+        C4: "snare.mp3"
+      },
+      baseUrl: "/m080/audio/"
+    }).toDestination()
+    //this.snarePlayer = new Tone.Player(this.snare).toDestination()
+    this.kickPlayer.volume.value = -12
+    this.snarePlayer.volume.value = -18
+    // this.kickPlayer.playbackRate = 1
+    // this.snarePlayer.playbackRate = 1
 
     //trigger playback of the loaded soundfile
 
     this.kick_trigger = this.gui.Button({
       label:'kick',
-      callback: ()=>{ this.kickPlayer.start()},
+      callback: ()=>{ this.kickPlayer.triggerAttack( 'C4')},
       size: 1, border: 20,
       x:30, y:80, size: 1,
       link: 'kick'
@@ -383,7 +402,7 @@ export class DatoDuo extends MonophonicTemplate {
 
     this.snare_trigger = this.gui.Button({
       label:'snare',
-      callback: ()=>{ this.snarePlayer.start()},
+      callback: ()=>{ this.snarePlayer.triggerAttack( 'C4')},
       size: 1, border: 20,
       x:70, y:80, size: 1,
       link: 'snare',
@@ -453,7 +472,8 @@ export class DatoDuo extends MonophonicTemplate {
       callback: (x)=>{this.super.set('pulseWav.width.value' , stepper(x, 0, 1, [[0,0], [0.4, 0.6], [1,1]]))},
       orientation: 'vertical',
       showValue: false, 
-      link: 'wave'
+      link: 'wave',
+      border: 12
     })
     this.wave_fader.accentColor = [247, 5, 5]
     this.wave_fader.borderColor = [20, 20, 20]
@@ -461,17 +481,18 @@ export class DatoDuo extends MonophonicTemplate {
 
     this.freq_fader = this.gui.Slider({
       label:'freq',
-      //callback: (x)=>{this.cutoffSig.value = stepper(x, 200, 1200, [[0,0], [0.6, 0.8], [1,1]])},
+      //callback: (x)=>{this.cutoff.value = stepper(x, 200, 1200, [[0,0], [0.6, 0.8], [1,1]])},
       callback: (x)=>{
         this.super.set('filterDepth.factor.value' , x)
-        this.super.set('cutoffSig.value' , x)
+        this.super.set('cutoff.value' , x)
       },
-      mapto: this.cutoffSig,
+      mapto: this.cutoff,
       x: 49, y: 10, size: 2,
       min:50, max: 2500, curve: 2,
       orientation: 'vertical',
       showValue: false,
-      link: 'freq'
+      link: 'freq',
+      border: 12
     })
     this.freq_fader.accentColor = [247, 5, 5]
     this.freq_fader.borderColor = [20, 20, 20]
@@ -480,16 +501,17 @@ export class DatoDuo extends MonophonicTemplate {
     this.release_fader = this.gui.Slider({
       label:'release',
       callback: (x)=>{ 
-        this.super.set('env.decay' , stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]]))
+        this.super.set('env.decay' ,stepper(x, 0.01, 1, [[0,0], [0.8, 0.5], [1,5]]))
         this.super.set('env.release' , stepper(x, 0.1, 25, [[0,0], [0.8, 0.5], [1,5]]))
-        this.super.set('vcf_env.decay' , stepper(x, 0.1, 5, [[0,0], [0.8, 0.5], [1,5]]))
+        this.super.set('vcf_env.decay' , stepper(x, 0.01, 1, [[0,0], [0.8, 0.5], [1,5]]))
         this.super.set('vcf_env.release' , stepper(x, 0.1, 25, [[0,0], [0.8, 0.5], [1,5]]))
       },
       x: 59, y: 10, size: 2,
-      min:0.1, max: 1.5,
+      min:0.1, max: 25,
       orientation: 'vertical',
       showValue: false,
-      link: 'release'
+      link: 'release',
+      border: 12
     })
     this.release_fader.accentColor = [247, 5, 5]
     this.release_fader.borderColor = [20, 20, 20]
@@ -508,7 +530,11 @@ export class DatoDuo extends MonophonicTemplate {
 
     this.detune_knob = this.gui.Knob({
       label:'detune',
-      callback: (x)=>{ this.super.set('tonePitchshift.factor' , x)},
+      callback: x=>{
+        this.super.set('tonePitchShift.factor' , stepper(x,0.99999,2,[[0,0],[.25,.02],[.45,.49],[.55,.51],[.75,.98],[1,1]]))
+        console.log(stepper(x,0.99999,2,[[0,0],[.25,.02],[.45,.49],[.55,.51],[.75,.98],[1,1]]))
+      },
+      //callback: (x)=>{ this.super.set('tonePitchShift.factor' , x)},
       x: 22, y: 50, size:.25,
       min:0.99999, max: 2, curve: 1,
       showValue: false,
@@ -532,16 +558,30 @@ export class DatoDuo extends MonophonicTemplate {
 
     this.kick = "audio/drums-003.mp3"
     this.snare = "audio/snare.mp3"
-    this.kickPlayer = new Tone.Player(this.kick).toDestination()
-    this.snarePlayer = new Tone.Player(this.snare).toDestination()
-    this.kickPlayer.playbackRate = 1
-    this.snarePlayer.playbackRate = 1
+    //this.kickPlayer = new Tone.Player(this.kick).toDestination()
+    this.kickPlayer = new Tone.Sampler({
+      urls: {
+        C4: "drums-003.mp3"
+      },
+      baseUrl: "/m080/audio/"
+    }).toDestination()
+    this.snarePlayer = new Tone.Sampler({
+      urls: {
+        C4: "snare.mp3"
+      },
+      baseUrl: "/m080/audio/"
+    }).toDestination()
+    //this.snarePlayer = new Tone.Player(this.snare).toDestination()
+    this.kickPlayer.volume.value = -12
+    this.snarePlayer.volume.value = -18
+    // this.kickPlayer.playbackRate = 1
+    // this.snarePlayer.playbackRate = 1
 
     //trigger playback of the loaded soundfile
 
     this.kick_trigger = this.gui.Button({
       label:'kick',
-      callback: ()=>{ this.kickPlayer.start()},
+      callback: ()=>{ this.kickPlayer.triggerAttack( 'C4')},
       size: 1, border: 20,
       x:30, y:80, size: 1,
       link: 'kick'
@@ -550,7 +590,7 @@ export class DatoDuo extends MonophonicTemplate {
 
     this.snare_trigger = this.gui.Button({
       label:'snare',
-      callback: ()=>{ this.snarePlayer.start()},
+      callback: ()=>{ this.snarePlayer.triggerAttack( 'C4')},
       size: 1, border: 20,
       x:70, y:80, size: 1,
       link: 'snare',

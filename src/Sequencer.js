@@ -9,11 +9,11 @@ export class Sequencer{
    * Creates a sequencer.
    * 
    * @param {object|null} [control=null] - The control object that the sequencer will manipulate (e.g., a Synth, Filter, etc.).
-   * @param {number[]} [values=[]] - An array of values that the sequencer will step through.
+   * @param {number} [values=16] - The number of values that the sequencer will step through.
    * @param {string} [subdivision='8n'] - The rhythmic subdivision for the sequencer (e.g., '8n' for eighth notes).
-   * @param {boolean[]} [enables=[]] - An array of boolean values that enable or disable specific steps in the sequence.
+   * @param {boolean} [enables=0] - The number of boolean values that enable or disable specific steps in the sequence.
    */
-  constructor(control = null, values = [], subdivision = '8n', enables = []){
+  constructor(control = null, values = 8, subdivision = '8n', enables = 0){
     //console.log('enter construct')
     this.gui = null
     this.subdivision = subdivision
@@ -22,9 +22,9 @@ export class Sequencer{
       console.log('To set custom callback: this.callback = (your function here)')
     }
     this.setCallback(this.control)
-    this.values = values
+    this.values = new Array(values).fill(0)
     this.tempVal = values
-    this.enables = enables
+    this.enables = new Array(enables).fill(0)
     this.tempenables = enables
     this.beatsPerBar = 4
     this.subdivisionsPerBeat = 4
@@ -55,21 +55,23 @@ export class Sequencer{
     //
         if (this.enables.length == 0){
           this.val = this.values[this.values_index]
+          this.callback(this.val, time)
           //console.log(this.val)
         }
 
         else if (this.enables[this.enables_index]){
           //console.log(this.values[this.values_index])
           this.val = this.values[this.values_index]
+          this.callback(this.val, time)
           //console.log(this.val)
           
         }
         else {
           //console.log(0)
-          this.val = 0
+          //this.val = 0
         }
 
-        this.callback(this.values_index, time)
+        
 
        if(this.interface !== undefined){
         this.interface.updateGui(this.values_index, this.enables_index)
@@ -86,9 +88,10 @@ export class Sequencer{
    * @param {string} name - The name of the GUI interface to use (e.g., 'stepSequence', 'circularSequence').
    * @param {object} gui - The GUI object.
    */
-  setGui(name, gui){
-    if(name === "stepSequence") this.interface = new stepSequence(this,gui)
-    else if (name === "circularSequence") this.interface = new circularSequence(this, gui)
+  setGui(name, gui, x=10, y=10, rows=1){
+    this.gui = gui
+    if(name === "stepSequence") this.interface = new stepSequence(this, gui, x,y,rows)
+    else if (name === "circularSequence") this.interface = new circularSequence(this, gui,x,y,rows)
   }
 
   /**
@@ -182,10 +185,13 @@ class stepSequence{
    * @param {object} target - The target sequencer object that this GUI will control.
    * @param {object} gui - The GUI object used to create controls.
    */
-  constructor(target, gui){
+  constructor(target, gui, x,y,rows = 2){
     this.gui = gui
+    this.rows = rows
+    this.enColumns = target.enables.length / this.rows
+    this.valColumns = target.values.length / this.rows
     this.target = target
-    this.initGui()
+    this.initGui(x,y)
     this.prevVal = 0
     this.prevEnable = 0
   }
@@ -202,18 +208,22 @@ class stepSequence{
     this.enables_array = []
     this.values_array = []
 
-    for( let i=0; i<this.target.enables.length; i++){
-      this.enables_array.push(this.createToggle('En'+(i+1).toString(), 10*i, 80, 0.5, [200,50,0],  x => this.target.enables[i] = x))
-      this.enables_array[i].set(1)
+    for(let j=0;j<this.rows;j++){
+      for( let i=0; i<this.enColumns; i++){
+        this.enables_array.push(this.createToggle('En'+(i+1+j*this.enColumns).toString(), x*i+10, y+10+j*25, 0.3, [200,50,0],  x => this.target.enables[i+j*this.enColumns] = x))
+        this.enables_array[i+j*this.enColumns].set(1)
+      }
     }
-    
-    for( let i=0; i<this.target.values.length; i++){
-      this.values_array.push(this.createKnob((i+1), 10*i, 60, 0, 127, 1,  [200,50,0],  x => this.target.values[i] = Math.floor(x)))
+    for(let j=0;j<this.rows;j++){
+      for( let i=0; i<this.valColumns; i++){
+      this.values_array.push(this.createKnob((i+1+j*this.valColumns).toString(), x*i+10, y+j*25, 0, 127, .75,  [200,50,0],  x => this.target.values[i+j*this.valColumns] = Math.floor(x)))
+      }
     }
-    this.playButton = this.createToggle('Pause/Play', 50, 10, 1, [200,50,0], x => this.togglePlay(x))
+    this.playButton = this.createToggle('Pause/Play', x-10, y, 1, [200,50,0], x => this.togglePlay(x))
     this.playButton.set(1)
+    console.log(x,y)
 
-    this.playText = this.gui.Text({label:"play", x:50,y:20})
+    //this.playText = this.gui.Text({label:"play", x:50,y:20})
   }
 
   /**
@@ -224,13 +234,17 @@ class stepSequence{
    * @param {number} enables - The current index of the enables array.
    */
   updateGui(values, enables){
-    this.values_array[values].accentColor = [0, 250, 0]
-    this.values_array[this.prevVal].accentColor = [0, 0, 200]
-    this.prevVal = values
+    if(this.values_array.length > 0){
+      this.values_array[values].accentColor = [0, 250, 0]
+      this.values_array[this.prevVal].accentColor = [0, 0, 200]
+      this.prevVal = values
+    }
 
-    this.enables_array[enables].accentColor = [0, 250, 0]
-    this.enables_array[this.prevEnable].accentColor = [0, 0, 200]
-    this.prevEnable = enables
+    if(this.enables_array.length > 0){
+      this.enables_array[enables].accentColor = [0, 250, 0]
+      this.enables_array[this.prevEnable].accentColor = [0, 0, 200]
+      this.prevEnable = enables
+    }
 
   }
 
@@ -252,9 +266,9 @@ class stepSequence{
       label:_label, size:_size, accentColor:_accentColor,
       x: _x + this.x, y: _y + this.y,
       callback: callback,
-      showLabel: 1, showValue: 1, // Assuming these are common settings
-      border: 20, // Adjust as needed
-      showLabel: 0, showValue: 0
+      border: 5, // Adjust as needed
+      showLabel: 0, showValue: 0,
+      cornerRadius: .1
     });
   }
   /**
@@ -280,8 +294,8 @@ class circularSequence extends stepSequence{
    * @param {object} target - The target sequencer object that this GUI will control.
    * @param {object} gui - The GUI object used to create controls.
    */
-  constructor(target, gui){
-    super(target, gui)
+  constructor(target, guix,y,rows){
+    super(target, guix,y,rows)
   }
 
   /**

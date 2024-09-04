@@ -75,23 +75,26 @@ export class ESPSynth extends MonophonicTemplate {
 
         //distortion
         this.dist = new Tone.Distortion()
-        this.distgain = new Tone.Multiply(1)
-        this.distout = new Tone.Add()
-        this.vca.connect(this.distout)
-        this.vca.connect(this.distgain)
-        this.distgain.connect(this.dist)
-        this.dist.connect(this.distout)
+        // this.distgain = new Tone.Multiply(1)
+        // this.distout = new Tone.Add()
+        // this.vca.connect(this.distout)
+        // this.vca.connect(this.distgain)
+        // this.distgain.connect(this.dist)
+        // this.dist.connect(this.distout)
+        this.vca.connect(this.dist)
 
         //chorus
         this.chor = new Tone.Chorus(2.5, 5, 0.9)
-        this.chorgain = new Tone.Multiply(1)
-        this.chorout = new Tone.Add()
-        this.distout.connect(this.chorout)
-        this.distout.connect(this.chorgain)
-        this.chorgain.connect(this.chor)
-        this.chor.connect(this.chorout)
+        this.dist.connect(this.chor)
+        // this.chorgain = new Tone.Multiply(1)
+        // this.chorout = new Tone.Add()
+        // this.distout.connect(this.chorout)
+        // this.distout.connect(this.chorgain)
+        // this.chorgain.connect(this.chor)
+        // this.chor.connect(this.chorout)
 
-        this.chorout.connect(this.output)
+        // this.chorout.connect(this.output)
+        this.chor.connect(this.output)
 
         //velocity
         this.velo = 10
@@ -738,9 +741,12 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.chorus_filter_knob = this.gui.Knob({
             label:'chorus',
-            callback: (x)=>{this.super.set('chorgain.factor.value' , x)},
+            callback: (x)=>{
+                this.super.set('chor.wet.value' , x)
+              //  this.super.set('chor.')
+            },
             x: 91, y: 15, size:0.85,
-            min:0.0001, max: 1,
+            min:0.000, max: 1,
             showValue: false,
         })
         this.chorus_filter_knob.set( 0.0001 )

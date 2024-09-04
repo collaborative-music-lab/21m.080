@@ -193,7 +193,7 @@ export class DrumSampler extends DrumTemplate{
     if (this.loop.state === "stopped") {
         this.loop = new Tone.Loop(time => {
             this.index = Math.floor(Tone.Transport.ticks / Tone.Time(this.subdivision).toTicks());
-            console.log('index', this.index)
+            //console.log('index', this.index)
             let curBeat = this.seq.original[this.index%this.seq.original.length];
 
             const event = parseStringBeat(curBeat, time)
@@ -210,7 +210,7 @@ export class DrumSampler extends DrumTemplate{
     }
 }
   triggerDrum(val, time){
-    console.log(val)
+    //console.log(val)
     switch(val){
       case '.': break;
       case '0': this.triggerVoice(this.kick,1,time); break; //just because. . . .
@@ -236,7 +236,7 @@ export class DrumSampler extends DrumTemplate{
       this.openHatChoke.factor.setValueAtTime(1, time)
       this.openHatEnv.triggerAttackRelease(10,time)
     }
-    if( voice.state === "started" ) voice.stop(time)
+    //if( voice.state === "started" ) voice.stop(time)
     voice.volume.setValueAtTime( Tone.gainToDb(amplitude), time)
     voice.start( time )
   }

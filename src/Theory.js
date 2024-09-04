@@ -49,6 +49,7 @@ getInterval(num,scale): returns MIDI note number of scale degree (from 0)
  */
 
 import * as Tone from 'tone';
+import * as Ornament from './Ornament.js'
 
 let tonic = 'C';
 let tonicNumber = 0; //midi note of tonic, 0-11
@@ -119,6 +120,10 @@ const MinorScaleDegrees = {
   'bv': 6,'v': 7, 'vi': 8,'#vi': 9, 'bvii': 10,'vii': 11
 };
 
+export function orn(note,pattern=0,scalar=1, length=4 ){
+  return Ornament.orn(note,pattern,scalar,length)
+}
+
 
 export function setVoicing(name){
   if (voicings.hasOwnProperty(name)) voicing = name 
@@ -173,7 +178,7 @@ export function printProgression(){
 }
 
 //gets the index of the current chord based on tranpost position
-function getChordIndex(){
+export function getChordIndex(){
   let index = Math.floor(Tone.Transport.ticks / Tone.Time(harmonicRhythm/4).toTicks());
   // console.log(index)
   return index
@@ -646,7 +651,7 @@ export function parseStringBeat(curBeat, time){
     if (bracketCheck.test(curBeat)) {
       //remove brackets and split into arrays by commas
       curBeat =curBeat.slice(1, -1).split(',');
-      console.log(curBeat)
+      //console.log(curBeat)
       curBeat.forEach(arr => {
           const length = arr.length;
           for (let i = 0; i < length; i++) {

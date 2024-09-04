@@ -877,6 +877,7 @@ export class Button extends Element {
         super(p, options);
         this.value = options.value || 0
         this.rawValue = this.value
+        this.cornerRadius = options.cornerRadius || 1
 
         // send initial val to collab-hub
         if (this.linkName) { 
@@ -900,16 +901,16 @@ export class Button extends Element {
         let border = this.getParam('border',this.border)
 
         if( this.rawValue ){            
-            this.p.noFill()
-            this.p.stroke(this.setColor(this.accentColor));
-            this.p.strokeWeight(border);
-            this.p.ellipse(this.cur_x, this.cur_y, this.cur_size, this.cur_size);
+            this.p.fill(this.setColor(this.accentColor))
+            this.p.stroke(this.setColor(this.borderColor));
+            this.p.strokeWeight(border/2);
+            this.p.rect(this.cur_x - this.cur_size/2, this.cur_y - this.cur_size/2, this.cur_size, this.cur_size, this.cur_size/2 * this.cornerRadius);
         }
         else{
             this.p.noFill()
             this.p.stroke(this.setColor(this.borderColor));
             this.p.strokeWeight(border/2);
-            this.p.ellipse(this.cur_x, this.cur_y, this.cur_size, this.cur_size);
+            this.p.rect(this.cur_x - this.cur_size/2, this.cur_y - this.cur_size/2, this.cur_size, this.cur_size, this.cur_size/2 * this.cornerRadius);
         }
 
         // Display the label string inside the button

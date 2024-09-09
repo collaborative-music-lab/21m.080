@@ -31,8 +31,8 @@ function App() {
   ];
 
   const homeStarterCode = `/*
-  Alt-Enter: Evaluate Line in Live Mode
-  Alt-Shift-Enter: Evaluate Block in Live Mode
+  Alt(option)-Enter: Evaluate Line
+  Alt(option)-Shift-Enter: Evaluate Block
 */`;
 
 

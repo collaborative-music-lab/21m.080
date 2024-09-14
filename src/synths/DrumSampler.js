@@ -39,7 +39,7 @@ export class DrumSampler extends DrumTemplate{
     this.kit = kit
     //
     this.closedHatEnv = new Tone.Envelope({attack:0.0,decay:.5,sustain:0,release:.4})
-    this.openHatEnv = new Tone.Envelope({attack:0.0,decay:.01,sustain:1,release:.4})
+    this.openHatEnv = new Tone.Envelope({attack:0.0,decay:1,sustain:0,release:.4})
     this.hatVca = new Tone.Multiply()
     this.openHatChoke = new Tone.Multiply()
     this.comp = new Tone.Compressor(-20,4)
@@ -84,6 +84,13 @@ export class DrumSampler extends DrumTemplate{
             this.loadPreset('default');
         }
   }//constructor
+
+  openHatDecay(val){
+    this.openHatEnv.release = val
+  }
+  closedHatDecay(val){
+    this.closedHatEnv.release = val
+  }
 
   /**
    * Load a specific drum kit.
@@ -187,8 +194,6 @@ export class DrumSampler extends DrumTemplate{
     };
     this.seq.original = parseStringSequence(arr)
 
-    console.log(this.seq.original)
-
     // Create a Tone.Loop
     if (this.loop.state === "stopped") {
         this.loop = new Tone.Loop(time => {
@@ -208,7 +213,7 @@ export class DrumSampler extends DrumTemplate{
         // Start the Transport
         Tone.Transport.start();
     }
-}
+  } 
   triggerDrum(val, time){
     //console.log(val)
     switch(val){

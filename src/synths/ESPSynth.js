@@ -197,13 +197,15 @@ export class ESPSynth extends MonophonicTemplate {
     if(time){
         this.env.triggerAttackRelease(dur, time)
         this.frequency.setValueAtTime(freq, time)
-        this.vcfVelocityDepth.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.03)
-        this.vcaVelocityDepth.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]),.03)
+        // this.vcfVelocityDepth.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.01)
+        // this.vcaVelocityDepth.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]),.01)
+        this.vcfVelocityDepth.setValueAtTime(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),time)
+        this.vcaVelocityDepth.setValueAtTime(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]),time)
     } else{
         this.env.triggerAttackRelease(dur)
         this.frequency.value = freq
-        this.vcfVelocityDepth.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.03)
-        this.vcaVelocityDepth.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]),.03)
+        this.vcfVelocityDepth.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcfDynamicRange],[1,1]]),.01)
+        this.vcaVelocityDepth.rampTo(stepper(amp, 0, 1, [[0,0],[0.001, 1 - this.vcaDynamicRange],[1,1]]),.01)
     }
     }//attackRelease
 

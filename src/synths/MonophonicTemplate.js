@@ -49,6 +49,9 @@ export class MonophonicTemplate {
         this.subdivision = '8n' 
         this.loop = new Tone.Loop(time => {},this.subdivision)
         this.octave = 0
+        this.sustain = .01
+        this.velocity = 100
+        this.callback = x=>{}
     }
 
     /**
@@ -323,7 +326,7 @@ export class MonophonicTemplate {
         if (this.loop.state === "stopped") {
             this.loop = new Tone.Loop(time => {
                 this.index = Math.floor(Tone.Transport.ticks / Tone.Time(this.subdivision).toTicks());
-
+                this.callback(this.index)
                 let curBeat = this.seq[this.index%this.seq.length];
 
                 const event = parsePitchStringBeat(curBeat, time)
@@ -331,6 +334,7 @@ export class MonophonicTemplate {
 
                 for (const val of event)  this.parseNoteString(val, time)
 
+            
             }, this.subdivision).start(0);
 
             // Start the Transport
@@ -390,6 +394,6 @@ setSubdivision(sub) {
         else note = intervalToMidi(val[0])
         const div = val[1]
 
-        this.triggerAttackRelease(note + this.octave*12, 100, .01, time + div * (Tone.Time(this.subdivision)));
+        this.triggerAttackRelease(note + this.octave*12, this.velocity, this.sustain, time + div * (Tone.Time(this.subdivision)));
     }
 }

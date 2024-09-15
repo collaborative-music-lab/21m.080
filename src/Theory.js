@@ -1,7 +1,3 @@
-/* Theory.js
-
-*/
-
 /** Theory.js
  * 
  * Implements a system for specifying chord and progressions 
@@ -669,7 +665,7 @@ export function parseStringBeat(curBeat, time){
 
 //handles pitch sequences
 export function parsePitchStringBeat(curBeat, time){
-  console.log(curBeat)
+  // console.log(curBeat)
   const firstElement = curBeat.replace(/\[/g, "")[0]
   const usesPitchNames = /^[a-ac-zA-Z]$/.test(firstElement);
 
@@ -679,7 +675,7 @@ export function parsePitchStringBeat(curBeat, time){
     if (bracketCheck.test(curBeat)) {
       //remove brackets and split into arrays by commas
       curBeat =curBeat.slice(1, -1).split(',');
-      console.log(curBeat)
+      //console.log(curBeat)
       curBeat.forEach(arr => {
         let regex = /\[.*?\]|[A-Ga-g][#b]?\d*|@(\d+)|./g;
         if( !usesPitchNames){ //true if first element is a number

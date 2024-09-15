@@ -46,12 +46,18 @@ export class MonophonicTemplate {
         this.name = ""
         this.presetsData = null
         //for .sequence()
-        this.subdivision = '8n' 
-        this.loop = new Tone.Loop(time => {},this.subdivision)
+        //this.loop = new Tone.Loop(time => {},this.subdivision)
         this.octave = 0
         this.sustain = .01
         this.velocity = 100
         this.callback = x=>{}
+        this.seq = []
+        this.subdivision = []
+        this.loop = new Array(10).fill(null)
+        for(let i=0;i<10;i++) {
+            this.seq.push([0])
+            this.subdivision.push('8n')
+        }
     }
 
     /**
@@ -314,74 +320,103 @@ export class MonophonicTemplate {
      *
      * @param {string} arr - The sequence of notes as a string.
      * @param {string} [subdivision] - The rhythmic subdivision for the loop (e.g., '16n', '8n').
+     * @param {string} num (default 0) - the sequence number. Up to 10 sequences per instance.
      */
-    sequence(arr, subdivision) {
+    sequence(arr, subdivision, num = 0) {
 
-        if (subdivision) this.subdivision = subdivision;
-
-        this.seq = parsePitchStringSequence(arr)
-        console.log(this.seq)
+        this.seq[num] = parsePitchStringSequence(arr)
 
         // Create a Tone.Loop
-        if (this.loop.state === "stopped") {
-            this.loop = new Tone.Loop(time => {
-                this.index = Math.floor(Tone.Transport.ticks / Tone.Time(this.subdivision).toTicks());
-                this.callback(this.index)
-                let curBeat = this.seq[this.index%this.seq.length];
+        if (this.loop[num] === null) {
+            this.loop[num] = new Tone.Loop(time => {
+                this.index = Math.floor(Tone.Transport.ticks / Tone.Time(this.subdivision[num]).toTicks());
+                // this.callback(this.index)
+                let curBeat = this.seq[num][this.index%this.seq[num].length];
 
                 const event = parsePitchStringBeat(curBeat, time)
                 //console.log(event)
 
-                for (const val of event)  this.parseNoteString(val, time)
+                for (const val of event)  this.parseNoteString(val, time, num)
 
             
-            }, this.subdivision).start(0);
+            }, '4n').start(0);
 
             // Start the Transport
             Tone.Transport.start();
         }
+
+        if (subdivision) {
+            if(subdivision !== this.subdivision[num]){
+                this.setSubdivision(subdivision, num)
+            }
+        }
+
+        this.start(num)
+    }
+
+        /**
+     * Starts the loop for the synthesizer.
+     */
+    start(num = 'all') {
+        if(num === 'all'){
+            for(let i=0;i<10;i++){
+                if(this.loop[i] !== null) this.loop[i].start()
+            }
+        }
+        else if(this.loop[num] !== null) this.loop[num].start()
     }
 
     /**
- * Starts the loop for the synthesizer.
- */
-start() {
-    this.loop.start();
-}
-
-/**
- * Stops the loop for the synthesizer.
- */
-stop() {
-    this.loop.stop();
-}
-
-/**
- * Sets the subdivision for the loop and adjusts the playback rate accordingly.
- * 
- * @param {string} sub - The subdivision to set (e.g., '16n', '8n', '4n', '2n').
- */
-setSubdivision(sub) {
-    this.loop.subdivision = sub;
-    this.subdivision = sub;
-    switch (sub) {
-        case '16n':
-            this.loop.playbackRate = 2;
-            break;
-        case '8n':
-            this.loop.playbackRate = 1;
-            break;
-        case '4n':
-            this.loop.playbackRate = 0.5;
-            break;
-        case '2n':
-            this.loop.playbackRate = 0.25;
-            break;
+     * Stops the loop for the synthesizer.
+     */
+    stop(num = 'all') {
+        if(num === 'all'){
+            for(let i=0;i<10;i++){
+                if(this.loop[i] !== null) this.loop[i].stop()
+            }
+        }
+        else if(this.loop[num] !== null) this.loop[num].stop()
     }
-}
+
+    /**
+     * Sets the subdivision for the loop and adjusts the playback rate accordingly.
+     * 
+     * @param {string} sub - The subdivision to set (e.g., '16n', '8n', '4n', '2n').
+     */
+    setSubdivision(sub, num = 'all') {
+        // this.loop.subdivision = sub;
+        
+        if(num === 'all'){
+            for(let i=0;i<10;i++){
+                if(this.loop[i] !== null) {
+                    this.setOneSub(sub,num)
+                }
+            }
+        } else {
+            if(this.loop[num] !== null) this.setOneSub(sub,num)
+        }
+    }
+
+    setOneSub(sub,num){
+        this.subdivision[num] = sub;
+        switch (sub) {
+            case '16n':
+                this.loop[num].playbackRate = 4;
+                break;
+            case '8n':
+                this.loop[num].playbackRate = 2;
+                break;
+            case '4n':
+                this.loop[num].playbackRate = 1;
+                break;
+            case '2n':
+                this.loop[num].playbackRate = 0.5;
+                break;
+        }
+    }
 
 
-    parseNoteString(val, time){
+    parseNoteString(val, time, num){
         //console.log(val)
         if(val[0] === ".") return
         //return
@@ -394,6 +429,6 @@ setSubdivision(sub) {
         else note = intervalToMidi(val[0])
         const div = val[1]
 
-        this.triggerAttackRelease(note + this.octave*12, this.velocity, this.sustain, time + div * (Tone.Time(this.subdivision)));
+        this.triggerAttackRelease(note + this.octave*12, this.velocity, this.sustain, time + div * (Tone.Time(this.subdivision[num])));
     }
 }

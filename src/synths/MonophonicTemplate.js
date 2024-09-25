@@ -40,19 +40,23 @@ export class MonophonicTemplate {
     constructor() {
         this.presets = null;
         this.gui_elements = [];
+        this.poly_ref = null
+        this.super = null
         this.frequency = new Tone.Signal();
         this.env = new Tone.Envelope();
         this.type = 'Synth'
         this.name = ""
         this.presetsData = null
+
         //for .sequence()
         //this.loop = new Tone.Loop(time => {},this.subdivision)
-        this.octave = 0
-        this.sustain = .01
-        this.velocity = 100
+        this.enable = new Array(10).fill(1)
+        this.octave = new Array(10).fill(0)
+        this.sustain = new Array(10).fill(.1)
         this.callback = x=>{}
         this.seq = []
         this.subdivision = []
+        this.velocity = new Array(10).fill(100)
         this.loop = new Array(10).fill(null)
         for(let i=0;i<10;i++) {
             this.seq.push([0])
@@ -71,10 +75,15 @@ export class MonophonicTemplate {
         if (presetData) {
             console.log("Loading preset ", name);
             for (let id in presetData) {
-                for (let element of Object.values(this.gui.elements)) {
-                    if (element.id === id) {
-                        element.set(presetData[id]);
+                try{
+                    for (let element of Object.values(this.gui.elements)) {
+                        if (element.id === id) {
+                            if(element.type !== 'momentary') element.set(presetData[id]);
+                        }
                     }
+                }
+                catch(e){
+                    console.log(e)
                 }
                 //console.log(id)
             }
@@ -322,23 +331,55 @@ export class MonophonicTemplate {
      * @param {string} [subdivision] - The rhythmic subdivision for the loop (e.g., '16n', '8n').
      * @param {string} num (default 0) - the sequence number. Up to 10 sequences per instance.
      */
-    sequence(arr, subdivision, num = 0) {
+    sequence(arr, subdivision = '8n', num = 0) {
 
         this.seq[num] = parsePitchStringSequence(arr)
 
+        this.createLoop(subdivision, num)
+        // // Create a Tone.Loop
+        // if (this.loop[num] === null) {
+        //     this.loop[num] = new Tone.Loop(time => {
+        //         this.index = Math.floor(Tone.Transport.ticks / Tone.Time(this.subdivision[num]).toTicks());
+        //         if(this.enable[num] == 0) return
+        //         if(num == 0) this.callback(this.index)
+        //         let curBeat = this.seq[num][this.index%this.seq[num].length];
+
+        //         const event = parsePitchStringBeat(curBeat, time)
+        //         //console.log(event)
+
+        //         for (const val of event)  this.parseNoteString(val, time, num)
+
+            
+        //     }, '4n').start(0);
+
+        //     // Start the Transport
+        //     Tone.Transport.start();
+        // }
+
+        // if (subdivision) {
+        //     if(subdivision !== this.subdivision[num]){
+        //         this.setSubdivision(subdivision, num)
+        //     }
+        // }
+
+        // this.start(num)
+    }
+
+    createLoop(subdivision, num){
         // Create a Tone.Loop
         if (this.loop[num] === null) {
             this.loop[num] = new Tone.Loop(time => {
                 this.index = Math.floor(Tone.Transport.ticks / Tone.Time(this.subdivision[num]).toTicks());
-                // this.callback(this.index)
+                if(this.enable[num] === 0) return
+                
+                if(num == 0) this.callback(this.index)
                 let curBeat = this.seq[num][this.index%this.seq[num].length];
 
                 const event = parsePitchStringBeat(curBeat, time)
                 //console.log(event)
-
+                //console.log(num,this.index, event, this.seq[num])
                 for (const val of event)  this.parseNoteString(val, time, num)
 
-            
             }, '4n').start(0);
 
             // Start the Transport
@@ -359,11 +400,9 @@ export class MonophonicTemplate {
      */
     start(num = 'all') {
         if(num === 'all'){
-            for(let i=0;i<10;i++){
-                if(this.loop[i] !== null) this.loop[i].start()
-            }
+            for(let i=0;i<10;i++) this.enable[i] = 1
         }
-        else if(this.loop[num] !== null) this.loop[num].start()
+        else this.enable[num] = 1
     }
 
     /**
@@ -371,11 +410,68 @@ export class MonophonicTemplate {
      */
     stop(num = 'all') {
         if(num === 'all'){
-            for(let i=0;i<10;i++){
-                if(this.loop[i] !== null) this.loop[i].stop()
-            }
+            for(let i=0;i<10;i++) this.enable[i] = 0
         }
-        else if(this.loop[num] !== null) this.loop[num].stop()
+        else this.enable[num] = 0
+    }
+
+    expr(func, len=32, subdivision = '16n', num = 0) {
+        const arr = Array.from({ length: len }, (_, i) => func(i))
+
+        this.seq[num] = arr.map(element => {
+            return typeof element === 'string' ? element : element.toString();
+        });
+
+        //console.log(this.seq[num])
+        this.createLoop(subdivision, num)
+    }
+
+    /**
+     * Sets the velocity for a loop
+     * 
+     * @param {string} velocity - MIDI velocity valur
+     */
+    setVelocity(velocity, num = 'all') {
+        
+        if(num === 'all'){
+            for(let i=0;i<10;i++){
+                this.velocity[i] = velocity
+            }
+        } else {
+            this.velocity[num] = velocity
+        }
+    }
+
+    /**
+     * Sets the velocity for a loop
+     * 
+     * @param {string} velocity - MIDI velocity valur
+     */
+    setSustain(val, num = 'all') {
+        if(val<=0) return
+        if(num === 'all'){
+            for(let i=0;i<10;i++){
+                this.sustain[i] = val
+            }
+        } else {
+            this.sustain[num] = val
+        }
+    }
+
+    /**
+     * Sets the velocity for a loop
+     * 
+     * @param {string} velocity - MIDI velocity valur
+     */
+    setOctave(val, num = 'all') {
+        val = val < -4 ? -4 : val > 4 ? 4 : val
+        if(num === 'all'){
+            for(let i=0;i<10;i++){
+                this.octave[i] = val
+            }
+        } else {
+            this.octave[num] = val
+        }
     }
 
     /**
@@ -389,7 +485,7 @@ export class MonophonicTemplate {
         if(num === 'all'){
             for(let i=0;i<10;i++){
                 if(this.loop[i] !== null) {
-                    this.setOneSub(sub,num)
+                    this.setOneSub(sub,i)
                 }
             }
         } else {
@@ -400,6 +496,9 @@ export class MonophonicTemplate {
     setOneSub(sub,num){
         this.subdivision[num] = sub;
         switch (sub) {
+            case '32n':
+                this.loop[num].playbackRate = 0.25;
+                break;
             case '16n':
                 this.loop[num].playbackRate = 4;
                 break;
@@ -411,6 +510,9 @@ export class MonophonicTemplate {
                 break;
             case '2n':
                 this.loop[num].playbackRate = 0.5;
+                break;
+            case '1n':
+                this.loop[num].playbackRate = 0.25;
                 break;
         }
     }
@@ -424,11 +526,11 @@ export class MonophonicTemplate {
         const usesPitchNames = /^[a-ac-zA-Z]$/.test(val[0][0]);
 
         let note = ''
-
-        if( usesPitchNames) note =  pitchNameToMidi(val[0])
+        //console.log(val[0], usesPitchNames)
+        if( usesPitchNames ) note =  pitchNameToMidi(val[0])
         else note = intervalToMidi(val[0])
         const div = val[1]
-
-        this.triggerAttackRelease(note + this.octave*12, this.velocity, this.sustain, time + div * (Tone.Time(this.subdivision[num])));
+        //console.log(note, this.velocity[num], this.sustain)
+        this.triggerAttackRelease(note + this.octave[num]*12, this.velocity[num], this.sustain[num], time + div * (Tone.Time(this.subdivision[num])));
     }
 }

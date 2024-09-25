@@ -623,7 +623,7 @@ export function parsePitchStringSequence(str) {
 
     let arr = str.match(regex);
 
-    console.log(str, arr)
+    console.log(arr)
 
     // Step 3: Process '@' elements
     for (let i = 0; i < arr.length; i++) {
@@ -769,7 +769,7 @@ export function intervalToMidi(interval) {
     interval = interval.trim()
     
     // Determine the pitch class and accidental if present
-    const degree = interval.match(/\[.*?\]|-?\d?|@(\d+)|\./g)[0];
+    const degree = interval.match(/\[.*?\]|-?\d+|@(\d+)|\./g)[0];
     const accidental = interval.match(/[b#]+/g);
 
     

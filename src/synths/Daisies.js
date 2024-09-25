@@ -3,10 +3,10 @@ Daisies
 Polyphonic Subtractive Synthesizer
 
 Daisy:
-* 2 OmniOscillators(vco_1, vco_2)->shape->waveShapers->mixer->lpf->hpf->panner->vca
+* 2 OmniOscillators(vco_1, vco_2)->shape->waveShapers->mixer->vcf->hpf->panner->vca
 * frequency->frequency_scalar->(detune for vco_2)->vco_1.frequency
 * frequencyCV->frequency_scalar.factor
-* cutoff control: cutoff, cutoff_vc, keyTracking, lpf_env_depth
+* cutoff control: cutoff, cutoff_vc, keyTracking, vcf_env_depth
 * lfo->vca_lfo_depth-<output.factor, pitch_lfo_depth->
 * lfo->pitch_lfo_depth->frequency_scalar.factor
 * env->velocity_depth(Multiply)->vca.factor
@@ -27,7 +27,7 @@ methods:
 -  setCutoffCV
 -  setHighpass 
 -  setKeyTracking 
--  setFilterEnvDepth = function(val){this.voiceSettings["lpf_env_depth.factor"] =  val }
+-  setFilterEnvDepth = function(val){this.voiceSettings["vcf_env_depth.factor"] =  val }
 -  setPanning(val)
 -  setPulseWidth (num,val)
 -  setVcoGain(num,val)
@@ -60,7 +60,7 @@ Main List of Parameters & how to set them:
 - cutoff_cv_depth.factor: setCutoffCV
 - highpass_freq: setHighpass 
 - key_tracking_depth: setKeyTracking 
-- vcf_env_depth: setFilterEnvDepth = function(val){this.voiceSettings["lpf_env_depth.factor"] =  val }
+- vcf_env_depth: setFilterEnvDepth = function(val){this.voiceSettings["vcf_env_depth.factor"] =  val }
 - panning: setPanning(val)
 - pulse_width[vco_1,vco_2]: setPulseWidth (num,val)
 - vco_gain[vco_1,vco_2]: setVcoGain(num,val)
@@ -97,19 +97,17 @@ export class Daisy{
 		this.frequency_scalar.connect(this.detune)
 		this.detune.connect(this.vco_2.frequency)
 
-		this.mixer_1 = new Tone.Multiply(.5)
-		this.mixer_2 = new Tone.Multiply(.5)
-		this.vco_1.connect( this.mixer_1)
-		this.vco_2.connect( this.mixer_2)
+		this.crossfade = new Tone.CrossFade()
+		this.vco_1.connect( this.crossfade.a)
+		this.vco_2.connect( this.crossfade.b)
 
-		this.lpf = new Tone.Filter({type:'lowpass', rolloff:-24, Q:0, cutoff:3000})
-		this.mixer_1.connect(this.lpf)
-		this.mixer_2.connect(this.lpf)
+		this.vcf = new Tone.Filter({type:'lowpass', rolloff:-24, Q:0, cutoff:3000})
+		this.crossfade.connect(this.vcf)
 
 		this.vca = new Tone.Multiply()
 		this.panner = new Tone.Panner(0)
 		this.output = new Tone.Multiply(.25)
-		this.lpf.connect(this.vca)
+		this.vcf.connect(this.vca)
 		this.vca.connect(this.panner)
 		this.panner.connect(this.output)
 
@@ -123,16 +121,16 @@ export class Daisy{
 
 		//vcf
 		this.cutoff = new Tone.Signal(1000)
-		this.cutoff.connect(this.lpf.frequency)
+		this.cutoff.connect(this.vcf.frequency)
 		this.cutoffCV = new Tone.Signal()
-		this.cutoffCV.connect(this.lpf.frequency)
+		this.cutoffCV.connect(this.vcf.frequency)
 		this.keyTracking = new Tone.Multiply(.1)
 		this.frequency.connect(this.keyTracking)
-		this.keyTracking.connect(this.lpf.frequency)
+		this.keyTracking.connect(this.vcf.frequency)
 		this.vcf_env = new Tone.Envelope()
-		this.lpf_env_depth = new Tone.Multiply()
-		this.vcf_env.connect(this.lpf_env_depth)
-		this.lpf_env_depth.connect(this.lpf.frequency)
+		this.vcf_env_depth = new Tone.Multiply()
+		this.vcf_env.connect(this.vcf_env_depth)
+		this.vcf_env_depth.connect(this.vcf.frequency)
 
 		this.lfo = new Tone.Oscillator(.5).start()
 		this.vca_constant = new Tone.Signal(1)
@@ -181,12 +179,12 @@ export class Daisy{
       this.frequency.setValueAtTime(val,time)
       this.env.triggerAttackRelease(dur,time)
       this.vcf_env.triggerAttackRelease(dur,time)
-      //this.velocity.setValueAtTime(Math.pow(vel,2),time)
+      this.velocity.setValueAtTime(Math.pow(vel,2),time)
     } else{
       this.frequency.value = val
       this.env.triggerAttackRelease(dur)
       this.vcf_env.triggerAttackRelease(dur)
-      //this.velocity.value =Math.pow(vel,2) 
+      this.velocity.value =Math.pow(vel,2) 
     }
   }//attackRelease
 }
@@ -221,11 +219,9 @@ export class Daisies extends MonophonicTemplate{
 					"vco_1.type": "square",
 					"vco_2.type": "square",
 					"detune.factor": 0,
-					"mixer_1.factor": .5,
-					"mixer_2.factor": .5,
 					"pitch_lfo_depth.factor": 0,
 	        //vcf
-	        "lpf_env_depth.factor": 0,
+	        "vcf_env_depth.factor": 0,
 	        "keyTracking.factor": 0,
 	        "panner.pan": 0,
 	        "keyTracking.factor": 0,
@@ -287,6 +283,46 @@ export class Daisies extends MonophonicTemplate{
     //   this.updateVoiceParameters(this.v, { val });
     // }
   }//attackRelease
+
+  /**
+     * Set the ADSR values for the envelope
+     * @param {number} a - Attack time
+     * @param {number} d - Decay time
+     * @param {number} s - Sustain level
+     * @param {number} r - Release time
+     * @returns {void}
+     * @example synth.setADSR(0.01, 0.1, 0.5, 0.1)
+     */
+    setADSR(a, d, s, r) {
+    	for(let i=0;i<this.numVoices;i++){
+    		if (this.voice[i].env) {
+	            this.voice[i].env.attack = a>0.001 ? a : 0.001
+	            this.voice[i].env.decay = d>0.01 ? d : 0.01
+	            this.voice[i].env.sustain = Math.abs(s)<1 ? s : 1
+	            this.voice[i].env.release = r>0.01 ? r : 0.01
+        	}
+    	}
+    }
+
+    /**
+     * Set the ADSR values for the filter envelope
+     * @param {number} a - Attack time
+     * @param {number} d - Decay time
+     * @param {number} s - Sustain level
+     * @param {number} r - Release time
+     * @returns {void}
+     * @example synth.setFilterADSR(0.01, 0.1, 0.5, 0.1)
+     */ 
+    setFilterADSR(a, d, s, r) {
+    	for(let i=0;i<this.numVoices;i++){
+	        if (this.voice[i].vcf_env) {
+	            this.voice[i].vcf_env.attack = a>0.001 ? a : 0.001
+	            this.voice[i].vcf_env.decay = d>0.01 ? d : 0.01
+	            this.voice[i].vcf_env.sustain = Math.abs(s)<1 ? s : 1
+	            this.voice[i].vcf_env.release = r>0.01 ? r : 0.01
+	        }
+	    }
+    }
 
   set(param, value) {
   	//console.log('set', param, value)
@@ -374,11 +410,9 @@ export class Daisies extends MonophonicTemplate{
 
   setHighpass = function(val){this.hpf.frequency.value = val }
 
-  setVcoGain = function(num,val){
-  	if(num <0 || num >2 ){ console.log("daisy vcos are 0 and 1"); return;}
+  setVcoMix = function(val){
 		for(let i=0;i<this.numVoices;i++) {
-			if(num==0)this.voice[i].mixer_1.factor.value = val 
-			else this.voice[i].mixer_2.factor.value = val 
+			this.voice[i].crossfade.fade.value = val 
 		}
   }
 
@@ -413,11 +447,11 @@ export class Daisies extends MonophonicTemplate{
   	this.gui = gui
   	this.x = x
   	this.y = y
-  	this.mix1_knob = this.createKnob('vco1', 5, 5, 0, 1, 0.75, [200,50,0],x=>this.set('mixer_1.factor',x));
-  	this.mix2_knob = this.createKnob('vco2', 15, 5, 0, 1, 0.75, [200,50,0],x=>this.set('mixer_2.factor',x));
-  	this.detune_knob = this.createKnob('detune', 25, 5, 1, 2, 0.75, [200,50,0],x=>this.set('detune',x));
-  	this.cutoff_knob = this.createKnob('cutoff', 35, 5, 0, 10000, 0.75, [200,50,0],x=>this.set('cutoff',x));
-  	this.vcf_env_knob = this.createKnob('vcf env', 45, 5, 0, 5000, 0.75, [200,50,0],x=>this.set('lpf_env_depth.factor',x));
+  	this.mix1_knob = this.createKnob('vco_mix', 5, 5, 0, 1, 0.75, [200,50,0],x=>this.set('crossfade.fade',x));
+  	this.detune_knob = this.createKnob('detune', 15, 5, 1, 2, 0.75, [200,50,0],x=>this.set('detune',x));
+  	this.cutoff_knob = this.createKnob('cutoff', 25, 5, 0, 10000, 0.75, [200,50,0],x=>this.set('cutoff',x));
+  	this.vcf_env_knob = this.createKnob('vcf env', 35, 5, 0, 5000, 0.75, [200,50,0],x=>this.set('vcf_env_depth.factor',x));
+  	this.vcf_Q_knob = this.createKnob('Q', 45, 5, 0, 20, 0.75, [200,50,0],x=>this.set('vcf.Q',x));
   	this.keyTracking_knob = this.createKnob('key vcf', 55, 5, 0, 1, 0.75, [200,50,0],x=>this.set('keyTracking.factor',x));
   	this.attack_knob = this.createKnob('a', 5, 45, 0.005, .5, 0.75, [200,50,0],x=>this.set('env.attack',x));
   	this.decay_knob = this.createKnob('d', 15, 45, 0.01, .5, 0.75, [200,50,0],x=>this.set('env.decay',x));
@@ -470,4 +504,38 @@ export class Daisies extends MonophonicTemplate{
   	//console.log(note, val )
   	return val
   }
+
+  get() {
+	  // Store the properties as strings so we can print both the name and the value
+	  const props = [
+	    "this.voice[0].frequency.value",
+	    "this.voice[0].detune.value",
+	    "this.voice[0].crossfade.fade.value",
+	    "this.voice[0].cutoff.value",
+	    "this.voice[0].vcf.Q.value",
+	    "this.voice[0].vcf_env_depth.factor.value",
+	    "this.voice[0].velocity_depth.factor.value",
+	    "this.voice[0].keyTracking.factor.value",
+	    "this.voice[0].vca_lfo_depth.factor.value",
+	    "this.voice[0].pitch_lfo_depth.factor.value",
+	    "this.voice[0].pwm_lfo_depth.factor.value",
+	    "this.voice[0].vcf.Q.value",
+	    "this.voice[0].vcf_env_depth.factor.value",
+	    "this.voice[0].lfo.frequency.value",
+	    "this.voice[0].keyTracking.factor.value"
+	  ];
+
+	  // Iterate over the props array
+	  for (let prop of props) {
+	    // Extract and print the property name, removing 'this.voice[0].'
+	    const propName = prop.replace("this.voice[0].", "");
+	    
+	    // Use eval to access the actual value of the property
+	    const propValue = eval(prop);
+
+	    // Print the property name and value
+	    console.log(`${propName}: ${propValue}`);
+	  }
+	}
+
 }

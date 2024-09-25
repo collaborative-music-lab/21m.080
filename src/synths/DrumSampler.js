@@ -77,6 +77,7 @@ export class DrumSampler extends DrumTemplate{
     this.subdivision = '8n'
     this.hatDecay = .05
     this.loop = new Tone.Loop(time => {},this.subdivision)
+    this.prevTime = 0
 
     if (this.gui !== null) {
             this.initGui()
@@ -105,15 +106,15 @@ export class DrumSampler extends DrumTemplate{
       "Bongos": "Bongos", "Bongo": "Bongos",
       "CR78": "CR78", 
       "KPR77": "KPR77",
-      "Kit3": "Kit3", 
-      "Kit8": "Kit8", 
-      "LINN": "LINN", 
+      "Kit3": "Kit3","kit3": "Kit3", 
+      "Kit8": "Kit8", "kit8": "Kit8", 
+      "LINN": "LINN", "linn": "LINN", 
       "R8": "R8",
-      "Stark": "Stark", 
-      "Techno": "Techno", 
+      "Stark": "Stark", "stark": "Stark", 
+      "Techno": "Techno", "techno": "Techno", 
       "TheCheebacabra1": "TheCheebacabra1", "Cheese1": "TheCheebacabra1",
       "TheCheebacabra2": "TheCheebacabra2",  "Cheese2": "TheCheebacabra2",
-      "acoustic-kit": "acoustic-kit", "acoustic": "acoustic-kit",
+      "acoustic-kit": "acoustic-kit", "acoustic": "acoustic-kit", "Acoustic": "acoustic-kit",
       "breakbeat13": "breakbeat13", 
       "breakbeat8": "breakbeat8", 
       "breakbeat9": "breakbeat9",
@@ -215,7 +216,7 @@ export class DrumSampler extends DrumTemplate{
     }
   } 
   triggerDrum(val, time){
-    //console.log(val)
+    //console.log(val,time)
     switch(val){
       case '.': break;
       case '0': this.triggerVoice(this.kick,1,time); break; //just because. . . .
@@ -242,8 +243,15 @@ export class DrumSampler extends DrumTemplate{
       this.openHatEnv.triggerAttackRelease(10,time)
     }
     //if( voice.state === "started" ) voice.stop(time)
-    voice.volume.setValueAtTime( Tone.gainToDb(amplitude), time)
-    voice.start( time )
+    //if( this.prevTime < time){
+    try{
+      voice.volume.setValueAtTime( Tone.gainToDb(amplitude), time)
+      voice.start( time )
+    } catch(e){
+      console.log('time error')
+    }
+    // } else { console.log('caught time error', time, this.prevTime)}
+    // this.prevTime = time
   }
 
   /** Start playing the the sequence
@@ -406,7 +414,8 @@ export class DrumSampler extends DrumTemplate{
    * @param {number} [y = 10] - base Y position
    * @param {object} [gui=this.gui] - The GUI object to use.
    */
-  initGui(x = 10, y = 10) {
+  initGui(gui=this.gui, x = 10, y = 10) {
+      if(gui) this.gui = gui
       // Set the base positions
       this.x = x;
       this.y = y;

@@ -135,6 +135,10 @@ function Editor(props) {
 
     var curLineNum = 0;
 
+    const {
+      floor, ceil, round, max, min, pow, sqrt, abs, sin, cos, tan, log, exp, PI
+    } = Math;
+
     /************************************************
      * 
      * Code caching and URL decoding

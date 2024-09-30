@@ -7,8 +7,8 @@
  * hihat simulates open and closed:
  * 
  * hihat -> hatVca (for open/closed) -> hihat_vca (overall level) -> comp, etc.
- * openHatEnv -> openHatChoke(vca) -> hatVca.factor
- * closedHatEnv -> hatVca.factor
+ * openEnv -> openHatChoke(vca) -> hatVca.factor
+ * closedEnv -> hatVca.factor
  * 
  * kick has a dry output pre-comp and distortion
  * 
@@ -38,8 +38,8 @@ export class DrumSampler extends DrumTemplate{
     this.name = "DrumSampler"
     this.kit = kit
     //
-    this.closedHatEnv = new Tone.Envelope({attack:0.0,decay:.5,sustain:0,release:.4})
-    this.openHatEnv = new Tone.Envelope({attack:0.0,decay:1,sustain:0,release:.4})
+    this.closedEnv = new Tone.Envelope({attack:0.0,decay:.5,sustain:0,release:.4})
+    this.openEnv = new Tone.Envelope({attack:0.0,decay:1,sustain:0,release:.4})
     this.hatVca = new Tone.Multiply()
     this.openHatChoke = new Tone.Multiply()
     this.comp = new Tone.Compressor(-20,4)
@@ -47,51 +47,127 @@ export class DrumSampler extends DrumTemplate{
     this.output = new Tone.Multiply(0.8);
     this.dry_kick = new Tone.Multiply(0.5)
     //
-    this.kick_vca = new Tone.Multiply(1)
+    this.kickEnv = new Tone.Envelope(0.001, 1, 1, 10)
+    this.kick_vca = new Tone.Multiply()
+    this.kick_gain = new Tone.Multiply(1)
     this.kick = new Tone.Player().connect(this.kick_vca)
-    this.snare_vca = new Tone.Multiply(1)
+    this.snareEnv = new Tone.Envelope(0.001, 1, 1, 10)
+    this.snare_vca = new Tone.Multiply()
+    this.snare_gain = new Tone.Multiply(1)
     this.snare = new Tone.Player().connect(this.snare_vca)
     this.hihat_vca = new Tone.Multiply(.9)
     this.hihat = new Tone.Player().connect(this.hihat_vca)
-    this.tom_vca = new Tone.Multiply(.8)
-    this.tom1 = new Tone.Player().connect(this.tom_vca)
-    this.tom2 = new Tone.Player().connect(this.tom_vca)
-    this.tom3 = new Tone.Player().connect(this.tom_vca)
+    //switched Toms to arrays
+    this.tom = []
+    this.tomEnv = []
+    this.tom_vca = []
+    this.tom_gain = []
+    for(let i=0;i<3;i++) {
+      this.tomEnv.push(new Tone.Envelope(0.001, 1, 1, 10))
+      this.tom_vca.push( new Tone.Multiply() )
+      this.tom_gain.push( new Tone.Multiply(.8) )
+      this.tom.push( new Tone.Player() )
+    }
+    for(let i=0;i<3;i++) {
+      this.tom[i].connect( this.tom_vca[i] ) 
+      this.tomEnv[i].connect( this.tom_gain[i] )
+      this.tom_gain[i].connect( this.tom_vca[i].factor )
+      this.tom_vca[i].connect(this.comp)
+    }
     //
+    this.kickEnv.connect( this.kick_gain)
+    this.kick_gain.connect( this.kick_vca.factor)
     this.kick_vca.connect(this.comp)
+    this.snareEnv.connect( this.snare_gain)
+    this.snare_gain.connect( this.snare_vca.factor)
     this.snare_vca.connect(this.comp)
     this.hihat_vca.connect(this.hatVca)
-    this.tom_vca.connect(this.comp)
     //
-    this.kick.connect(this.dry_kick)
+    this.kick_vca.connect(this.dry_kick)
     this.comp.connect(this.distortion)
     this.distortion.connect(this.output)
-    this.closedHatEnv.connect(this.hatVca.factor)
-    this.openHatEnv.connect(this.openHatChoke)
+    this.closedEnv.connect(this.hatVca.factor)
+    this.openEnv.connect(this.openHatChoke)
     this.openHatChoke.connect(this.hatVca.factor)
     this.hatVca.connect(this.comp)
     this.dry_kick.connect(this.output)
     //
     this.loadSamples(this.kit)
-    this.index = 0;
-    this.subdivision = '8n'
     this.hatDecay = .05
-    this.loop = new Tone.Loop(time => {},this.subdivision)
     this.prevTime = 0
+
+    this.kickGhostVelocity = new Array(10).fill(.25)
+    this.snareGhostVelocity = new Array(10).fill(1/4)
+    this.kickVelocity = new Array(10).fill(1)
+    this.snareVelocity = new Array(10).fill(1)
+    this.closedVelocity = new Array(10).fill(.75)
+    this.openVelocity = new Array(10).fill(1)
+    this.p1Velocity = new Array(10).fill(1)
+    this.p2Velocity = new Array(10).fill(1)
+    this.p3Velocity = new Array(10).fill(1)
 
     if (this.gui !== null) {
             this.initGui()
             this.hideGui();
             this.loadPreset('default');
         }
+
+        for(let i=0;i<10;i++) {
+            this.subdivision[i] = '16n'
+        }
   }//constructor
 
-  openHatDecay(val){
-    this.openHatEnv.release = val
+  //SETTERS AND GETTERS
+  get kickDecay() { return this.kickEnv.release; }
+  set kickDecay(value) { this.kickEnv.release = value; }
+  get snareDecay() { return this.snareEnv.release; }
+  set snareDecay(value) { this.snareEnv.release = value; }
+  get closedDecay() { return this.closedEnv.release; }
+  set closedDecay(value) { this.closedEnv.release = value; }
+  get openDecay() { return this.openEnv.decay; }
+  set openDecay(value) { this.openEnv.decay = value; }
+  get p1Decay() { return this.tomEnv[0].release; }
+  set p1Decay(value) { this.p1Env.release = value; }
+  get p2Decay() { return this.tomEnv[1].release; }
+  set p2Decay(value) { this.p2Env.release = value; }
+  get p3Decay() { return this.tomEnv[2].release; }
+  set p3Decay(value) { this.p3Env.release = value; }
+
+  setVelocity(voice, num, val){
+    if(val > 1) val = val/127 //account for 0-127 velocities
+    if(num>=0 && num<10){
+      switch( voice ){
+        case 'kick': case 'O': this.kickVelocity[num]=val; break;
+        case 'snare': case 'X': this.snareVelocity[num]=val; break;
+        case 'closed': case '*': this.closedVelocity[num]=val; break;
+        case 'open': case '^': this.openVelocity[num]=val; break;
+        case 'p1': case '1': this.p1Velocity[num]=val; break;
+        case 'p2': case '2': this.p1Velocity[num]=val; break;
+        case 'p3': case '3': this.p1Velocity[num]=val; break;
+        case 'o': this.kickGhostVelocity[num]=val; break;
+        case 'x': this.snareGhostVelocity[num]=val; break;
+      }
+    } else{
+      for(let i=0;i<10;i++){
+        switch( voice ){
+        case 'kick': case 'O': this.kickVelocity[i]=val; break;
+        case 'snare': case 'X': this.snareVelocity[i]=val; break;
+        case 'closed': case '*': this.closedVelocity[i]=val; break;
+        case 'open': case '^': this.openVelocity[i]=val; break;
+        case 'p1': case '1': this.p1Velocity[num]=i; break;
+        case 'p2': case '2': this.p1Velocity[num]=i; break;
+        case 'p3': case '3': this.p1Velocity[num]=i; break;
+        case 'o': this.kickGhostVelocity[num]=val; break;
+        case 'x': this.snareGhostVelocity[num]=val; break;
+      }
+      }
+
+    }
   }
-  closedHatDecay(val){
-    this.closedHatEnv.release = val
-  }
+
+  // setOneVelocity(voice,num,val{
+  //   voice[num] = val
+  // })
 
   /**
    * Load a specific drum kit.
@@ -139,9 +215,9 @@ export class DrumSampler extends DrumTemplate{
     this.kick.load( this.baseUrl.concat("/kick.mp3") )
     this.snare.load( this.baseUrl.concat("/snare.mp3") )
     this.hihat.load( this.baseUrl.concat("/hihat.mp3") )
-    this.tom1.load( this.baseUrl.concat("/tom1.mp3") )
-    this.tom2.load( this.baseUrl.concat("/tom2.mp3") )
-    this.tom3.load( this.baseUrl.concat("/tom3.mp3") )
+    this.tom[0].load( this.baseUrl.concat("/tom1.mp3") )
+    this.tom[1].load( this.baseUrl.concat("/tom2.mp3") )
+    this.tom[2].load( this.baseUrl.concat("/tom3.mp3") )
   }
 
   /**
@@ -152,17 +228,15 @@ export class DrumSampler extends DrumTemplate{
    * @param {number} time - The time at which to trigger the voice.
    */
   trigger(voice, vel, time) {
-    if (this.kick.loaded) {
-      if(1){
-        switch (voice) {
-          case "kick": this.triggerVoice( this.kick,  vel, time ); break;
-          case "snare": this.triggerVoice( this.snare, vel, time ); break;
-          case "hihat": this.triggerVoice( this.hihat, vel, time ); break;
-          case "tom1": this.triggerVoice( this.tom1, vel, time ); break;
-          case "tom2": this.triggerVoice( this.tom2, vel, time ); break;
-          case "tom3": this.triggerVoice( this.tom3, vel, time ); break;
-          default: console.error(`Unknown voice: ${voice}`); break;
-        }
+    if (voice.loaded) {
+      switch (voice) {
+        case "kick": this.triggerVoice( this.kick,  vel, time ); break;
+        case "snare": this.triggerVoice( this.snare, vel, time ); break;
+        case "hihat": this.triggerVoice( this.hihat, vel, time ); break;
+        case "tom1": this.triggerVoice( this.tom[0], vel, time ); break;
+        case "tom2": this.triggerVoice( this.tom[1], vel, time ); break;
+        case "tom3": this.triggerVoice( this.tom[2], vel, time ); break;
+        default: console.error(`Unknown voice: ${voice}`); break;
       }
     } else {
       console.error("Sampler is not loaded yet.");
@@ -175,78 +249,114 @@ export class DrumSampler extends DrumTemplate{
    * @param {string} arr - A string representing the drum pattern.
    * @param {string} subdivision - The rhythmic subdivision to use for the sequence (e.g., '8n', '16n').
    */
-  sequence(arr, subdivision) {
+  sequence(arr, subdivision = '8n', num = 0, iterations = 'Infinity') {
+
+    this.seq[num] = parseStringSequence(arr)
+
+    this.createLoop(subdivision, num, iterations)
 
     // Initialize arrays for each drum voice
-    if (subdivision) this.subdivision = subdivision;
+    if (subdivision) this.subdivision[num] = subdivision;
 
     //note: we have changed approaches
     //the sequence is not split up at this point
     //instead, it is parsed in the loop
-    this.seq = {
-        "original": [],
-        "kick": [],
-        "snare": [],
-        "hihat": [],
-        "tom1": [],
-        "tom2": [],
-        "tom3": [],
-        "openHat": []
-    };
-    this.seq.original = parseStringSequence(arr)
-
-    // Create a Tone.Loop
-    if (this.loop.state === "stopped") {
-        this.loop = new Tone.Loop(time => {
-            this.index = Math.floor(Tone.Transport.ticks / Tone.Time(this.subdivision).toTicks());
-            //console.log('index', this.index)
-            let curBeat = this.seq.original[this.index%this.seq.original.length];
-
-            const event = parseStringBeat(curBeat, time)
-            //console.log(event)
-
-            for (const val of event) {
-              //console.log(val[0], val[1])
-              this.triggerDrum(val[0], time + val[1] * (Tone.Time(this.subdivision)));
-            }
-        }, this.subdivision).start(0);
-
-        // Start the Transport
-        Tone.Transport.start();
-    }
   } 
-  triggerDrum(val, time){
+
+  /**
+     * plays the provided sequence array initializes a Tone.Loop with the given subdivision.
+     *
+     * @param {string} arr - The sequence of notes as a string.
+     * @param {number} iterations - The the number of times to play the sequence
+     * @param {string} [subdivision] - The rhythmic subdivision for the loop (e.g., '16n', '8n').
+     * @param {string} num (default 0) - the sequence number. Up to 10 sequences per instance.
+     */
+    setSeq(arr, subdivision = '8n', num = 0){
+        this.seq[num] = parseStringSequence(arr)
+
+        if (subdivision) this.setSubdivision(subdivision, num) 
+    }
+
+    play(iterations = 1, arr = null, subdivision = '8n', num = 0) {
+
+        if(arr) this.seq[num] = parseStringSequence(arr)
+
+        this.createLoop(subdivision, num, iterations)
+        //this.loop[num].start()
+    }
+
+  createLoop(subdivision, num, iterations='Infinity'){
+        // Create a Tone.Loop
+        if (this.loop[num] === null) {
+            this.loop[num] = new Tone.Loop(time => {
+              //console.log(num)
+                this.index = Math.floor(Tone.Transport.ticks / Tone.Time(this.subdivision[num]).toTicks());
+                if(this.enable[num] === 0) return
+                
+                if(num == 0) this.callback(this.index)
+                let curBeat = this.seq[num][this.index%this.seq[num].length];
+
+                const event = parseStringBeat(curBeat, time)
+                //console.log(this.index , this.seq[num],curBeat, event)
+                for (const val of event) {
+                  this.triggerDrum(val[0], num, time + val[1] * (Tone.Time(this.subdivision[num])));
+              }
+            }, '4n').start(0);
+
+            // Start the Transport
+            Tone.Transport.start();
+        }
+        this.loop[num].iterations = iterations * this.seq[num].length
+
+        if (subdivision) {
+         // if(subdivision !== this.subdivision[num]){
+                setTimeout( this.setSubdivision(subdivision, num), 100)
+             // }
+        }
+
+        this.start(num)
+    }
+
+  triggerDrum(val, num, time){
     //console.log(val,time)
     switch(val){
       case '.': break;
-      case '0': this.triggerVoice(this.kick,1,time); break; //just because. . . .
-      case 'O': this.triggerVoice(this.kick,1,time); break;
-      case 'o': this.triggerVoice(this.kick,.5,time); break;
-      case 'X': this.triggerVoice(this.snare,1,time); break;
-      case 'x': this.triggerVoice(this.snare,.5,time); break;
-      case '*': this.triggerVoice(this.hihat,.75,time); break;
-      case '^': this.triggerVoice("openHat",1,time); break;
-      case '1': this.triggerVoice(this.tom1,1,time); break;
-      case '2': this.triggerVoice(this.tom2,1,time); break;
-      case '3': this.triggerVoice(this.tom3,1,time); break;
+      case '0': this.triggerVoice(this.kick,this.kickVelocity[num],time); break; //just because. . . .
+      case 'O': this.triggerVoice(this.kick,this.kickVelocity[num],time); break;
+      case 'o': this.triggerVoice(this.kick,this.kickGhostVelocity[num],time); break;
+      case 'X': this.triggerVoice(this.snare,this.snareVelocity[num],time); break;
+      case 'x': this.triggerVoice(this.snare,this.snareGhostVelocity[num],time); break;
+      case '*': this.triggerVoice(this.hihat,this.closedVelocity[num],time); break;
+      case '^': this.triggerVoice("openHat",this.openVelocity[num],time); break;
+      case '1': this.triggerVoice(this.tom[0],this.p1Velocity[num],time); break;
+      case '2': this.triggerVoice(this.tom[1],this.p2Velocity[num],time); break;
+      case '3': this.triggerVoice(this.tom[2],this.p3Velocity[num],time); break;
       default: console.log('triggerDrum(), no matching drum voice ', val, '\n')
     }   
   }
+
   triggerVoice(voice, amplitude, time){
-    if( voice === this.hihat) {
-      this.closedHatEnv.triggerAttackRelease(.001,time)
+    let curEnv = null
+    if( voice === this.kick ) curEnv = this.kickEnv
+    else if( voice === this.snare ) curEnv = this.snareEnv
+    else if( voice === this.tom[0] ) curEnv = this.tomEnv[0]
+    else if( voice === this.tom[1] ) curEnv = this.tomEnv[1]
+    else if( voice === this.tom[2] ) curEnv = this.tomEnv[2]
+    else if( voice === this.hihat) {
+      this.closedEnv.triggerAttackRelease(.001,time)
       this.openHatChoke.factor.setValueAtTime(0, time)
     }
     else if( voice === "openHat") {
       voice = this.hihat
       this.openHatChoke.factor.setValueAtTime(1, time)
-      this.openHatEnv.triggerAttackRelease(10,time)
+      this.openEnv.triggerAttackRelease(10,time)
     }
     //if( voice.state === "started" ) voice.stop(time)
     //if( this.prevTime < time){
     try{
       voice.volume.setValueAtTime( Tone.gainToDb(amplitude), time)
       voice.start( time )
+      if(curEnv !== null) curEnv.triggerAttackRelease(.001, time)
     } catch(e){
       console.log('time error')
     }
@@ -254,133 +364,7 @@ export class DrumSampler extends DrumTemplate{
     // this.prevTime = time
   }
 
-  /** Start playing the the sequence
-   */
-  start(){ this.loop.start()}
-
-  // /**
-  //  * Sequences the drum voices based on the input string or object, subdivision, and the initial sequence.
-  //  * Rewrites the current sequence by default.
-  //  * @param {string|object} input Input string or object to append to the initial sequence of the drum voices.
-  //  * @param {string} subdivision Subdivision of the sequence.
-  //  * @param {object} init Initial sequence of the drum voices. Empty by default.
-  //  * @returns 
-  //  */
-  // sequence(input, subdivision, init={
-  //   "kick" : [],
-  //   "snare" : [],
-  //   "hihat" : [],
-  //   "tom1" : [],
-  //   "tom2" : [],
-  //   "tom3" : [],
-  //   "openHat" : []
-  // }) {
-  //   // Initialize arrays for each drum voice
-  //   this.seq = init
-  //   if(subdivision) this.subdivision = subdivision
-
-  //   // String input parsing
-  //   if (typeof input === "string") {
-  //     // Remove all spaces from the input string
-  //     let str_arr = input.replaceAll(" ","")
-
-  //     // Parse the input string
-  //     for (this.i=0; this.i<str_arr.length; this.i++) {
-  //       if(str_arr[this.i] === 'O') {this.seq['kick'].push(1)} else if(str_arr[this.i] === 'o') {this.seq['kick'].push(.5)} else this.seq['kick'].push(0)
-  //       if(str_arr[this.i] === 'X') {this.seq['snare'].push(1)}  else if(str_arr[this.i] === 'x') {this.seq['snare'].push(.5)} else this.seq['snare'].push(0)
-  //       if(str_arr[this.i] === '*') {this.seq['hihat'].push(1)} else this.seq['hihat'].push(0)
-  //       if(str_arr[this.i] === '1') {this.seq['tom1'].push(1)} else this.seq['tom1'].push(0)
-  //       if(str_arr[this.i] === '2') {this.seq['tom2'].push(1)} else this.seq['tom2'].push(0)
-  //       if(str_arr[this.i] === '3') {this.seq['tom3'].push(1)} else this.seq['tom3'].push(0)
-  //       if(str_arr[this.i] === '^') {this.seq['openHat'].push(1)} else this.seq['openHat'].push(0)
-  //     }
-  //   } else if (typeof input === "object") {
-  //     // Object input parsing
-      
-  //     // get the input length
-  //     let len = 0
-  //     for (const [name, arr] of Object.entries(input)) {
-  //       if (name in this.seq) {
-  //         len = arr.length
-  //         break;
-  //       }
-  //     }
-
-  //     // append the input to the sequence
-  //     for (const [name, arr] of Object.entries(this.seq)) {
-  //       if (name in input) {
-  //         this.seq[name].push.apply(arr, input[name]);
-  //       } else {
-  //         this.seq[name].push.apply(arr, Array(len).fill(0));
-  //       }
-  //     }
-  //   } else {
-  //     console.error("Invalid input type. Please provide a string or an object.")
-  //     return;
-  //   }
-    
-  //   // Create a Tone.Loop if stopped
-  //   if( this.loop.state === "stopped"){
-  //     this.loop = new Tone.Loop(time => {
-  //       this.index = Math.floor(Tone.Transport.ticks / Tone.Time(this.subdivision).toTicks());
-
-  //       // Iterate over the sequence and trigger the voices
-  //       for (const [name, arr] of Object.entries(this.seq)){
-  //         if (arr) {
-  //           const val = arr[this.index % arr.length]
-  //           if( name === "kick" && val > 0) this.triggerVoice( this.kick, val, time)
-  //           else if( name === "snare" && val > 0 ) this.triggerVoice( this.snare, val, time)
-  //           else if( name === "hihat"&& val > 0 ) this.triggerVoice( this.hihat, val, time)
-  //           else if( name === "tom1" && val > 0) this.triggerVoice( this.tom1, val, time)
-  //           else if( name === "tom2" && val > 0) this.triggerVoice( this.tom2, val, time)
-  //           else if( name === "tom3" && val > 0) this.triggerVoice( this.tom3, val, time)
-  //           else if( name === "openHat" && val > 0) this.triggerVoice( "openHat", val, time)
-  //         }
-  //       }
-  //     }, this.subdivision).start(0);
-
-  //     // Start the Transport
-  //     Tone.Transport.start();
-  //   }
-
-  //   console.log(this.seq)
-  // }
-
-  // /**
-  //  * Updates the current sequence with the input object. Doesn't rewrite the non-provided voices patterns.
-  //  * @param {object} input  Object input to update the current sequence.
-  //  * @returns 
-  //  */
-  // update(input) {
-  //   if (typeof input !== "object") {
-  //     console.error("Invalid input type. Can only update seq using objects.")
-  //     return;
-  //   }
-
-  //   let seq = this.seq
-  //   // update the sequence from input
-  //   for (const [name, arr] of Object.entries(input)) {
-  //     if (name in this.seq) {
-  //       seq[name] = arr
-  //     }
-  //   }
-  //   this.seq = seq
-  //   console.log(this.seq)
-  // }
-
-  // /**
-  //  * Appends the input to the current sequence
-  //  * @param {string|object} input Input string or object to append to the current sequence.
-  //  */
-  // append(input){
-  //   this.sequence(input, null, this.seq);
-  // }
-
-  /** stop playing the the sequence
-   */
-  stop(){ this.loop.stop()}
-
-  //drawBeat does'nt really work but is an attempt to draw the 
+  //drawBeat doesn't really work but is an attempt to draw the 
     //sequence to a canvas using html
   drawBeat (canvasId) {
         const verticalOrder = ['^', '*', '1', '2', '3', 'x', 'X', 'o', 'O'];
@@ -424,20 +408,24 @@ export class DrumSampler extends DrumTemplate{
       this.values_array = [];
 
       // Create GUI elements for VCA controls (factor controls)
-      const kick_vca_knob = this.createKnob('Kick', 0, 40, 0, 1, .5, [200, 50, 0], x => this.kick_vca.factor.value = x);
-      const snare_vca_knob = this.createKnob('Snare', 0, 20, 0, 1, .5, [200, 50, 0], x => this.snare_vca.factor.value = x);
+      const kick_vca_knob = this.createKnob('Kick', 0, 40, 0, 1, .5, [200, 50, 0], x => this.kick_gain.factor.value = x);
+      const snare_vca_knob = this.createKnob('Snare', 0, 20, 0, 1, .5, [200, 50, 0], x => this.snare_gain.factor.value = x);
       const hat_vca_knob = this.createKnob('Hihat', 0, 0, 0, 1, .5, [200, 50, 0], x => this.hihat_vca.factor.value = x);
-      const toms_vca_knob = this.createKnob('Toms', 0, 60, 0, 1, .5, [200, 50, 0], x => this.tom_vca.factor.value = x);
+      const toms_vca_knob = this.createKnob('Toms', 0, 60, 0, 1, .5, [200, 50, 0], x => {this.tom_gain[0].factor.value = x; this.tom_gain[1].factor.value = x ;this.tom_gain[2].factor.value = x});
+      const kick_decay_knob = this.createKnob('decay', 10, 40, 0, 1, .5, [200, 50, 0], x => this.kickEnv.release = x*10+.01);
+      const snare_decay_knob = this.createKnob('decay', 10, 20, 0, 1, .5, [200, 50, 0], x => this.snareEnv.release = x*10+.01);
+      const toms_decay_knob = this.createKnob('decay', 10, 60, 0, 1, .5, [200, 50, 0], x => {this.tomEnv[0].release = x*10+.01; this.tomEnv[1].release = x*10+.01 ;this.tomEnv[2].release = x*10+.01});
+      
       const output_knob = this.createKnob('Output', 80, 60, 0, 4, 1, [200, 50, 0], x => this.output.factor.value = x);
       const dry_kick_knob = this.createKnob('Dry Kick', 40, 40, 0, 1, .4, [200, 50, 0], x => this.dry_kick.factor.value = x);
 
       // Create GUI elements for Playback Rate controls
-      const kick_rate_knob = this.createKnob('Kick Rate', 20, 40, 0., 2, .4, [200, 50, 0], x => this.kick.playbackRate = x);
-      const snare_rate_knob = this.createKnob('Snare Rate', 20, 20, 0., 2, .4, [200, 50, 0], x => this.snare.playbackRate = x);
-      const hat_rate_knob = this.createKnob('Hihat Rate', 20, 0, 0., 2, .4, [200, 50, 0], x => this.hihat.playbackRate = x);
-      const tom1_rate_knob = this.createKnob('Tom1 Rate', 20, 60, 0., 2, .4, [200, 50, 0], x => this.tom1.playbackRate = x);
-      const tom2_rate_knob = this.createKnob('Tom2 Rate', 30, 60, 0., 2, .4, [200, 50, 0], x => this.tom2.playbackRate = x);
-      const tom3_rate_knob = this.createKnob('Tom3 Rate', 40, 60, 0., 2, .4, [200, 50, 0], x => this.tom3.playbackRate = x);
+      const kick_rate_knob = this.createKnob('rate', 20, 40, 0., 2, .4, [200, 50, 0], x => this.kick.playbackRate = x);
+      const snare_rate_knob = this.createKnob('rate', 20, 20, 0., 2, .4, [200, 50, 0], x => this.snare.playbackRate = x);
+      const hat_rate_knob = this.createKnob('rate', 20, 0, 0., 2, .4, [200, 50, 0], x => this.hihat.playbackRate = x);
+      const tom1_rate_knob = this.createKnob('1 Rate', 20, 60, 0., 2, .4, [200, 50, 0], x => this.tom[0].playbackRate = x);
+      const tom2_rate_knob = this.createKnob('2 Rate', 30, 60, 0., 2, .4, [200, 50, 0], x => this.tom[1].playbackRate = x);
+      const tom3_rate_knob = this.createKnob('3 Rate', 40, 60, 0., 2, .4, [200, 50, 0], x => this.tom[2].playbackRate = x);
 
       // Create GUI elements for Compressor controls
       const comp_threshold_knob = this.createKnob('Threshold', 60, 20, -60, -5, .5, [200, 50, 0], x => this.comp.threshold.value = x);
@@ -447,7 +435,7 @@ export class DrumSampler extends DrumTemplate{
       const distort_knob = this.createKnob('Distort', 60, 60, 0, 1, .5, [200, 50, 0], x => this.distortion.distortion = x);
 
       // Create GUI element for Hat Decay
-      const hihat_decay_knob = this.createKnob('Hat Decay', 40, 0, 0.01, 1, .75, [200, 50, 0], x => this.closedHatEnv.release = x);
+      const hihat_decay_knob = this.createKnob('Hat Decay', 40, 0, 0.01, 1, .75, [200, 50, 0], x => this.closedEnv.release = x);
   
       const kit_dropdown = this.gui.Dropdown({
         label: 'kit', dropdownOptions: [ "LINN", "Techno", "TheCheebacabra1", "TheCheebacabra2", "acoustic-kit", "breakbeat13", "breakbeat8", "breakbeat9", "4OP-FM", "Bongos", "CR78", "KPR77", "Kit3", "Kit8"],
@@ -481,7 +469,6 @@ export class DrumSampler extends DrumTemplate{
     ];
   }
 
-
   createKnob(_label, _x, _y, _min, _max, _size, _accentColor, callback) {
       //console.log(_label)
       return this.gui.Knob({
@@ -494,20 +481,20 @@ export class DrumSampler extends DrumTemplate{
       });
     }
 
-  connect(destination) {
-    if (destination.input) {
-      this.output.connect(destination.input);
-    } else {
-      this.output.connect(destination);
-    }
-  }
+  // connect(destination) {
+  //   if (destination.input) {
+  //     this.output.connect(destination.input);
+  //   } else {
+  //     this.output.connect(destination);
+  //   }
+  // }
 
-	disconnect(destination) {
-    if (destination.input) {
-      this.output.disconnect(destination.input);
-    } else {
+	// disconnect(destination) {
+  //   if (destination.input) {
+  //     this.output.disconnect(destination.input);
+  //   } else {
 
-      this.output.disconnect(destination);
-    }
-  }
+  //     this.output.disconnect(destination);
+  //   }
+  // }
 }

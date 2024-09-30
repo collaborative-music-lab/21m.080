@@ -623,8 +623,6 @@ export function parsePitchStringSequence(str) {
 
     let arr = str.match(regex);
 
-    console.log(arr)
-
     // Step 3: Process '@' elements
     for (let i = 0; i < arr.length; i++) {
         if (arr[i].startsWith("@")) {
@@ -666,6 +664,7 @@ export function parseStringBeat(curBeat, time){
 //handles pitch sequences
 export function parsePitchStringBeat(curBeat, time){
   // console.log(curBeat)
+  try{
   const firstElement = curBeat.replace(/\[/g, "")[0]
   const usesPitchNames = /^[a-ac-zA-Z]$/.test(firstElement);
 
@@ -712,6 +711,11 @@ export function parsePitchStringBeat(curBeat, time){
 
     //console.log(curBeat, outArr)
     return  outArr 
+    }
+  catch(e){
+    console.log('error with parsePitchStringBeat')
+    return ['.']
+  }
 }
 
 /**

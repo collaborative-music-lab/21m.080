@@ -88,14 +88,14 @@ export class Daisy{
 		this.frequency = new Tone.Signal(100)
 		this.frequencyCV = new Tone.Signal()
 		this.frequency_scalar = new Tone.Multiply(1)
-		this.detune = new Tone.Multiply(1)
+		this.detune_scalar = new Tone.Multiply(1)
 		this.vco_1 = new Tone.Oscillator({type:"square"}).start()
 		this.vco_2 = new Tone.Oscillator({type:"square"}).start()
 		this.frequency.connect(this.frequency_scalar)
 		this.frequencyCV.connect(this.frequency_scalar.factor)
 		this.frequency_scalar.connect(this.vco_1.frequency)
-		this.frequency_scalar.connect(this.detune)
-		this.detune.connect(this.vco_2.frequency)
+		this.frequency_scalar.connect(this.detune_scalar)
+		this.detune_scalar.connect(this.vco_2.frequency)
 
 		this.crossfade = new Tone.CrossFade()
 		this.vco_1.connect( this.crossfade.a)
@@ -120,8 +120,8 @@ export class Daisy{
 		this.velocity.connect(this.velocity_depth.factor)
 
 		//vcf
-		this.cutoff = new Tone.Signal(1000)
-		this.cutoff.connect(this.vcf.frequency)
+		this.cutoffVal = new Tone.Signal(1000)
+		this.cutoffVal.connect(this.vcf.frequency)
 		this.cutoffCV = new Tone.Signal()
 		this.cutoffCV.connect(this.vcf.frequency)
 		this.keyTracking = new Tone.Multiply(.1)
@@ -447,9 +447,9 @@ export class Daisies extends MonophonicTemplate{
   	this.gui = gui
   	this.x = x
   	this.y = y
-  	this.mix1_knob = this.createKnob('vco_mix', 5, 5, 0, 1, 0.75, [200,50,0],x=>this.set('crossfade.fade',x));
-  	this.detune_knob = this.createKnob('detune', 15, 5, 1, 2, 0.75, [200,50,0],x=>this.set('detune',x));
-  	this.cutoff_knob = this.createKnob('cutoff', 25, 5, 0, 10000, 0.75, [200,50,0],x=>this.set('cutoff',x));
+  	this.vco_mix = this.createKnob('vco_mix', 5, 5, 0, 1, 0.75, [200,50,0],x=>this.set('crossfade.fade',x));
+  	this.detune = this.createKnob('detune', 15, 5, 1, 2, 0.75, [200,50,0],x=>this.set('detune',x));
+  	this.cutoff = this.createKnob('cutoff', 25, 5, 0, 10000, 0.75, [200,50,0],x=>this.set('cutoff',x));
   	this.vcf_env_knob = this.createKnob('vcf env', 35, 5, 0, 5000, 0.75, [200,50,0],x=>this.set('vcf_env_depth.factor',x));
   	this.vcf_Q_knob = this.createKnob('Q', 45, 5, 0, 20, 0.75, [200,50,0],x=>this.set('vcf.Q',x));
   	this.keyTracking_knob = this.createKnob('key vcf', 55, 5, 0, 1, 0.75, [200,50,0],x=>this.set('keyTracking.factor',x));
@@ -457,8 +457,8 @@ export class Daisies extends MonophonicTemplate{
   	this.decay_knob = this.createKnob('d', 15, 45, 0.01, .5, 0.75, [200,50,0],x=>this.set('env.decay',x));
   	this.sustain_knob = this.createKnob('s', 25, 45, 0, 1, 0.75, [200,50,0],x=>this.set('env.sustain',x));
   	this.release_knob = this.createKnob('r', 35, 45, 0, 1, 0.75, [200,50,0],x=>this.set('env.release',x));
-  	this.gui_elements = [this.mix1_knob, this.mix2_knob, 
-  		this.detune_knob, this.cutoff_knob, this.vcf_env_knob,
+  	this.gui_elements = [this.vco_mix, 
+  		this.detune, this.cutoff, this.vcf_env_knob,
   		this.keyTracking_knob, this.attack_knob, this.decay_knob,
   		this.sustain_knob, this.release_knob]
   }

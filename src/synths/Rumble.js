@@ -15,7 +15,7 @@ setGain(a,b,c)
 
 properties set directly:
 frequency.value
-velocity.value
+velocitySig.value
 cutoff_cv.value
 clip.factor (into waveShaper)
 vca_lvl.value
@@ -102,8 +102,8 @@ export class Rumble extends MonophonicTemplate {
     this.env_depth = new Tone.Multiply()
     this.env.connect(this.env_depth)
     this.env_depth.connect(this.vca.factor)
-    this.velocity = new Tone.Signal(1)
-    this.velocity.connect(this.env_depth.factor)
+    this.velocitySig = new Tone.Signal(1)
+    this.velocitySig.connect(this.env_depth.factor)
 
     //vcf control
     this.vcf_env = new Tone.Envelope();
@@ -145,12 +145,12 @@ export class Rumble extends MonophonicTemplate {
       this.env.triggerAttack(time)
       this.vcf_env.triggerAttack(time)
       this.frequency.setValueAtTime(freq, time)
-      this.velocity.rampTo(amp,.03)
+      this.velocitySig.setValueAtTime(amp,time)
     } else {
       this.env.triggerAttack()
       this.vcf_env.triggerAttack()
       this.frequency.value = freq
-      this.velocity.rampTo(amp,.03)
+      this.velocitySig.rampTo(amp,.03)
     }
   }
   triggerRelease (time=null){
@@ -170,14 +170,16 @@ export class Rumble extends MonophonicTemplate {
       this.env.triggerAttackRelease(dur, time)
       this.vcf_env.triggerAttackRelease(dur, time)
       this.frequency.setValueAtTime(freq, time)
-      this.velocity.rampTo(amp,.03)
+      this.velocitySig.setValueAtTime(amp,time)
     } else{
       this.env.triggerAttackRelease(dur)
       this.vcf_env.triggerAttackRelease(dur)
       this.frequency.value = freq
-      this.velocity.rampTo(amp,.03)
+      this.velocitySig.rampTo(amp,.03)
     }
   }//attackRelease
+
+  
 
   setDetune(a,b,c){
   	this.vco_freq_1.factor.value = a

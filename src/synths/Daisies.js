@@ -4,7 +4,7 @@ Polyphonic Subtractive Synthesizer
 
 Daisy:
 * 2 OmniOscillators(vco_1, vco_2)->shape->waveShapers->mixer->vcf->hpf->panner->vca
-* frequency->frequency_scalar->(detune for vco_2)->vco_1.frequency
+* frequency->frequency_scalar->(detuneSig for vco_2)->vco_1.frequency
 * frequencyCV->frequency_scalar.factor
 * cutoff control: cutoff, cutoff_vc, keyTracking, vcf_env_depth
 * lfo->vca_lfo_depth-<output.factor, pitch_lfo_depth->
@@ -120,8 +120,8 @@ export class Daisy{
 		this.velocity.connect(this.velocity_depth.factor)
 
 		//vcf
-		this.cutoffVal = new Tone.Signal(1000)
-		this.cutoffVal.connect(this.vcf.frequency)
+		this.cutoffSig = new Tone.Signal(1000)
+		this.cutoffSig.connect(this.vcf.frequency)
 		this.cutoffCV = new Tone.Signal()
 		this.cutoffCV.connect(this.vcf.frequency)
 		this.keyTracking = new Tone.Multiply(.1)
@@ -218,7 +218,7 @@ export class Daisies extends MonophonicTemplate{
 					//vco
 					"vco_1.type": "square",
 					"vco_2.type": "square",
-					"detune.factor": 0,
+					"detune_scalar.factor": 0,
 					"pitch_lfo_depth.factor": 0,
 	        //vcf
 	        "vcf_env_depth.factor": 0,
@@ -448,19 +448,31 @@ export class Daisies extends MonophonicTemplate{
   	this.x = x
   	this.y = y
   	this.vco_mix = this.createKnob('vco_mix', 5, 5, 0, 1, 0.75, [200,50,0],x=>this.set('crossfade.fade',x));
-  	this.detune = this.createKnob('detune', 15, 5, 1, 2, 0.75, [200,50,0],x=>this.set('detune',x));
-  	this.cutoff = this.createKnob('cutoff', 25, 5, 0, 10000, 0.75, [200,50,0],x=>this.set('cutoff',x));
+  	this.detune = this.createKnob('detune', 15, 5, 1, 2, 0.75, [200,50,0],x=>this.set('detune_scalar',x));
+  	this.cutoff = this.createKnob('cutoff', 25, 5, 0, 10000, 0.75, [200,50,0],x=>this.set('cutoffSig',x));
   	this.vcf_env_knob = this.createKnob('vcf env', 35, 5, 0, 5000, 0.75, [200,50,0],x=>this.set('vcf_env_depth.factor',x));
   	this.vcf_Q_knob = this.createKnob('Q', 45, 5, 0, 20, 0.75, [200,50,0],x=>this.set('vcf.Q',x));
   	this.keyTracking_knob = this.createKnob('key vcf', 55, 5, 0, 1, 0.75, [200,50,0],x=>this.set('keyTracking.factor',x));
-  	this.attack_knob = this.createKnob('a', 5, 45, 0.005, .5, 0.75, [200,50,0],x=>this.set('env.attack',x));
-  	this.decay_knob = this.createKnob('d', 15, 45, 0.01, .5, 0.75, [200,50,0],x=>this.set('env.decay',x));
-  	this.sustain_knob = this.createKnob('s', 25, 45, 0, 1, 0.75, [200,50,0],x=>this.set('env.sustain',x));
-  	this.release_knob = this.createKnob('r', 35, 45, 0, 1, 0.75, [200,50,0],x=>this.set('env.release',x));
+  	this.highpass_knob = this.createKnob('hpf', 65, 5, 10, 3000, 0.75, [200,50,0],x=>this.setHighpass(x));
+  	this.attack_knob = this.createKnob('a', 5, 45, 0.005, .5, 0.5, [200,50,0],x=>this.set('env.attack',x));
+  	this.decay_knob = this.createKnob('d', 15, 45, 0.01, 10, 0.5, [200,50,0],x=>this.set('env.decay',x));
+  	this.sustain_knob = this.createKnob('s', 25, 45, 0, 1, 0.5, [200,50,0],x=>this.set('env.sustain',x));
+  	this.release_knob = this.createKnob('r', 35, 45, 0, 20, 0.5, [200,50,0],x=>this.set('env.release',x));
+  	this.vcf_attack_knob = this.createKnob('a', 5, 65, 0.005, .5, 0.5, [200,50,0],x=>this.set('vcf_env.attack',x));
+  	this.vcf_decay_knob = this.createKnob('d', 15, 65, 0.01, 10, 0.5, [200,50,0],x=>this.set('vcf_env.decay',x));
+  	this.vcf_sustain_knob = this.createKnob('s', 25, 65, 0, 1, 0.5, [200,50,0],x=>this.set('vcf_env.sustain',x));
+  	this.vcf_release_knob = this.createKnob('r', 35, 65, 0, 20, 0.5, [200,50,0],x=>this.set('vcf_env.release',x));
+  	this.lfo_freq_knob = this.createKnob('lfo', 45, 65, 0, 20, 0.5, [200,50,0],x=>this.set('lfo.frequency',x));
+  	this.lfo_amp_knob = this.createKnob('vibrato', 55, 65, 0, .1, 0.5, [200,50,0],x=>this.set('pitch_lfo_depth.factor',x));
+  	this.lfo_freq_knob = this.createKnob('tremolo', 65, 65, 0, 1, 0.5, [200,50,0],x=>this.set('vca_lfo_depth.factor',x));
+
+
   	this.gui_elements = [this.vco_mix, 
   		this.detune, this.cutoff, this.vcf_env_knob,
   		this.keyTracking_knob, this.attack_knob, this.decay_knob,
-  		this.sustain_knob, this.release_knob]
+  		this.sustain_knob, this.release_knob,this.vcf_attack_knob, this.vcf_decay_knob,
+  		this.vcf_sustain_knob, this.vcf_release_knob, 
+  		this.lfo_freq_knob,this.lfo_amp_knob,this.lfo_freq_knob,this.highpass_knob]
   }
 
 	updateVoiceParameters(voiceIndex, params, time = null) {
@@ -509,7 +521,7 @@ export class Daisies extends MonophonicTemplate{
 	  // Store the properties as strings so we can print both the name and the value
 	  const props = [
 	    "this.voice[0].frequency.value",
-	    "this.voice[0].detune.value",
+	    "this.voice[0].detune_scalar.value",
 	    "this.voice[0].crossfade.fade.value",
 	    "this.voice[0].cutoff.value",
 	    "this.voice[0].vcf.Q.value",

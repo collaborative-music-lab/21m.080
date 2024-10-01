@@ -81,16 +81,19 @@ export class Rumble extends MonophonicTemplate {
 
     //waveShaper
     this.clip = new Tone.Multiply(0.125)
+    this.direct_level = new Tone.Multiply(.5)
     this.waveShaper = new Tone.WaveShaper((x)=>{
       return Math.sin(x*Math.PI*2)
     	//return Math.tanh(x*8)
     })
     this.waveShaper.oversample = "4x"
     this.vcf.connect(this.clip)
+    this.vcf.connect(this.direct_level)
     this.clip.connect(this.waveShaper)
 
     // VCF, VCA, output
     this.vca = new Tone.Multiply()
+    this.direct_level.connect(this.vca)
     this.output = new Tone.Multiply(1)
     this.waveShaper.connect(this.vca)
     this.vca.connect(this.output)
@@ -247,15 +250,20 @@ export class Rumble extends MonophonicTemplate {
     this.vcf_env_depth_knob = this.createKnob('vcf env', 55, 75, 0, 5000, .75, [200,0,200], (x)=>this.vcf_env_depth.factor.value = x);
     this.vcf_res_knob = this.createKnob('Q', 35, 75, 0, 20, 0.75, [200,0,200], (x)=>this.vcf.Q.value = x);
     
-    this.attack_knob = this.createKnob('a', 60, 55, 0, .5, .25, [0,0,200], x=>this.env.attack = x);
-    this.decay_knob = this.createKnob('d', 65, 55, 0, 5, .25, [0,0,200], x=>this.env.decay = x);
-    this.sustain_knob = this.createKnob('s', 70, 55, 0, 1, .25, [0,0,200], x=>this.env.sustain = x);
-    this.release_knob = this.createKnob('r', 75, 55, 0, 20, .25, [0,0,200], x=>this.env.release = x);
+    this.attack_knob = this.createKnob('a', 60, 55, 0.000001, .5, .35, [0,0,200], x=>this.env.attack = x);
+    this.decay_knob = this.createKnob('d', 68, 55, 0, 10, .35, [0,0,200], x=>this.env.decay = x);
+    this.sustain_knob = this.createKnob('s', 76, 55, 0, 1, .35, [0,0,200], x=>this.env.sustain = x);
+    this.release_knob = this.createKnob('r', 84, 55, 0, 20, .35, [0,0,200], x=>this.env.release = x);
 
-    this.vcf_attack_knob = this.createKnob('vcf a', 60, 75, 0, .5, .25, [0,0,200], x=>this.vcf_env.attack = x);
-    this.vcf_decay_knob = this.createKnob('vcf d', 65, 75, 0, 5, .25, [0,0,200], x=>this.vcf_env.decay = x);
-    this.vcf_sustain_knob = this.createKnob('vcf s', 70, 75, 0, 1, .25, [0,0,200], x=>this.vcf_env.sustain = x);
-    this.vcf_release_knob = this.createKnob('vcf r', 75, 75, 0, 20, .25, [0,0,200], x=>this.vcf_env.release = x);
+    this.vcf_attack_knob = this.createKnob('vcf a', 60, 75, 0.001, .5, .35, [0,0,200], x=>this.vcf_env.attack = x);
+    this.vcf_decay_knob = this.createKnob('vcf d', 68, 75, 0, 10, .35, [0,0,200], x=>this.vcf_env.decay = x);
+    this.vcf_sustain_knob = this.createKnob('vcf s', 76, 75, 0, 1, .35, [0,0,200], x=>this.vcf_env.sustain = x);
+    this.vcf_release_knob = this.createKnob('vcf r', 84, 75, 0, 20, .35, [0,0,200], x=>this.vcf_env.release = x);
+    
+    this.lfo_knob = this.createKnob('lfo', 60, 25, 0, 20, .35, [0,0,200], x=>this.lfo.frequency.value = x);
+    this.pwm_knob = this.createKnob('pwm', 68, 25, 0, .9, .35, [0,0,200], x=>{this.setPwmDepth(x, x*.8,x*.6)});
+    this.clip_knob = this.createKnob('distortion', 82, 25, 0, 1, .35, [0,0,200], x=>{this.clip.factor.value = x});
+    this.clip_mix = this.createKnob('mix', 90, 25, 0, 1, .35, [0,0,200], x=>{this.direct_level.factor.value = x});
     // Repeat for other knobs...
     this.gui_elements = [this.vco1_label, this.vco2_label, this.vco3_label, 
        //this.oct_label, this.detune_label, this.gain_label, 
@@ -264,7 +272,8 @@ export class Rumble extends MonophonicTemplate {
       this.vco3_oct_knob, this.vco3_detune_knob, this.vco3_gain_knob, 
       this.vcf_cutoff_knob, this.vcf_res_knob, this.keytracking_knob, this.vcf_env_depth_knob ,
       this.attack_knob,this.decay_knob,this.sustain_knob,this.release_knob,
-      this.vcf_attack_knob,this.vcf_decay_knob,this.vcf_sustain_knob,this.vcf_release_knob
+      this.vcf_attack_knob,this.vcf_decay_knob,this.vcf_sustain_knob,this.vcf_release_knob,
+      this.lfo_knob, this.pwm_knob, this.clip_knob, this.clip_mix
       ]
 	}//gui
 

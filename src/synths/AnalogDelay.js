@@ -5,7 +5,7 @@
  * 
  * Signal path:
  * input -> hpf -> gain -> waveShaper -> lpf -> delay -> wet -> output
- *                                         -> feedback -> hpf
+ *               <- <- <- <-  <- <- <- <- <- feedback <-
  * input -> dry -> output
  * 
  * @class

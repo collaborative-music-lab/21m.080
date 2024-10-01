@@ -127,11 +127,31 @@ export class DatoDuo extends MonophonicTemplate {
     this.lfo.connect(this.delayFilter.frequency)
     this.delayFilter.connect(this.output)
 
-    if (this.gui !== null) {
-        this.initGui()
-        this.hideGui();
-        setTimeout(()=>{this.loadPreset('default')}, 500);
-    }
+    this.kick = "audio/drums-003.mp3"
+    this.snare = "audio/snare.mp3"
+    this.kickPlayer = new Tone.Sampler({
+      urls: {
+        C4: "drums-003.mp3"
+      },
+      baseUrl: "/m080/audio/"
+    }).toDestination()
+    this.snarePlayer = new Tone.Sampler({
+      urls: {
+        C4: "snare.mp3"
+      },
+      baseUrl: "/m080/audio/"
+    }).toDestination()
+    this.kickPlayer.volume.value = -12
+    this.snarePlayer.volume.value = -18
+    // this.kickPlayer.playbackRate = 1
+    // this.snarePlayer.playbackRate = 1
+
+
+    // if (this.gui !== null) {
+    //     this.initGui()
+    //     this.hideGui();
+    //     setTimeout(()=>{this.loadPreset('default')}, 500);
+    // }
   }
 
   //envelopes
@@ -298,7 +318,6 @@ export class DatoDuo extends MonophonicTemplate {
         this.filterDepth.factor.value = x
         this.cutoff.value = x
       },
-      mapto: this.cutoff,
       x: 49, y: 10, size: 2,
       min:50, max: 2500, curve: 2,
       orientation: 'vertical',
@@ -357,7 +376,7 @@ export class DatoDuo extends MonophonicTemplate {
 
     this.speaker_knob = this.gui.Knob({
       label:'gain',
-      mapto: this.output.factor,
+      callback: x=>{this.output.factor.value = x},
       x: 78, y: 50, size:.5,
       min:0, max: 0.1, curve: 2,
       showValue: false,
@@ -365,29 +384,6 @@ export class DatoDuo extends MonophonicTemplate {
     })
     this.speaker_knob.accentColor = [49,48,55]
     this.speaker_knob.set( 0.05 )
-
-    //sampler - beatpads
-
-    this.kick = "audio/drums-003.mp3"
-    this.snare = "audio/snare.mp3"
-    //this.kickPlayer = new Tone.Player(this.kick).toDestination()
-    this.kickPlayer = new Tone.Sampler({
-      urls: {
-        C4: "drums-003.mp3"
-      },
-      baseUrl: "/m080/audio/"
-    }).toDestination()
-    this.snarePlayer = new Tone.Sampler({
-      urls: {
-        C4: "snare.mp3"
-      },
-      baseUrl: "/m080/audio/"
-    }).toDestination()
-    //this.snarePlayer = new Tone.Player(this.snare).toDestination()
-    this.kickPlayer.volume.value = -12
-    this.snarePlayer.volume.value = -18
-    // this.kickPlayer.playbackRate = 1
-    // this.snarePlayer.playbackRate = 1
 
     //trigger playback of the loaded soundfile
 
@@ -555,29 +551,6 @@ export class DatoDuo extends MonophonicTemplate {
     this.speaker_knob.set( 0.05 )
 
     //sampler - beatpads
-
-    this.kick = "audio/drums-003.mp3"
-    this.snare = "audio/snare.mp3"
-    //this.kickPlayer = new Tone.Player(this.kick).toDestination()
-    this.kickPlayer = new Tone.Sampler({
-      urls: {
-        C4: "drums-003.mp3"
-      },
-      baseUrl: "/m080/audio/"
-    }).toDestination()
-    this.snarePlayer = new Tone.Sampler({
-      urls: {
-        C4: "snare.mp3"
-      },
-      baseUrl: "/m080/audio/"
-    }).toDestination()
-    //this.snarePlayer = new Tone.Player(this.snare).toDestination()
-    this.kickPlayer.volume.value = -12
-    this.snarePlayer.volume.value = -18
-    // this.kickPlayer.playbackRate = 1
-    // this.snarePlayer.playbackRate = 1
-
-    //trigger playback of the loaded soundfile
 
     this.kick_trigger = this.gui.Button({
       label:'kick',

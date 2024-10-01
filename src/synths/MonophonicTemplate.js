@@ -336,36 +336,33 @@ export class MonophonicTemplate {
         this.seq[num] = parsePitchStringSequence(arr)
 
         this.createLoop(subdivision, num)
-        // // Create a Tone.Loop
-        // if (this.loop[num] === null) {
-        //     this.loop[num] = new Tone.Loop(time => {
-        //         this.index = Math.floor(Tone.Transport.ticks / Tone.Time(this.subdivision[num]).toTicks());
-        //         if(this.enable[num] == 0) return
-        //         if(num == 0) this.callback(this.index)
-        //         let curBeat = this.seq[num][this.index%this.seq[num].length];
 
-        //         const event = parsePitchStringBeat(curBeat, time)
-        //         //console.log(event)
-
-        //         for (const val of event)  this.parseNoteString(val, time, num)
-
-            
-        //     }, '4n').start(0);
-
-        //     // Start the Transport
-        //     Tone.Transport.start();
-        // }
-
-        // if (subdivision) {
-        //     if(subdivision !== this.subdivision[num]){
-        //         this.setSubdivision(subdivision, num)
-        //     }
-        // }
-
-        // this.start(num)
     }
 
-    createLoop(subdivision, num){
+    /**
+     * plays the provided sequence array initializes a Tone.Loop with the given subdivision.
+     *
+     * @param {string} arr - The sequence of notes as a string.
+     * @param {number} iterations - The the number of times to play the sequence
+     * @param {string} [subdivision] - The rhythmic subdivision for the loop (e.g., '16n', '8n').
+     * @param {string} num (default 0) - the sequence number. Up to 10 sequences per instance.
+     */
+    setSeq(arr, subdivision = '8n', num = 0){
+        this.seq[num] = parsePitchStringSequence(arr)
+
+        if (subdivision) this.setSubdivision(subdivision, num) 
+    }
+
+    play(iterations = 1, arr = null, subdivision = '8n', num = 0) {
+
+        if(arr) this.seq[num] = parsePitchStringSequence(arr)
+        if (subdivision) this.setSubdivision(subdivision, num)
+
+        this.createLoop(subdivision, num, iterations)
+        this.loop[num].start()
+    }
+
+    createLoop(subdivision, num, iterations = 'Infinity'){
         // Create a Tone.Loop
         if (this.loop[num] === null) {
             this.loop[num] = new Tone.Loop(time => {
@@ -385,11 +382,10 @@ export class MonophonicTemplate {
             // Start the Transport
             Tone.Transport.start();
         }
+        this.loop.iterations = iterations
 
         if (subdivision) {
-            if(subdivision !== this.subdivision[num]){
-                this.setSubdivision(subdivision, num)
-            }
+            this.setSubdivision(subdivision, num)
         }
 
         this.start(num)
@@ -497,7 +493,10 @@ export class MonophonicTemplate {
         this.subdivision[num] = sub;
         switch (sub) {
             case '32n':
-                this.loop[num].playbackRate = 0.25;
+                this.loop[num].playbackRate = 16;
+                break;
+            case '32n':
+                this.loop[num].playbackRate = 8;
                 break;
             case '16n':
                 this.loop[num].playbackRate = 4;
@@ -531,6 +530,10 @@ export class MonophonicTemplate {
         else note = intervalToMidi(val[0])
         const div = val[1]
         //console.log(note, this.velocity[num], this.sustain)
-        this.triggerAttackRelease(note + this.octave[num]*12, this.velocity[num], this.sustain[num], time + div * (Tone.Time(this.subdivision[num])));
+        try{
+            this.triggerAttackRelease(note + this.octave[num]*12, this.velocity[num], this.sustain[num], time + div * (Tone.Time(this.subdivision[num])));
+        } catch(e){
+            console.error('problem with sequence', e)
+        }
     }
 }

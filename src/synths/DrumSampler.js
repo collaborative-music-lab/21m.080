@@ -37,6 +37,7 @@ export class DrumSampler extends DrumTemplate{
     this.presets = DrumSamplerPresets
     this.name = "DrumSampler"
     this.kit = kit
+    this.drumkitList = ["LINN", "Techno", "TheCheebacabra1", "TheCheebacabra2", "acoustic-kit", "breakbeat13", "breakbeat8", "breakbeat9", "4OP-FM", "Bongos", "CR78", "KPR77", "Kit3", "Kit8"]
     //
     this.closedEnv = new Tone.Envelope({attack:0.0,decay:.5,sustain:0,release:.4})
     this.openEnv = new Tone.Envelope({attack:0.0,decay:1,sustain:0,release:.4})
@@ -165,16 +166,13 @@ export class DrumSampler extends DrumTemplate{
     }
   }
 
-  // setOneVelocity(voice,num,val{
-  //   voice[num] = val
-  // })
-
   /**
    * Load a specific drum kit.
    * - duplicates loadSamples()
    * @param {string} kit - The name of the drum kit to load.
    */
   loadKit(kit){ this.loadSamples(kit)}
+  listKits(){console.log(this.drumkitList)}
   loadSamples(kit){
     this.kit = kit
     this.drumFolders = {
@@ -435,10 +433,11 @@ export class DrumSampler extends DrumTemplate{
       const distort_knob = this.createKnob('Distort', 60, 60, 0, 1, .5, [200, 50, 0], x => this.distortion.distortion = x);
 
       // Create GUI element for Hat Decay
-      const hihat_decay_knob = this.createKnob('Hat Decay', 40, 0, 0.01, 1, .75, [200, 50, 0], x => this.closedEnv.release = x);
+      const hihat_decay_knob = this.createKnob('Closed Decay', 40, 0, 0.01, .5, .75, [200, 50, 0], x => this.closedEnv.release = x);
+      const open_decay_knob = this.createKnob('Open Decay', 50, 0, 0.01, 2, .75, [200, 50, 0], x => this.openEnv.decay = x);
   
       const kit_dropdown = this.gui.Dropdown({
-        label: 'kit', dropdownOptions: [ "LINN", "Techno", "TheCheebacabra1", "TheCheebacabra2", "acoustic-kit", "breakbeat13", "breakbeat8", "breakbeat9", "4OP-FM", "Bongos", "CR78", "KPR77", "Kit3", "Kit8"],
+        label: 'kit', dropdownOptions: this.drumkitList,
         // (()=>{
         //   const valuesArray = Object.values(this.drumFolders)
         //   const uniqueValuesArray = [...new Set(valuesArray)];
@@ -452,7 +451,10 @@ export class DrumSampler extends DrumTemplate{
         kick_vca_knob, 
         snare_vca_knob, 
         hat_vca_knob, 
-        toms_vca_knob, 
+        toms_vca_knob,
+        kick_decay_knob,
+        snare_decay_knob,
+        toms_decay_knob, 
         output_knob, 
         dry_kick_knob,
         kick_rate_knob, 
@@ -465,6 +467,7 @@ export class DrumSampler extends DrumTemplate{
         comp_ratio_knob,
         distort_knob, 
         hihat_decay_knob,
+        open_decay_knob,
         kit_dropdown
     ];
   }

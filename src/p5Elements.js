@@ -3,7 +3,6 @@ p5Elements.js
 created by Kayli Requenez F23
 */
 
-
 import p5 from 'p5';
 import themes from './p5Themes.json';
 
@@ -51,9 +50,9 @@ export function exportTheme() {
 
 export function initialize(p, div) {
     p.div = div;
-    p.createCanvas(div.offsetWidth, div.offsetHeight);
+    p.createCanvas(div.offsetWidth, div.offsetWidth*.4);
     p.width = div.offsetWidth;
-    p.height = div.offsetHeight;
+    p.height = div.offsetWidth*.4;
     p.elements = {};
 
     return [p.width, p.height]

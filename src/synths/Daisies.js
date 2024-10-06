@@ -458,13 +458,14 @@ export class Daisies extends MonophonicTemplate{
   	this.decay_knob = this.createKnob('d', 15, 45, 0.01, 10, 0.5, [200,50,0],x=>this.set('env.decay',x));
   	this.sustain_knob = this.createKnob('s', 25, 45, 0, 1, 0.5, [200,50,0],x=>this.set('env.sustain',x));
   	this.release_knob = this.createKnob('r', 35, 45, 0, 20, 0.5, [200,50,0],x=>this.set('env.release',x));
-  	this.vcf_attack_knob = this.createKnob('a', 5, 65, 0.005, .5, 0.5, [200,50,0],x=>this.set('vcf_env.attack',x));
-  	this.vcf_decay_knob = this.createKnob('d', 15, 65, 0.01, 10, 0.5, [200,50,0],x=>this.set('vcf_env.decay',x));
-  	this.vcf_sustain_knob = this.createKnob('s', 25, 65, 0, 1, 0.5, [200,50,0],x=>this.set('vcf_env.sustain',x));
-  	this.vcf_release_knob = this.createKnob('r', 35, 65, 0, 20, 0.5, [200,50,0],x=>this.set('vcf_env.release',x));
+  	this.vcf_attack_knob = this.createKnob('a', 5, 75, 0.005, .5, 0.5, [200,50,0],x=>this.set('vcf_env.attack',x));
+  	this.vcf_decay_knob = this.createKnob('d', 15, 75, 0.01, 10, 0.5, [200,50,0],x=>this.set('vcf_env.decay',x));
+  	this.vcf_sustain_knob = this.createKnob('s', 25, 75, 0, 1, 0.5, [200,50,0],x=>this.set('vcf_env.sustain',x));
+  	this.vcf_release_knob = this.createKnob('r', 35, 75, 0, 20, 0.5, [200,50,0],x=>this.set('vcf_env.release',x));
   	this.lfo_freq_knob = this.createKnob('lfo', 45, 65, 0, 20, 0.5, [200,50,0],x=>this.set('lfo.frequency',x));
   	this.lfo_amp_knob = this.createKnob('vibrato', 55, 65, 0, .1, 0.5, [200,50,0],x=>this.set('pitch_lfo_depth.factor',x));
-  	this.lfo_freq_knob = this.createKnob('tremolo', 65, 65, 0, 1, 0.5, [200,50,0],x=>this.set('vca_lfo_depth.factor',x));
+  	
+  	this.pan_knob = this.createKnob('pan', 75, 5, 0, 1, 0.5, [200,50,0],x=>{for(let i=0;i<this.numVoices;i++) this.voice[i].panner.pan.value = Math.sin(i/this.numVoices*Math.PI*2)*x});
 
 
   	this.gui_elements = [this.vco_mix, 

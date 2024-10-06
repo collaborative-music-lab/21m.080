@@ -12,7 +12,6 @@ let vco_freq = gui.Knob({
   curve: 2,
   size: 1.5
 })
-vco_freq.position(50,50)
 vco_freq.size = 1
 
 let output_fader = gui.Fader({

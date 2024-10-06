@@ -2,6 +2,8 @@
 
 import * as Tone from 'tone';
 import {parsePitchStringSequence, parsePitchStringBeat,getChord, pitchNameToMidi, intervalToMidi} from '../Theory'
+import { ArrayVisualizer } from '../visualizers/VisualizeArray';
+
 
 /**
  * Represents a Monophonic Synth
@@ -53,7 +55,7 @@ export class MonophonicTemplate {
         this.enable = new Array(10).fill(1)
         this.octave = new Array(10).fill(0)
         this.sustain = new Array(10).fill(.1)
-        this.callback = x=>{}
+        
         this.seq = []
         this.subdivision = []
         this.velocity = new Array(10).fill(100)
@@ -62,6 +64,33 @@ export class MonophonicTemplate {
             this.seq.push([0])
             this.subdivision.push('8n')
         }
+
+        this.callback = i=>{}
+        this.callbackLoop = new Tone.Loop((time)=>{
+            this.index = Math.floor(Tone.Transport.ticks / Tone.Time('16n').toTicks());
+            this.callback(this.index)
+        },'16n').start()
+
+        this.seqToDraw = 0
+        this.drawing = new ArrayVisualizer(this,this.seq[0], 'Canvas1', .2);
+        this.drawingLoop = new Tone.Loop(time=>{
+            if(this.drawing.enabled === true ) {
+                this.drawing.startVisualFrame()
+                if(!Array.isArray(this.seqToDraw)){
+                    if(this.seq[this.seqToDraw].length > 0){
+                        const index = Math.floor(Tone.Transport.ticks / Tone.Time(this.subdivision[this.seqToDraw]).toTicks());
+                        this.drawing.visualize(this.seq[this.seqToDraw], index)
+                    }
+                } else{
+                    this.seqToDraw.forEach(num=>{
+                        if(this.seq[num].length > 0){
+                            const index = Math.floor(Tone.Transport.ticks / Tone.Time(this.subdivision[num]).toTicks());
+                            this.drawing.visualize(this.seq[num], index)
+                        }
+                    })
+                }
+            }
+        }, '16n').start()
     }
 
     /**
@@ -369,11 +398,12 @@ export class MonophonicTemplate {
                 this.index = Math.floor(Tone.Transport.ticks / Tone.Time(this.subdivision[num]).toTicks());
                 if(this.enable[num] === 0) return
                 
-                if(num == 0) this.callback(this.index)
+                //if(num == 0) this.callback(this.index)
                 let curBeat = this.seq[num][this.index%this.seq[num].length];
-
+                curBeat = this.checkForRandomElement(num,curBeat)
+                //console.log(curBeat)
                 const event = parsePitchStringBeat(curBeat, time)
-                //console.log(event)
+                //console.log(event[0])
                 //console.log(num,this.index, event, this.seq[num])
                 for (const val of event)  this.parseNoteString(val, time, num)
 
@@ -391,12 +421,59 @@ export class MonophonicTemplate {
         this.start(num)
     }
 
+    checkForRandomElement(num, curBeat) {
+    // If curBeat is a number, return it directly
+    if (typeof curBeat === 'number') {
+        return curBeat;
+    }
+
+    // If curBeat is a string and contains '?', we need to replace it
+    if (typeof curBeat === 'string' && curBeat.includes('?')) {
+        // Assuming `this.seq` is the context where sequences are stored
+        let validElements = [];
+
+        // Iterate through each element in seq[num] to build validElements
+        this.seq[num].forEach(item => {
+            if (typeof item === 'string') {
+                if (/^[a-zA-Z0-9]$/.test(item)) {
+                    // If it's a single number or letter, add it
+                    validElements.push(item);
+                } else if (/^\?$/.test(item)) {
+                    // If it's a single '?', skip it
+                    return;
+                } else if (/^\[.*\]$/.test(item)) {
+                    // If it's a bracketed string, extract letters and numbers and add them individually
+                    let insideBrackets = item.replace(/\[|\]/g, '');  // Remove brackets
+                    insideBrackets.split(' ').forEach(el => {
+                        if (/^[a-zA-Z0-9]$/.test(el)) {
+                            validElements.push(el);  // Add valid individual items
+                        }
+                    });
+                }
+            }
+        });
+
+        // Function to get a random non-? element
+        function getRandomElement() {
+            return validElements[Math.floor(Math.random() * validElements.length)];
+        }
+
+        // Replace each '?' with a random valid element
+        curBeat = curBeat.replace(/\?/g, () => getRandomElement());
+    }
+
+    return curBeat;
+}
+
+
+
         /**
      * Starts the loop for the synthesizer.
      */
     start(num = 'all') {
         if(num === 'all'){
             for(let i=0;i<10;i++) this.enable[i] = 1
+            this.drawingLoop.start()
         }
         else this.enable[num] = 1
     }
@@ -407,6 +484,7 @@ export class MonophonicTemplate {
     stop(num = 'all') {
         if(num === 'all'){
             for(let i=0;i<10;i++) this.enable[i] = 0
+            this.drawingLoop.stop()
         }
         else this.enable[num] = 0
     }
@@ -415,7 +493,7 @@ export class MonophonicTemplate {
         const arr = Array.from({ length: len }, (_, i) => func(i))
 
         this.seq[num] = arr.map(element => {
-            return typeof element === 'string' ? element : element.toString();
+            return typeof element === 'string' ? element : element//.toString();
         });
 
         //console.log(this.seq[num])
@@ -427,12 +505,10 @@ export class MonophonicTemplate {
      * 
      * @param {string} velocity - MIDI velocity valur
      */
-    setVelocity(velocity, num = 'all') {
+    setVelocity(velocity=100, num = 'all') {
         
         if(num === 'all'){
-            for(let i=0;i<10;i++){
-                this.velocity[i] = velocity
-            }
+            this.velocity = new Array(10).fill(velocity)
         } else {
             this.velocity[num] = velocity
         }
@@ -443,12 +519,10 @@ export class MonophonicTemplate {
      * 
      * @param {string} velocity - MIDI velocity valur
      */
-    setSustain(val, num = 'all') {
+    setSustain(val=.1, num = 'all') {
         if(val<=0) return
         if(num === 'all'){
-            for(let i=0;i<10;i++){
-                this.sustain[i] = val
-            }
+            this.sustain = new Array(10).fill(val)
         } else {
             this.sustain[num] = val
         }
@@ -459,12 +533,10 @@ export class MonophonicTemplate {
      * 
      * @param {string} velocity - MIDI velocity valur
      */
-    setOctave(val, num = 'all') {
+    setOctave(val=0, num = 'all') {
         val = val < -4 ? -4 : val > 4 ? 4 : val
         if(num === 'all'){
-            for(let i=0;i<10;i++){
-                this.octave[i] = val
-            }
+            this.octave = new Array(10).fill(val)
         } else {
             this.octave[num] = val
         }
@@ -475,10 +547,11 @@ export class MonophonicTemplate {
      * 
      * @param {string} sub - The subdivision to set (e.g., '16n', '8n', '4n', '2n').
      */
-    setSubdivision(sub, num = 'all') {
+    setSubdivision(sub='8n', num = 'all') {
         // this.loop.subdivision = sub;
         
         if(num === 'all'){
+            this.subdivision = new Array(10).fill(sub)
             for(let i=0;i<10;i++){
                 if(this.loop[i] !== null) {
                     this.setOneSub(sub,i)
@@ -520,8 +593,7 @@ export class MonophonicTemplate {
     parseNoteString(val, time, num){
         //console.log(val)
         if(val[0] === ".") return
-        //return
-
+        
         const usesPitchNames = /^[a-ac-zA-Z]$/.test(val[0][0]);
 
         let note = ''
@@ -529,11 +601,18 @@ export class MonophonicTemplate {
         if( usesPitchNames ) note =  pitchNameToMidi(val[0])
         else note = intervalToMidi(val[0])
         const div = val[1]
+        if(note < 0) return
         //console.log(note, this.velocity[num], this.sustain)
         try{
             this.triggerAttackRelease(note + this.octave[num]*12, this.velocity[num], this.sustain[num], time + div * (Tone.Time(this.subdivision[num])));
         } catch(e){
-            console.error('problem with sequence', e)
+            console.log('invalid note', note + this.octave[num]*12, this.velocity[num], this.sustain[num])
         }
+    }
+
+    //visualizations
+
+    draw(arr = this.drawing.array, target = this.drawing.target, ratio = this.drawing.ratio ){
+        this.drawing = new ArrayVisualizer(arr, target, ratio)
     }
 }

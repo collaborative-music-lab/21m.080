@@ -293,9 +293,10 @@ export class DrumSampler extends DrumTemplate{
                 
                 if(num == 0) this.callback(this.index)
                 let curBeat = this.seq[num][this.index%this.seq[num].length];
-
+                curBeat = this.checkForRandomElement(num,curBeat)
                 const event = parseStringBeat(curBeat, time)
                 //console.log(this.index , this.seq[num],curBeat, event)
+
                 for (const val of event) {
                   this.triggerDrum(val[0], num, time + val[1] * (Tone.Time(this.subdivision[num])));
               }

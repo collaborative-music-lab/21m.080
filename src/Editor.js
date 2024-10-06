@@ -16,7 +16,7 @@ import * as Tone from 'tone';
 import * as Theory from './Theory.js';
 //import ml5 from 'ml5';
 import Canvas from "./Canvas.js";
-import { Oscilloscope, Spectroscope, PlotTransferFunction } from './oscilloscope';
+import { Oscilloscope, Spectroscope, PlotTransferFunction } from './visualizers/index.js';
 import * as waveshapers from './synths/waveshapers.js'
 import {stepper, expr} from  './Utilities.js'
 // Collab-Hub features
@@ -129,14 +129,20 @@ function Editor(props) {
     //utilities
     window.stepper = stepper
     window.expr = expr
-
     // lib
     window.drumPatterns = drumPatterns;
 
     var curLineNum = 0;
 
+    //math
+    window.tri = (i)=>{return Math.abs(i%1-.5)*4-1}
+    window.pi = 3.141592
+    window.rand = (min,max=null)=>{
+        if(max=null) return floor(Math.random()*min)
+        else return floor(Math.random()*(max-min))+min
+    }
     const {
-      floor, ceil, round, max, min, pow, sqrt, abs, sin, cos, tan, log, exp, PI
+      sign, floor, ceil, round, max, min, pow, sqrt, abs, sin, cos, tan, log, exp, PI, random
     } = Math;
 
     /************************************************
@@ -211,11 +217,11 @@ function Editor(props) {
 
     useEffect(() => {
         // collab-hub socket instance
-        window.chClient = new CollabHubClient(); // needs to happen once (!)
-        window.chTracker = new CollabHubTracker(window.chClient);
+        //window.chClient = new CollabHubClient(); // needs to happen once (!)
+        //window.chTracker = new CollabHubTracker(window.chClient);
 
         // collab-hub join a room
-        window.chClient.joinRoom('21m080-temp-room'); // TODO change this to the patch-specific room name
+        //window.chClient.joinRoom('21m080-temp-room'); // TODO change this to the patch-specific room name
 
         const container = document.getElementById('container');
         if (container) {
@@ -223,6 +229,15 @@ function Editor(props) {
         }
         loadTheme('gruvboxDark').then((loadedTheme) => {
       setTheme('gruvboxDark');
+
+      Array.prototype.rotate = function(n) {
+          // Ensure n is an integer, and handle negative rotation
+          n = n % this.length;  // This ensures n stays within array bounds
+          if (n < 0) n += this.length;  // For negative rotation, we add the array length
+
+          // Perform the rotation
+          return this.slice(n).concat(this.slice(0, n));
+        };
     });
     }, []);
 

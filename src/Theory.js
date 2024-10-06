@@ -766,7 +766,7 @@ export function pitchNameToMidi(name) {
  *                        and an optional accidental (# or b).
  * @returns {number} - The corresponding MIDI note number.
  */
-export function intervalToMidi(interval) {
+export function intervalToMidi(interval, min=12, max = 127) {
     // Normalize input to remove spaces
   //console.log(interval)
     interval = interval.trim()
@@ -776,7 +776,7 @@ export function intervalToMidi(interval) {
     const accidental = interval.match(/[b#]+/g);
 
     let midiNote = -1
-    try{  midiNote = getChord().interval(degree,24,127)}
+    try{  midiNote = getChord().interval(degree,min,max)}
     catch(e){ console.log('bad interval: ', degree)}
 
     //console.log(midiNote)

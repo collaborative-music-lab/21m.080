@@ -55,6 +55,8 @@ export class MonophonicTemplate {
         this.enable = new Array(10).fill(1)
         this.octave = new Array(10).fill(0)
         this.sustain = new Array(10).fill(.1)
+        this.min = 24
+        this.max = 127
         
         this.seq = []
         this.subdivision = []
@@ -599,7 +601,7 @@ export class MonophonicTemplate {
         let note = ''
         //console.log(val[0], usesPitchNames)
         if( usesPitchNames ) note =  pitchNameToMidi(val[0])
-        else note = intervalToMidi(val[0])
+        else note = intervalToMidi(val[0], this.min, this.max)
         const div = val[1]
         if(note < 0) return
         //console.log(note, this.velocity[num], this.sustain)

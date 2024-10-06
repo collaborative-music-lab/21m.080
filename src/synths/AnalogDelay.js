@@ -23,29 +23,38 @@ export class AnalogDelay {
    */
   constructor(initialTime = 0.1, initialFB = 0) {
     this.input = new Tone.Multiply(1);
-    this.hpf = new Tone.Filter({ type: 'highpass', frequency: 20, Q: 0 });
-    this.gain = new Tone.Multiply(0.1);
-    this.waveShaper = new Tone.WaveShaper((x) => { return x });
-    this.lpf = new Tone.Filter({ type: 'lowpass', frequency: 5000, Q: 0, slope: '-24' });
+    this.highpass = new Tone.Filter({ type: 'highpass', frequency: 20, Q: 0 });
+    this.ws_input = new Tone.Multiply(0.125);
+    this.waveShaper = new Tone.WaveShaper((x) => { return Math.tanh(x) });
+    this.vcf = new Tone.Filter({ type: 'lowpass', frequency: 5000, Q: 0, slope: '-12' });
     this.delay = new Tone.Delay(initialTime);
-    this.feedback = new Tone.Multiply(initialFB);
-    this.wet = new Tone.Multiply(10);
-    this.dry = new Tone.Multiply(1);
+    this.feedbackMult = new Tone.Multiply(initialFB);
+    this.wetSig = new Tone.Multiply(1);
+    this.drySig = new Tone.Multiply(0);
     this.output = new Tone.Multiply(1);
 
     // Connecting signal path
-    this.input.connect(this.dry);
-    this.input.connect(this.hpf);
-    this.hpf.connect(this.lpf);
-    this.lpf.connect(this.gain);
-    this.gain.connect(this.waveShaper);
+    this.input.connect(this.drySig);
+    this.input.connect(this.highpass);
+    this.highpass.connect(this.vcf);
+    this.vcf.connect(this.ws_input);
+    this.ws_input.connect(this.waveShaper);
     this.waveShaper.connect(this.delay);
-    this.delay.connect(this.feedback);
-    this.feedback.connect(this.hpf);
-    this.delay.connect(this.wet);
-    this.wet.connect(this.output);
-    this.dry.connect(this.output);
+    this.delay.connect(this.feedbackMult);
+    this.feedbackMult.connect(this.vcf);
+    this.delay.connect(this.wetSig);
+    this.wetSig.connect(this.output);
+    this.drySig.connect(this.output);
   }
+
+  set time (value) {this.delay.delayTime.value = value}
+  set feedback (value) { this.feedbackMult.factor.value = value}
+  set damping (value) {this.vcf.frequency.value = value}
+  set hpf (value) { this.highpass.frequency.value = value}
+  set dry (value) { this.drySig.factor.value = value}
+  set wet (value) { this.wetSig.factor.value = value}
+  set gain (value) { this.ws_input.factor.value = value}
+  set amp (value) { this.output.factor.value = value}
 
   /**
    * Connect the output to a destination.

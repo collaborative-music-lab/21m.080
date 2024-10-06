@@ -175,7 +175,7 @@ export function printProgression(){
 
 //gets the index of the current chord based on tranpost position
 export function getChordIndex(){
-  let index = Math.floor(Tone.Transport.ticks / Tone.Time(harmonicRhythm/4).toTicks());
+  let index = Math.floor((Tone.Transport.ticks+8) / Tone.Time('1n').toTicks());
   // console.log(index)
   return index
 }
@@ -215,6 +215,7 @@ export function setProgressionRate(num) {
 export function getChord(index){
   let index2 = getChordIndex()// index % (pulsePerChord * progression.length)
   if (progressionChords.length < 1) progressionChords.push( new Chord('I'))
+  //console.log(index2, progressionChords[Math.floor( index2%progressionChords.length )].name)
   return progressionChords[Math.floor( index2%progressionChords.length )]
 }
 
@@ -604,7 +605,8 @@ export function parseStringSequence(str){
 export function parsePitchStringSequence(str) {
     
     const firstElement = str.replace(/\[/g, "")[0]
-    const usesPitchNames = /^[a-ac-zA-Z]$/.test(firstElement);
+    const usesPitchNames = /^[a-ac-zA-Z?]$/.test(firstElement);
+
 
     // Step 1: Remove all whitespace
     if( usesPitchNames ) str = str.replace(/\s/g, "");
@@ -616,10 +618,11 @@ export function parsePitchStringSequence(str) {
     // - Ensures '@' and the number following it are in their own array element
     //const regex = /\[.*?\]|[A-Ga-g][#b]?\d*|@(\d+)|./g;
     // - Preserves periods '.' as their own array elements
-    let regex = /\[.*?\]|[A-Ga-g][#b]?\d*|@(\d+)|\./g;
-    if( !usesPitchNames){ //true if first element is a number
-      regex = /\[.*?\]|-?[b#]?\d+[b#]?|@(\d+)|\./g;
-    } 
+    let regex = /\[.*?\]|[A-Ga-g][#b]?\d*|@(\d+)|\.|\?/g;
+
+    if (!usesPitchNames) { // true if the first element is a number
+        regex = /\[.*?\]|-?[b#]?\d+[b#]?|@(\d+)|\.|\?/g;
+    }
 
     let arr = str.match(regex);
 
@@ -633,6 +636,7 @@ export function parsePitchStringSequence(str) {
             i += repeatCount - 1; // Adjust index to account for the newly inserted elements
         }
     }
+
 
     return arr;
 }
@@ -663,54 +667,48 @@ export function parseStringBeat(curBeat, time){
 
 //handles pitch sequences
 export function parsePitchStringBeat(curBeat, time){
-  // console.log(curBeat)
+  //console.log(curBeat)
   try{
-  const firstElement = curBeat.replace(/\[/g, "")[0]
-  const usesPitchNames = /^[a-ac-zA-Z]$/.test(firstElement);
+    if (typeof curBeat === 'number')  curBeat = curBeat.toString();
+    const firstElement = curBeat.replace(/\[/g, "")[0]
+    const usesPitchNames = /^[a-ac-zA-Z]$/.test(firstElement);
 
-  let outArr = []
-  //handle when a beat contains more than one element
-    const bracketCheck = /^\[.*\]$/;
-    if (bracketCheck.test(curBeat)) {
-      //remove brackets and split into arrays by commas
-      curBeat =curBeat.slice(1, -1).split(',');
-      //console.log(curBeat)
-      curBeat.forEach(arr => {
-        let regex = /\[.*?\]|[A-Ga-g][#b]?\d*|@(\d+)|./g;
-        if( !usesPitchNames){ //true if first element is a number
-          regex = /\[.*?\]|-?\d+[#b]?|@(\d+)|\./g;
-        } 
-        arr = arr.match(regex)
+    let outArr = []
+    //handle when a beat contains more than one element
+      const bracketCheck = /^\[.*\]$/;
+      if (bracketCheck.test(curBeat)) {
+        //remove brackets and split into arrays by commas
+        curBeat =curBeat.slice(1, -1).split(',');
+        //console.log(curBeat)
+        curBeat.forEach(arr => {
+          let regex = /\[.*?\]|[A-Ga-g][#b]?\d*|@(\d+)|./g;
+          if( !usesPitchNames){ //true if first element is a number
+            regex = /\[.*?\]|-?\d+[#b]?|@(\d+)|\./g;
+          } 
+          arr = arr.match(regex)
 
-         for (let i = 0; i < arr.length; i++) {
-              if (arr[i].startsWith("@")) {
-                  const repeatCount = parseInt(arr[i].slice(1), 10)-1; // Get the number after '@'
-                  const elementToRepeat = arr[i - 1]; // Get the previous element
-                  const repeatedElements = new Array(repeatCount).fill(elementToRepeat); // Repeat the element
-                  arr.splice(i, 1, ...repeatedElements); // Replace '@' element with the repeated elements
-                  i += repeatCount - 1; // Adjust index to account for the newly inserted elements
-              }
-          }
-          // console.log(arr)
-          
-          const length = arr.length;
-          for (let i = 0; i < length; i++) {
-              const val = arr[i];
-              outArr.push([val,i/length])
-          }
-      });
-      //console.log(outArr)
-    } else { //for beats with only one element
-      outArr.push([curBeat, 0])
-    }
-    // // Assuming outArr is your input array
-    // outArr.forEach((arr, i) => {
-    //     const correctedPitchElement = rearrangeAccidentals(arr[0], usesPitchNames);
-    //     outArr[i] = [correctedPitchElement, arr[1]];
-    // });
-
-    //console.log(curBeat, outArr)
-    return  outArr 
+           for (let i = 0; i < arr.length; i++) {
+                if (arr[i].startsWith("@")) {
+                    const repeatCount = parseInt(arr[i].slice(1), 10)-1; // Get the number after '@'
+                    const elementToRepeat = arr[i - 1]; // Get the previous element
+                    const repeatedElements = new Array(repeatCount).fill(elementToRepeat); // Repeat the element
+                    arr.splice(i, 1, ...repeatedElements); // Replace '@' element with the repeated elements
+                    i += repeatCount - 1; // Adjust index to account for the newly inserted elements
+                }
+            }
+            // console.log(arr)
+            
+            const length = arr.length;
+            for (let i = 0; i < length; i++) {
+                const val = arr[i];
+                outArr.push([val,i/length])
+            }
+        });
+        //console.log(outArr)
+      } else { //for beats with only one element
+        outArr.push([curBeat, 0])
+      }
+      return  outArr 
     }
   catch(e){
     console.log('error with parsePitchStringBeat')
@@ -770,16 +768,18 @@ export function pitchNameToMidi(name) {
  */
 export function intervalToMidi(interval) {
     // Normalize input to remove spaces
+  //console.log(interval)
     interval = interval.trim()
     
     // Determine the pitch class and accidental if present
     const degree = interval.match(/\[.*?\]|-?\d+|@(\d+)|\./g)[0];
     const accidental = interval.match(/[b#]+/g);
 
-    
+    let midiNote = -1
+    try{  midiNote = getChord().interval(degree,24,127)}
+    catch(e){ console.log('bad interval: ', degree)}
 
-    let midiNote = getChord().interval(degree,24,127)
-
+    //console.log(midiNote)
     if (accidental !== null) {
       if (Array.isArray(accidental)) {
         for (const sign of accidental) {

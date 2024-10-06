@@ -7,6 +7,7 @@ export { DelayOp } from './DelayOp.js';
 export { Polyphony } from './Polyphony.js';
 export { Caverns } from './Caverns.js';
 export { Rumble } from './Rumble.js';
+export { Daisy } from './Daisies.js';
 export { Daisies } from './Daisies.js';
 export { Stripe } from './Stripe.js';
 export { Diffuseur } from './Diffuseur.js';

@@ -82,8 +82,11 @@ import * as Tone from 'tone';
 import DaisiesPresets from './synthPresets/DaisiesPresets.json';
 import { MonophonicTemplate } from './MonophonicTemplate';
 
-export class Daisy{
+export class Daisy extends MonophonicTemplate{
 	constructor(){
+		super()
+		this.presets = DaisiesPresets
+		this.name = 'Daisy'
 		
 		this.frequency = new Tone.Signal(100)
 		this.frequencyCV = new Tone.Signal()
@@ -105,9 +108,13 @@ export class Daisy{
 		this.crossfade.connect(this.vcf)
 
 		this.vca = new Tone.Multiply()
+		this.lfo_vca = new Tone.Multiply(1)
+		this.lfo_vca_constant = new Tone.Signal(1)
 		this.panner = new Tone.Panner(0)
 		this.output = new Tone.Multiply(.25)
-		this.vcf.connect(this.vca)
+		this.vcf.connect(this.lfo_vca)
+		this.lfo_vca.connect(this.vca)
+		this.lfo_vca_constant.connect(this.lfo_vca.factor)
 		this.vca.connect(this.panner)
 		this.panner.connect(this.output)
 
@@ -134,10 +141,9 @@ export class Daisy{
 
 		this.lfo = new Tone.Oscillator(.5).start()
 		this.vca_constant = new Tone.Signal(1)
-		this.vca_lfo_depth = new Tone.Multiply(0)
-		this.lfo.connect(this.vca_lfo_depth)
-		this.vca_lfo_depth.connect(this.output.factor)
-		this.vca_constant.connect(this.output.factor)
+		this.amp_lfo_depth = new Tone.Multiply(0)
+		this.lfo.connect(this.amp_lfo_depth)
+		this.amp_lfo_depth.connect(this.lfo_vca.factor)
 		this.pitch_lfo_depth = new Tone.Multiply(0)
 		this.lfo.connect(this.pitch_lfo_depth)
 		this.frequency_constant = new Tone.Signal(1)
@@ -147,19 +153,22 @@ export class Daisy{
 		//no PWM to prevent errors when vco is not set to pulse
 		this.pwm_lfo_depth = new Tone.Multiply()
 		this.lfo.connect(this.pwm_lfo_depth)
+
 		//this.pwm_lfo_depth.connect(this.vco_1.width)
 		//this.pwm_lfo_depth.connect(this.vco_2.width)
   }
 
   //TRIGGER METHODS
-  triggerAttack = function(val, vel=1, time=null){
+  triggerAttack = function(val, vel=100, time=null){
+  	let freq = Tone.Midi(val).toFrequency()
+  	vel = vel/127
     if(time){
-      this.frequency.setValueAtTime(Tone.Midi(val).toFrequency(),time)
+      this.frequency.setValueAtTime(freq,time)
       this.env.triggerAttack(time)
       this.vcf_env.triggerAttack(time)
       this.velocity.setValueAtTime(Math.pow(vel,2),time)
     } else{
-      this.frequency.value = Tone.Midi(val).toFrequency()
+      this.frequency.value = freq
       this.env.triggerAttack()
       this.vcf_env.triggerAttack()
       this.velocity.value =Math.pow(vel,2) 
@@ -174,7 +183,9 @@ export class Daisy{
       this.vcf_env.triggerRelease()
     }
   }
-  triggerAttackRelease = function(val, vel=1, dur=0.01, time=null){
+  triggerAttackRelease = function(val, vel=100, dur=0.01, time=null){
+    val = Tone.Midi(val).toFrequency()
+    vel = vel/127
     if(time){
       this.frequency.setValueAtTime(val,time)
       this.env.triggerAttackRelease(dur,time)
@@ -187,6 +198,43 @@ export class Daisy{
       this.velocity.value =Math.pow(vel,2) 
     }
   }//attackRelease
+
+  initGui(gui, x=10,	y=10){
+  	// if(this.gui_elements.length > 0){
+  	// 	console.log("initGui is called when a synth is created.\n Call synth.showGui() to see it.")
+  	// 	return;
+  	// }
+  	this.gui = gui
+  	this.x = x
+  	this.y = y
+  	this.vco_mix = this.createKnob('vco_mix', 5, 5, 0, 1, 0.75, [200,50,0],x=>this.crossfade.fade.value= x);
+  	this.detune = this.createKnob('detune', 15, 5, 1, 2, 0.75, [200,50,0],x=>this.detune_scalar.factor.value = x);
+  	this.cutoff = this.createKnob('cutoff', 25, 5, 0, 10000, 0.75, [200,50,0],x=>this.cutoffSig.value = x);
+  	this.vcf_env_knob = this.createKnob('vcf env', 35, 5, 0, 5000, 0.75, [200,50,0],x=>this.vcf_env_depth.factor.value = x);
+  	this.vcf_Q_knob = this.createKnob('Q', 45, 5, 0, 20, 0.75, [200,50,0],x=>this.vcf.Q.value = x);
+  	this.keyTracking_knob = this.createKnob('key vcf', 55, 5, 0, 1, 0.75, [200,50,0],x=>this.keyTracking.factor.value = x);
+  	//this.highpass_knob = this.createKnob('hpf', 65, 5, 10, 3000, 0.75, [200,50,0],x=>this.setHighpass(x);
+  	this.attack_knob = this.createKnob('a', 5, 45, 0.005, .5, 0.5, [200,50,0],x=>this.env.attack = x);
+  	this.decay_knob = this.createKnob('d', 15, 45, 0.01, 10, 0.5, [200,50,0],x=>this.env.decay = x);
+  	this.sustain_knob = this.createKnob('s', 25, 45, 0, 1, 0.5, [200,50,0],x=>this.env.sustain = x);
+  	this.release_knob = this.createKnob('r', 35, 45, 0, 20, 0.5, [200,50,0],x=>this.env.release = x);
+  	this.vcf_attack_knob = this.createKnob('a', 5, 75, 0.005, .5, 0.5, [200,50,0],x=>this.vcf_env.attack = x);
+  	this.vcf_decay_knob = this.createKnob('d', 15, 75, 0.01, 10, 0.5, [200,50,0],x=>this.vcf_env.decay = x);
+  	this.vcf_sustain_knob = this.createKnob('s', 25, 75, 0, 1, 0.5, [200,50,0],x=>this.vcf_env.sustain = x);
+  	this.vcf_release_knob = this.createKnob('r', 35, 75 , 0, 20, 0.5, [200,50,0],x=>this.vcf_env.release = x);
+  	this.lfo_freq_knob = this.createKnob('lfo', 45, 65, 0, 20, 0.5, [200,50,0],x=>this.lfo.frequency.value = x);
+  	this.lfo_vibrato = this.createKnob('vibrato', 55, 65, 0, .1, 0.5, [200,50,0],x=>this.pitch_lfo_depth.factor.value = x);
+  	this.lfo_tremolo = this.createKnob('tremolo', 65, 65, 0, 1, 0.5, [200,50,0],x=>this.amp_lfo_depth.factor.value = x);
+  	
+  	//this.pan_knob = this.createKnob('pan', 75, 5, 0, 1, 0.5, [200,50,0],x=>{this.panner.pan.value = Math.sin(i/8*Math.PI*2)*x});
+
+
+  	this.gui_elements = [ this.vco_mix, this.detune, this.cutoff, this.vcf_env_knob, this.vcf_Q_knob, this.keyTracking_knob, 
+  		//this.highpass_knob, 
+  		this.attack_knob, this.decay_knob, this.sustain_knob, this.release_knob, this.vcf_attack_knob, this.vcf_decay_knob, this.vcf_sustain_knob, this.vcf_release_knob, this.lfo_freq_knob, this.lfo_vibrato, this.lfo_tremolo
+  		//, this.pan_knob
+  		];
+  }
 }
 
 /********************
@@ -201,19 +249,20 @@ export class Daisies extends MonophonicTemplate{
 		this.presets = DaisiesPresets
     console.log(this.name, " loaded, available preset: ", this.presets)
 		this.numVoices = num
+		this.slop = .01
 
 	//audio
     this.voice = []
     for(let i=0;i<this.numVoices;i++) this.voice.push(new Daisy())
-    this.output = new Tone.Multiply(0.125)
+    this.output = new Tone.Multiply(1/this.numVoices)
   	this.hpf = new Tone.Filter({type:'highpass', rolloff:-12, Q:0, cutoff:50})
     for(let i=0;i<this.numVoices;i++) this.voice[i].output.connect( this.hpf)
     this.hpf.connect(this.output)
+
     //control
     this.decay_cv = 0
 		this.adsr = [.01,.5,.5,2]
 		this.vcf_adsr = [.01,.5,.5,2]
-		this.vco_type = ["pulse","pulse"]
 		this.voiceSettings = {
 					//vco
 					"vco_1.type": "square",
@@ -251,15 +300,9 @@ export class Daisies extends MonophonicTemplate{
   ***************/
   triggerAttack = function(val, vel=100, time=null){
     this.v = this.getNewVoice(val)
-    vel = vel/127
     if (time) this.voice[this.v].triggerAttack(val,vel,time)
 		else this.voice[this.v].triggerAttack(val,vel)
 
-    // if (time) {
-    //   this.updateVoiceParameters(this.v, { val }, time);
-    // } else {
-    //   this.updateVoiceParameters(this.v, { val });
-    // }
   }
   triggerRelease = function(val, time=null){
     this.v = this.getActiveVoice(val)
@@ -272,8 +315,7 @@ export class Daisies extends MonophonicTemplate{
   }
   triggerAttackRelease = function(val, vel=100, dur=0.01, time=null){
     this.v = this.getNewVoice(val)
-    val = Tone.Midi(val).toFrequency()
-    vel = vel/127
+    val = val + Math.random()*this.slop - this.slop/2
     if (time) this.voice[this.v].triggerAttackRelease(val,vel, dur, time) 
     else this.voice[this.v].triggerAttackRelease(val,vel,dur)
 
@@ -354,37 +396,30 @@ export class Daisies extends MonophonicTemplate{
   }//set
 
   getNewVoice(num) {
-	  if (this.voiceCounter >= this.numVoices) {
-	    this.voiceCounter = 0; // Reset voice counter if it exceeds the number of voices
-	  }
-
-	  //keep track of note order
-	  this.prevNote = this.noteOrder.shift();
-	  this.noteOrder.push(num);
 
 	  //if note is already playing free it
 	  for (let i = 0; i < this.numVoices; i++) {
 	  	if(this.activeNotes[i] == num ) this.triggerRelease(num)	
 	  }
 		//look for free voice
+		let envStates = []
 	  for (let i = 0; i < this.numVoices; i++) {
-	    const index = (i + this.voiceCounter) % this.numVoices;
-	    if (this.activeNotes[index] < 0) {
-	      this.activeNotes[index] = num;
-	      this.voiceCounter = (index + 1) % this.numVoices; // Prepare for the next voice
-	      //console.log('free voice, assigned to voice', index)
-	      return index;
-	    }
-	  }
+	  	const curEnv = this.voice[i].env.value
+	  	if(curEnv == 0){
+	  		//console.log('new voice ', i)
+        return i;
+	  	}
+	  	envStates.push( curEnv )
 
-    this.voiceCounter = (this.voiceCounter + 1) % this.numVoices; // Prepare for the next voice
-    return this.voiceCounter
-	  
-	  // Fallback if the above logic didn't return
-	  //console.log('fallback', this.voiceCounter)
-	  const returnValue = this.voiceCounter;
-	  this.voiceCounter = (this.voiceCounter + 1) % this.numVoices;
-	  return returnValue;
+    let assignedVoice = envStates.reduce((minIndex, currentValue, currentIndex, array) => {
+        return currentValue < array[minIndex] ? currentIndex : minIndex;
+    }, 0);
+    //console.log('stolen ', assignedVoice, envStates)
+
+    this.voice[assignedVoice].env.cancel()
+    //console.log('stole voice ', assignedVoice)
+    return assignedVoice;
+  }
 	}//getNewVoice
 
 	//returns the voice playing the selected note
@@ -423,6 +458,7 @@ export class Daisies extends MonophonicTemplate{
   	this.updateEnv()
   	this.updateFilterEnv()
   }
+
   updateEnv(){
   	for(let i=0;i<this.numVoices;i++) {
       this.voice[i].env.attack = this.adsr[0]
@@ -431,6 +467,7 @@ export class Daisies extends MonophonicTemplate{
       this.voice[i].env.release = this.adsr[3] + this.decay_cv
     }
   }
+
   updateFilterEnv(){
   	for(let i=0;i<this.numVoices;i++) {
       this.voice[i].vcf_env.attack = this.vcf_adsr[0] 
@@ -461,20 +498,17 @@ export class Daisies extends MonophonicTemplate{
   	this.vcf_attack_knob = this.createKnob('a', 5, 75, 0.005, .5, 0.5, [200,50,0],x=>this.set('vcf_env.attack',x));
   	this.vcf_decay_knob = this.createKnob('d', 15, 75, 0.01, 10, 0.5, [200,50,0],x=>this.set('vcf_env.decay',x));
   	this.vcf_sustain_knob = this.createKnob('s', 25, 75, 0, 1, 0.5, [200,50,0],x=>this.set('vcf_env.sustain',x));
-  	this.vcf_release_knob = this.createKnob('r', 35, 75, 0, 20, 0.5, [200,50,0],x=>this.set('vcf_env.release',x));
+  	this.vcf_release_knob = this.createKnob('r', 35, 75 , 0, 20, 0.5, [200,50,0],x=>this.set('vcf_env.release',x));
   	this.lfo_freq_knob = this.createKnob('lfo', 45, 65, 0, 20, 0.5, [200,50,0],x=>this.set('lfo.frequency',x));
-  	this.lfo_amp_knob = this.createKnob('vibrato', 55, 65, 0, .1, 0.5, [200,50,0],x=>this.set('pitch_lfo_depth.factor',x));
+  	this.lfo_vibrato = this.createKnob('vibrato', 55, 65, 0, .1, 0.5, [200,50,0],x=>this.set('pitch_lfo_depth.factor',x));
+  	this.lfo_tremolo = this.createKnob('tremolo', 65, 65, 0, 1, 0.5, [200,50,0],x=>this.set('amp_lfo_depth.factor',x));
   	
   	this.pan_knob = this.createKnob('pan', 75, 5, 0, 1, 0.5, [200,50,0],x=>{for(let i=0;i<this.numVoices;i++) this.voice[i].panner.pan.value = Math.sin(i/this.numVoices*Math.PI*2)*x});
 
 
-  	this.gui_elements = [this.vco_mix, 
-  		this.detune, this.cutoff, this.vcf_env_knob,
-  		this.keyTracking_knob, this.attack_knob, this.decay_knob,
-  		this.sustain_knob, this.release_knob,this.vcf_attack_knob, this.vcf_decay_knob,
-  		this.vcf_sustain_knob, this.vcf_release_knob, 
-  		this.lfo_freq_knob,this.lfo_amp_knob,this.lfo_freq_knob,this.highpass_knob]
+  	this.gui_elements = [ this.vco_mix, this.detune, this.cutoff, this.vcf_env_knob, this.vcf_Q_knob, this.keyTracking_knob, this.highpass_knob, this.attack_knob, this.decay_knob, this.sustain_knob, this.release_knob, this.vcf_attack_knob, this.vcf_decay_knob, this.vcf_sustain_knob, this.vcf_release_knob, this.lfo_freq_knob, this.lfo_vibrato, this.lfo_tremolo, this.pan_knob];
   }
+
 
 	updateVoiceParameters(voiceIndex, params, time = null) {
 	    const settings = this.voiceSettings;
@@ -552,3 +586,18 @@ export class Daisies extends MonophonicTemplate{
 	}
 
 }
+
+// class audioElement{
+// 	constructor(toneCOnstrucor,tone_params,gui_type,gui_params){
+// 		this.main = new 	ToneConstructor()
+// 		this.mainCV = new Tone.Multiply().connect(this.main.frequency)
+// 		this.secondCV = new Tone.Multiply().connect(this.main.frequency)
+// 		this.threeCV = new Tone.Multiply().connect(this.main.frequency)
+
+// 		createtoneelement
+// 		createguielement
+// 		linkelements		
+// 	}
+// }
+
+//let i = new audioElement('Tone.Filter',{frequency:100},'gui.Knob',{x,y,min,max})

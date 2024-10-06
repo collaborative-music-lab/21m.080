@@ -6,7 +6,7 @@ import { javascript } from '@codemirror/lang-javascript';
 
 //tone
 import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns, AnalogDelay,
-        Rumble, Daisies, DatoDuo, ESPSynth, Polyphony, Stripe, Diffuseur, KP, Sympathy, 
+        Rumble, Daisy, Daisies, DatoDuo, ESPSynth, Polyphony, Stripe, Diffuseur, KP, Sympathy, 
         ModDelay, Kick, DrumSampler, Simpler, Snare, Cymbal} from './synths/index.js';
 import { drumPatterns } from './lib/drumPatterns.js';
 import {Sequencer} from './Sequencer.js';
@@ -113,6 +113,7 @@ function Editor(props) {
     window.Rumble = Rumble
     window.Polyphony = Polyphony
     window.Daisies = Daisies
+    window.Daisy = Daisy
     window.Stripe = Stripe
     window.Diffuseur = Diffuseur
     window.KP = KP
@@ -237,6 +238,26 @@ function Editor(props) {
 
           // Perform the rotation
           return this.slice(n).concat(this.slice(0, n));
+        };
+
+        Array.prototype.peek = function(n) {
+          // Ensure n is an integer, and handle negative rotation
+          n = n % this.length;  // This ensures n stays within array bounds
+          if (n < 0) n += this.length;  // For negative rotation, we add the array length
+
+          // return the element at n
+          return this[n]
+        };
+
+        Array.prototype.poke = function(n, v) {
+          // Ensure n is an integer, and handle negative rotation
+          n = n % this.length;  // This ensures n stays within array bounds
+          if (n < 0) n += this.length;  // For negative rotation, we add the array length
+          let temp = this[n]
+          //modify the array
+          this[n]=v
+          //return the previous value of the changed element
+          return temp
         };
     });
     }, []);

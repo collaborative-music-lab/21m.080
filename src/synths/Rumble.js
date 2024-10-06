@@ -94,7 +94,7 @@ export class Rumble extends MonophonicTemplate {
     // VCF, VCA, output
     this.vca = new Tone.Multiply()
     this.direct_level.connect(this.vca)
-    this.output = new Tone.Multiply(1)
+    this.output = new Tone.Multiply(.5)
     this.waveShaper.connect(this.vca)
     this.vca.connect(this.output)
 
@@ -250,15 +250,15 @@ export class Rumble extends MonophonicTemplate {
     this.vcf_env_depth_knob = this.createKnob('vcf env', 55, 75, 0, 5000, .75, [200,0,200], (x)=>this.vcf_env_depth.factor.value = x);
     this.vcf_res_knob = this.createKnob('Q', 35, 75, 0, 20, 0.75, [200,0,200], (x)=>this.vcf.Q.value = x);
     
-    this.attack_knob = this.createKnob('a', 60, 55, 0.000001, .5, .35, [0,0,200], x=>this.env.attack = x);
-    this.decay_knob = this.createKnob('d', 68, 55, 0, 10, .35, [0,0,200], x=>this.env.decay = x);
-    this.sustain_knob = this.createKnob('s', 76, 55, 0, 1, .35, [0,0,200], x=>this.env.sustain = x);
-    this.release_knob = this.createKnob('r', 84, 55, 0, 20, .35, [0,0,200], x=>this.env.release = x);
+    this.attack_knob = this.createKnob('a', 68, 55, 0.000001, .5, .35, [0,0,200], x=>this.env.attack = x);
+    this.decay_knob = this.createKnob('d', 76, 55, 0, 10, .35, [0,0,200], x=>this.env.decay = x);
+    this.sustain_knob = this.createKnob('s', 84, 55, 0, 1, .35, [0,0,200], x=>this.env.sustain = x);
+    this.release_knob = this.createKnob('r', 92, 55, 0, 20, .35, [0,0,200], x=>this.env.release = x);
 
-    this.vcf_attack_knob = this.createKnob('vcf a', 60, 75, 0.001, .5, .35, [0,0,200], x=>this.vcf_env.attack = x);
-    this.vcf_decay_knob = this.createKnob('vcf d', 68, 75, 0, 10, .35, [0,0,200], x=>this.vcf_env.decay = x);
-    this.vcf_sustain_knob = this.createKnob('vcf s', 76, 75, 0, 1, .35, [0,0,200], x=>this.vcf_env.sustain = x);
-    this.vcf_release_knob = this.createKnob('vcf r', 84, 75, 0, 20, .35, [0,0,200], x=>this.vcf_env.release = x);
+    this.vcf_attack_knob = this.createKnob('vcf a', 68, 80, 0.001, .5, .35, [0,0,200], x=>this.vcf_env.attack = x);
+    this.vcf_decay_knob = this.createKnob('vcf d', 76, 80, 0, 10, .35, [0,0,200], x=>this.vcf_env.decay = x);
+    this.vcf_sustain_knob = this.createKnob('vcf s', 84, 80, 0, 1, .35, [0,0,200], x=>this.vcf_env.sustain = x);
+    this.vcf_release_knob = this.createKnob('vcf r', 92, 80, 0, 20, .35, [0,0,200], x=>this.vcf_env.release = x);
     
     this.lfo_knob = this.createKnob('lfo', 60, 25, 0, 20, .35, [0,0,200], x=>this.lfo.frequency.value = x);
     this.pwm_knob = this.createKnob('pwm', 68, 25, 0, .9, .35, [0,0,200], x=>{this.setPwmDepth(x, x*.8,x*.6)});
@@ -289,7 +289,7 @@ export class Rumble extends MonophonicTemplate {
       label, min, max, size, accentColor,
       x: x + this.x, y: y + this.y,
       callback: callback,
-      showLabel: 1, showValue: 1, // Assuming these are common settings
+      showLabel: 1, showValue: 0, // Assuming these are common settings
       curve: 2, // Adjust as needed
       border: 2 // Adjust as needed
     });

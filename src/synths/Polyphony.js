@@ -116,16 +116,20 @@ export class Polyphony extends MonophonicTemplate{
 
     //look for free voice
 		let envStates = []
+
 	  for (let i = 0; i < this.numVoices; i++) {
 	  	const curEnv = this.voice[i].env.value
+
+	  		//console.log('new voice ', i, this.numVoices,curEnv)
 	  	if(curEnv == 0){
-	  		//console.log('new voice ', i)
+	  		//console.log('new voice ', i, this.numVoices,curEnv)
 	  		this.setActiveNote(i, noteNum)
         return i;
 	  	}
 
-	  //if no free voice
-	  envStates.push( curEnv )
+		  //if no free voice
+		  envStates.push( curEnv )
+		}
 
     let assignedVoice = envStates.reduce((minIndex, currentValue, currentIndex, array) => {
         return currentValue < array[minIndex] ? currentIndex : minIndex;
@@ -135,7 +139,7 @@ export class Polyphony extends MonophonicTemplate{
     this.setActiveNote(assignedVoice, noteNum)
     //console.log('stole voice ', assignedVoice)
     return assignedVoice;
-  }
+  
   }
 
   // Get the index of a specific active note, or -1 if the note is not active
@@ -160,61 +164,99 @@ export class Polyphony extends MonophonicTemplate{
     }
 
     	//
-	initGui(selfRef, gui) {
-    this.voice[0].super = selfRef;
-    this.voice[0].initGui(gui);
-    let elements = this.voice[0].gui_elements;
+		initGui(selfRef, gui) {
+		    this.voice[0].super = selfRef;
+		    this.voice[0].initGui(gui);
+		    let elements = this.voice[0].gui_elements;
 
-    for (let i = 0; i < elements.length; i++) {
-        let element = elements[i];
-        try {
-            if (element.callback !== null) {
-                // Extract the parameter and value expression
-                const param = this.generateParamString(element.callback);
-                const val = this.retrieveValueExpression(element.callback);
+		    for (let i = 0; i < elements.length; i++) {
+		        let element = elements[i];
+		        try {
+		            if (element.callback !== null) {
 
-                // Modify the callback to apply the value to all voices
-                element.callback = (x) => {
-                    // Loop through each voice
-                    for (let i = 0; i < this.numVoices; i++) {
-                        // Access the relevant parameter for each voice
-                        let voiceTarget = this.voice[i];
-                        let keys = param.split('.');
+		                let funcString = element.callback.toString();
 
-                        // Traverse through the nested properties to find the final target
-                        for (let j = 0; j < keys.length - 1; j++) {
-                            if (voiceTarget[keys[j]] === undefined) {
-                                console.error(`Parameter ${keys[j]} does not exist on voice ${i}`);
-                                return;
-                            }
-                            voiceTarget = voiceTarget[keys[j]];
-                        }
-                        if(voiceTarget.name === 'Param' || voiceTarget.name === 'Signal'){
-                        	voiceTarget.value = x
-                        }
-                        else if( voiceTarget.name === 'Envelope'){
-                        	voiceTarget = x
-                        } else{
-                        	console.log('unknown object ', voiceTarget.name)
-                        }
+		                if (funcString.includes('this.super')) {
+		                	console.log('super function returned', funcString)
+		                	continue;
+		                }
 
-                        // // Apply the new value to the last key
-                        // const lastKey = keys[keys.length - 1];
-                        // if (voiceTarget[lastKey] !== undefined) {
-                        // 	val(x)
-                        //     //voiceTarget[lastKey] === 'value' ? val(x) : val.value(x);
-                        // } else {
-                        //     console.error(`Parameter ${lastKey} does not exist on voice ${i}`);
-                        // }
-                    }
-                };
-                //console.log(`Updated callback for ${param}`);
-            }
-        } catch (e) {
-            console.log('Invalid GUI element: ', element);
-        }
-    }
-}
+		                // Extract the parameter and value expression
+		                let param = this.generateParamString(element.callback);
+		                const val = this.retrieveValueExpression(element.callback);
+
+		                if (!param) {
+		                    param = this.applyFunctionToAllVoices(element.callback);
+		                }
+		                // console.log(param,val)
+
+		                element.callback = (x) => {
+		                    for (let j = 0; j < this.numVoices; j++) {
+		                        if (val == null) {
+		                            let temp = this.stringToFunction(param);
+		                            temp.apply(this.voice[j], [j, x]);
+		                        } else {
+		                            let voiceTarget = this.voice[j];
+		                            let keys = param.split('.');
+		                            //console.log(this.voice[i])
+
+		                            for (let k = 0; k < keys.length - 1; k++) {
+		                                if (voiceTarget[keys[k]] === undefined) {
+		                                    return;
+		                                }
+		                                voiceTarget = voiceTarget[keys[k]];
+		                            }
+
+		                            const lastKey = keys[keys.length - 1];
+
+		                            if (lastKey === 'value') {
+		                                voiceTarget.value = eval(val);
+		                            } else if (voiceTarget.name === 'Param' || voiceTarget.name === 'Signal') {
+		                                voiceTarget.value = eval(val);
+		                            } else if (voiceTarget.name === 'Envelope') {
+		                                voiceTarget[lastKey] = eval(val);
+		                            }
+		                        }
+		                    }
+		                };
+		            }
+		        } catch (e) {
+		            console.log('Invalid GUI element: ', element, e);
+		        }
+		    }
+		}
+
+
+
+
+
+	applyFunctionToAllVoices(f) {
+	    let fnString = f.toString();
+	    // Perform the replacement and assign the result back
+	    fnString = fnString.replace(/\bthis\./g, '');
+	    //console.log("Modified function string:", fnString);
+
+	    return fnString
+	}
+
+	stringToFunction(funcString) {
+	   // Split by '=>' to get parameters and body for functions without 'this.super'
+	    const parts = funcString.split('=>');
+	    const params = parts[0].replace(/\(|\)/g, '').trim();  // Extract the parameter
+	    let body = parts[1].trim();  // The function body
+
+	    // Replace occurrences of 'this.' for the voice context
+	    body = body.replace(/\bthis\./g, 'this.voice[i].');
+
+	    // Prefix standalone function calls with 'this.'
+	    body = body.replace(/(?<!this\.|this\.super\.)\b(\w+)\(/g, 'this.$1(');
+
+	    // // Log the modified function for debugging purposes
+	    // console.log('params:', params);
+	    // console.log('modified body:', body);
+
+	    return new Function('i', params, body);  // Create a function that accepts 'i' (voice index) and params
+	}
 
 
 	// Function to generate the parameter string from an assignment
@@ -256,7 +298,7 @@ export class Polyphony extends MonophonicTemplate{
 	//SET PARAMETERS
 
 	set(param, value, time = Tone.now()) {
-    console.log('set', param, value);
+    //console.log('set', param, value);
 
     // Split the parameter into keys (to access nested properties)
     let keys = param.split('.');
@@ -277,6 +319,8 @@ export class Polyphony extends MonophonicTemplate{
 
         // Ensure `value` is always treated as a function
         const finalValue = typeof value === 'function' ? value() : value;
+
+        //console.log(target, finalValue)
 
         if (target[lastKey] !== undefined) {
             if (target[lastKey]?.value !== undefined) {
@@ -321,6 +365,12 @@ export class Polyphony extends MonophonicTemplate{
 		for(let i=0;i<this.numVoices;i++){
 			this.voice[this.v].triggerRelease()
 			this.activeNotes[i]  = -1
+		}
+	}
+
+	pan = function(depth){
+		for(let i=0;i<this.numVoices;i++){
+			this.voice[i].panner.pan.value = Math.sin(i/8*Math.PI*2)*depth
 		}
 	}
 

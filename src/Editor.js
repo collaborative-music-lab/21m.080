@@ -3,6 +3,9 @@ import { useState, useEffect, useRef } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { historyField } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
+import { Decoration, ViewPlugin, EditorView } from "@codemirror/view";
+import { StateEffect, StateField } from "@codemirror/state";
+
 
 //tone
 import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns, AnalogDelay,
@@ -70,6 +73,29 @@ const loadTheme = async (themeName) => {
     return fallbackModule.gruvboxDark; // Fallback theme
   }
 }; //loadTheme
+
+// Define effects to add and clear decorations
+const addDecorationEffect = StateEffect.define();
+const clearAllDecorationsEffect = StateEffect.define();
+
+// Define a StateField to manage the decorations
+const decorationsField = StateField.define({
+  create() {
+    return Decoration.none;
+  },
+  update(decorations, transaction) {
+    decorations = decorations.map(transaction.changes);
+    for (let effect of transaction.effects) {
+      if (effect.is(addDecorationEffect)) {
+        decorations = decorations.update({ add: [effect.value] });
+      } else if (effect.is(clearAllDecorationsEffect)) {
+        decorations = Decoration.none;  // Clear all decorations
+      }
+    }
+    return decorations;
+  },
+  provide: f => EditorView.decorations.from(f)
+});
 
 function Editor(props) {
     window.p5 = p5;
@@ -195,7 +221,7 @@ function Editor(props) {
         setThemeDef(selectedTheme);     
     };
 
-    window.setTheme = setTheme
+    //window.setTheme = setTheme
     
     /************************************************
      * 
@@ -206,6 +232,7 @@ function Editor(props) {
     //const value = 'let CHANNEL = 3'
     const [height, setHeight] = useState(false);
     const [code, setCode] = useState(value); //full string of user code
+    const [editorView, setEditorView] = useState(null);
     var vars = {}; //current audioNodes
     var innerScopeVars = {}; //maps vars inside scope to a list of its instances
     window.innerScopeVars = innerScopeVars;
@@ -215,6 +242,12 @@ function Editor(props) {
     const [codeMinimized, setCodeMinimized] = useState(false);
     const [p5Minimized, setP5Minimized] = useState(false);
     const [maximized, setMaximized] = useState('');
+
+    // Ensure editorView is set properly when the editor is created
+      const onCreateEditor = (view) => {
+        setEditorView(view);  // Capture the editorView instance
+        //console.log('EditorView created:', view);
+      };
 
     useEffect(() => {
         // collab-hub socket instance
@@ -230,6 +263,7 @@ function Editor(props) {
         }
         loadTheme('gruvboxDark').then((loadedTheme) => {
       setTheme('gruvboxDark');
+    });
 
       Array.prototype.rotate = function(n) {
           // Ensure n is an integer, and handle negative rotation
@@ -259,9 +293,7 @@ function Editor(props) {
           //return the previous value of the changed element
           return temp
         };
-    });
     }, []);
-
 
     function removeComments() {
         // Regular expression to match single-line and multi-line comments
@@ -516,10 +548,103 @@ function Editor(props) {
         try {
             var line = code.split('\n')[curLineNum - 1];
             traverse(line);
+            //flashLine(editorView,curLineNum)
+            addLineDecoration(curLineNum-1)
         } catch (error) {
             console.log(error);
         }
     }
+
+    function evaluateBlock() {
+        try {
+            //add "//" inside innerscope
+            const lines = removedSpaces();
+            var linepos = curLineNum - 1;
+            var line = lines[linepos];
+            while (line !== undefined && line.replace(/\s/g, "") !== '') {
+                linepos -= 1;
+                line = lines[linepos];
+            }
+            var start = linepos + 1;
+            linepos = curLineNum;
+            line = lines[linepos];
+            while (line !== undefined && line.replace(/\s/g, "") !== '') {
+                linepos += 1;
+                line = lines[linepos];
+            }
+            traverse(lines.slice(start, linepos).join('\n'));
+            flashBlock (start, linepos, 1000)
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const addLineDecoration = (lineNumber, duration = 1000) => {
+      if (editorView) {
+        const line = editorView.state.doc.line(lineNumber + 1);
+        console.log(line)
+        // Create a blue background decoration (without fade-out initially)
+        const deco = Decoration.line({ class: "line-highlight" }).range(line.from);
+
+        // Apply the highlight immediately
+        const transaction = editorView.state.update({
+          effects: addDecorationEffect.of(deco)
+        });
+        editorView.dispatch(transaction);
+
+        // Add the fade-out class after a short delay to trigger the fade-out effect
+        setTimeout(() => {
+          const elements = document.getElementsByClassName('line-highlight');
+          for (let el of elements) {
+            el.classList.add('fade-out');  // Add the fade-out class after the highlight
+          }
+        }, 300); // Small delay to allow the initial highlight to appear instantly
+
+        // Remove the highlight after the specified duration
+        setTimeout(() => {
+          const clearTransaction = editorView.state.update({
+            effects: clearAllDecorationsEffect.of(null) // Remove decoration
+          });
+          editorView.dispatch(clearTransaction);
+        }, duration);
+      }
+    };
+
+    // Add decoration to a block of lines
+  const flashBlock = (startLine, endLine, duration = 1000) => {
+    
+    if (editorView) {
+      const decorations = [];
+
+      // Loop through each line in the block and create a decoration
+      for (let lineNumber = startLine; lineNumber <= endLine; lineNumber++) {
+        const line = editorView.state.doc.line(lineNumber + 1);  // CodeMirror uses 1-based line numbers
+        const deco = Decoration.line({ class: "line-highlight" }).range(line.from);
+        
+        // Apply each decoration as its own transaction
+        const transaction = editorView.state.update({
+          effects: addDecorationEffect.of(deco)
+        });
+        editorView.dispatch(transaction);
+      }
+
+      // Add fade-out class after a delay (longer delay might be needed for smooth appearance)
+      setTimeout(() => {
+        const elements = document.getElementsByClassName('line-highlight');
+        for (let el of elements) {
+          el.classList.add('fade-out');  // Add fade-out class to each highlighted line
+        }
+      }, 200); // Small delay to apply the fade-out class
+
+      // Set a timeout to remove the block decoration after the duration
+      setTimeout(() => {
+        const clearTransaction = editorView.state.update({
+          effects: clearAllDecorationsEffect.of(null) // Remove the block decoration
+        });
+        editorView.dispatch(clearTransaction);
+      }, duration);
+    }
+  };
 
     function removedSpaces() {
         let lines = code.split("\n");
@@ -543,35 +668,19 @@ function Editor(props) {
         return lines;
     }
 
-    function evaluateBlock() {
-        try {
-            //add "//" inside innerscope
-            const lines = removedSpaces();
-            var linepos = curLineNum - 1;
-            var line = lines[linepos];
-            while (line !== undefined && line.replace(/\s/g, "") !== '') {
-                linepos -= 1;
-                line = lines[linepos];
-            }
-            var start = linepos + 1;
-            linepos = curLineNum;
-            line = lines[linepos];
-            while (line !== undefined && line.replace(/\s/g, "") !== '') {
-                linepos += 1;
-                line = lines[linepos];
-            }
-            traverse(lines.slice(start, linepos).join('\n'));
-        } catch (error) {
-            console.log(error);
-        }
-    }
-
     //CODEMIRROR HANDLERS
     //save history in browser and update code value
     const handleCodeChange = (value, viewUpdate) => {
         if (refresh) {
             setRefresh(false);
         }
+
+        if (editorView) {
+          const currentDoc = editorView.state.doc.toString(); // Get the current content
+          //console.log(currentDoc);
+        }
+        console.log('change')
+
         localStorage.setItem(`${props.page}Value`, value);
         setCode(value);
         //viewUpdate.view.dom.clientHeight = document.getElementById('main').clientHeight;
@@ -821,11 +930,12 @@ function Editor(props) {
                                     mode: 'javascript',
                                 }}
                                 theme={themeDef}
-                                extensions={[javascript({ jsx: true })]}
+                                extensions={[javascript({ jsx: true }),decorationsField]}
                                 onChange={handleCodeChange}
                                 onKeyDown={handleKeyDown}
                                 onStatistics={handleStatistics}
                                 height={height}
+                                onCreateEditor={onCreateEditor}  
                             />
                         }
                     </div>

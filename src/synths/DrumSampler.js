@@ -128,11 +128,36 @@ export class DrumSampler extends DrumTemplate{
   get openDecay() { return this.openEnv.decay; }
   set openDecay(value) { this.openEnv.decay = value; }
   get p1Decay() { return this.tomEnv[0].release; }
-  set p1Decay(value) { this.p1Env.release = value; }
+  set p1Decay(value) { this.tomEnv[0].release = value; }
   get p2Decay() { return this.tomEnv[1].release; }
-  set p2Decay(value) { this.p2Env.release = value; }
+  set p2Decay(value) { this.tomEnv[1].release = value; }
   get p3Decay() { return this.tomEnv[2].release; }
-  set p3Decay(value) { this.p3Env.release = value; }
+  set p3Decay(value) { this.tomEnv[2].release = value; }
+
+  get kickRate() { return this.kick.playbackRate; }
+  set kickRate(value) { this.kick.playbackRate = value; }
+  get snareRate() { return this.snare.playbackRate; }
+  set snareRate(value) { this.snare.playbackRate = value; }
+  get closedRate() { return this.hihat.playbackRate; }
+  set closedRate(value) { this.hihat.playbackRate = value; }
+  get p1Rate() { return this.tom[0].playbackRate; }
+  set p1Rate(value) { this.tom[0].playbackRate = value; }
+  get p2Rate() { return this.tom[1].playbackRate.playbackRate; }
+  set p2Rate(value) { this.tom[1].playbackRate = value; }
+  get p3Rate() { return this.tomEnv[2].playbackRate; }
+  set p3Rate(value) { this.tom[2].playbackRate = value; }
+
+  get threshold() { return this.comp.threshold.value ; }
+  set threshold(value) { this.comp.threshold.value = value; }
+  get ratio() { return this.comp.ratio.value ; }
+  set ratio(value) { this.comp.ratio.value = value; }
+  get dist() { return this.distortion.distortion ; }
+  set dist(value) { this.distortion.distortion = value; }
+  get volume() { return this.output.factor; }
+  set volume(value) { this.output.factor = value; }
+
+  set dryKick(value) {this.dry_kick.factor.value = value}
+  get dryKick() {return this.dry_kick.factor.value}
 
   setVelocity(voice, num, val){
     if(val > 1) val = val/127 //account for 0-127 velocities

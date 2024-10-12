@@ -49,6 +49,16 @@ code {
     monospace;
 }
 
+.line-highlight {
+  background-color: blue !important;  /* Use !important to override active line background */
+  transition: none;
+}
+
+.line-highlight.fade-out {
+  transition: background-color 1s ease !important;  /* Apply transition only for fade-out */
+  background-color: transparent !important;         /* Fades to transparent */
+}
+
 .outer-container {
   padding: 5px;
   height: calc(100vh - 10px);

@@ -5,7 +5,7 @@
  * 
  * Signal path:
  * input -> hpf -> gain -> waveShaper -> lpf -> delay -> wet -> output
- *               <- <- <- <-  <- <- <- <- <- feedback <-
+ *                                         <- feedback <-
  * input -> dry -> output
  * 
  * @class
@@ -36,10 +36,10 @@ export class AnalogDelay {
     // Connecting signal path
     this.input.connect(this.drySig);
     this.input.connect(this.highpass);
-    this.highpass.connect(this.vcf);
-    this.vcf.connect(this.ws_input);
+    this.highpass.connect(this.ws_input);
     this.ws_input.connect(this.waveShaper);
-    this.waveShaper.connect(this.delay);
+    this.waveShaper.connect(this.vcf);
+    this.vcf.connect(this.delay);
     this.delay.connect(this.feedbackMult);
     this.feedbackMult.connect(this.vcf);
     this.delay.connect(this.wetSig);

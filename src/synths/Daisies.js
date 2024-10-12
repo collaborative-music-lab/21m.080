@@ -107,7 +107,9 @@ export class Daisy extends MonophonicTemplate{
 
 		this.vcf = new Tone.Filter({type:'lowpass', rolloff:-24, Q:0, cutoff:3000})
 		this.crossfade.connect(this.vcf)
+		this.crossfade_constant = new Tone.Signal(0)
 		this.crossfade_lfo_depth.connect(this.crossfade.fade)
+		this.crossfade_constant.connect(this.crossfade.fade)
 
 		this.vca = new Tone.Multiply()
 		this.lfo_vca = new Tone.Multiply(1)
@@ -203,18 +205,23 @@ export class Daisy extends MonophonicTemplate{
   }//attackRelease
 
   shapeVco(vcoNum, shape, amp=2, curve=1, isEven=1 ){
-  	//console.log(0,shape)
+  	//console.log(vcoNum,shape)
 		let partials = []
-		  for(let i=0;i<64;i++){
-		    partials.push(1/Math.pow(i+1,curve)*16*(i%2<(2-isEven))*Math.abs(1-Math.sin(i*Math.PI*shape+Math.PI/2)*amp))
-		  }
-		  if(vcoNum%1 == 0) {
-		  	//console.log(shape, this.vco_1.partials)
-		  	this.vco_1.partials = partials
-		  	//console.log('post ', this.vco_1.partials)
-		  }
-		  else this.vco_2.partials = partials 
-		
+	  for(let i=0;i<64;i++){
+	    partials.push(1/Math.pow(i+1,curve)*16*(i%2<(2-isEven))*Math.abs(1-Math.sin(i*Math.PI*shape+Math.PI/2)*amp))
+	  }
+	  if(vcoNum === 0) {
+	  	//console.log(shape, this.vco_1.partials)
+	  	this.vco_1.partials = partials
+	  	//console.log('post ', this.vco_1.partials)
+	  }
+	  else this.vco_2.partials = partials 
+  }
+
+  setHighpass(val){
+  	if(this.super !== null){
+  		this.super.hpf.frequency.value = val
+  	}
   }
 
   initGui(gui, x=10,	y=10){
@@ -225,13 +232,13 @@ export class Daisy extends MonophonicTemplate{
   	this.gui = gui
   	this.x = x
   	this.y = y
-  	this.vco_mix = this.createKnob('vco_mix', 5, 5, 0, 1, 0.75, [200,50,0],x=>this.crossfade.fade.value= x);
+  	this.vco_mix = this.createKnob('vco_mix', 5, 5, 0, 1, 0.75, [200,50,0],x=>this.crossfade_constant.value= x);
   	this.detune = this.createKnob('detune', 15, 5, 1, 2, 0.75, [200,50,0],x=>this.detune_scalar.factor.value = x);
   	this.cutoff = this.createKnob('cutoff', 25, 5, 0, 10000, 0.75, [200,50,0],x=>this.cutoffSig.value = x);
   	this.vcf_env_knob = this.createKnob('vcf env', 35, 5, 0, 5000, 0.75, [200,50,0],x=>this.vcf_env_depth.factor.value = x);
   	this.vcf_Q_knob = this.createKnob('Q', 45, 5, 0, 20, 0.75, [200,50,0],x=>this.vcf.Q.value = x);
   	this.keyTracking_knob = this.createKnob('key vcf', 55, 5, 0, 1, 0.75, [200,50,0],x=>this.keyTracking.factor.value = x);
-  	//this.highpass_knob = this.createKnob('hpf', 65, 5, 10, 3000, 0.75, [200,50,0],x=>this.setHighpass(x);
+  	this.highpass_knob = this.createKnob('hpf', 65, 5, 10, 3000, 0.75, [200,50,0],x=>this.setHighpass(x));
   	this.attack_knob = this.createKnob('a', 5, 45, 0.005, .5, 0.5, [200,50,0],x=>this.env.attack = x);
   	this.decay_knob = this.createKnob('d', 15, 45, 0.01, 10, 0.5, [200,50,0],x=>this.env.decay = x);
   	this.sustain_knob = this.createKnob('s', 25, 45, 0, 1, 0.5, [200,50,0],x=>this.env.sustain = x);
@@ -253,7 +260,7 @@ export class Daisy extends MonophonicTemplate{
 
 
   	this.gui_elements = [ this.vco_mix, this.detune, this.cutoff, this.vcf_env_knob, this.vcf_Q_knob, this.keyTracking_knob, 
-  		//this.highpass_knob, 
+  		this.highpass_knob, 
   		this.attack_knob, this.decay_knob, this.sustain_knob, this.release_knob, this.vcf_attack_knob, this.vcf_decay_knob, this.vcf_sustain_knob, this.vcf_release_knob, this.lfo_freq_knob, this.lfo_vibrato, this.lfo_tremolo, this.lfo_blend_knob
   		, this.pan_knob, this.vco1_shape_knob, this.vco2_shape_knob
   		];

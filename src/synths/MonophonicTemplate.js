@@ -40,8 +40,9 @@ the preset file into synth/synthPresets/
  */
 export class MonophonicTemplate {
     constructor() {
-        this.presets = null;
+        this.presets = {};
         this.gui_elements = [];
+        this.gui = null;
         this.poly_ref = null
         this.super = null
         this.frequency = new Tone.Signal();
@@ -103,6 +104,7 @@ export class MonophonicTemplate {
      */
     loadPreset(name) {
         const presetData = this.presets[name];
+
         if (presetData) {
             console.log("Loading preset ", name);
             for (let id in presetData) {
@@ -284,6 +286,17 @@ export class MonophonicTemplate {
         });
     }
 
+    createKnob(_label, _x, _y, _min, _max, _size, _accentColor, callback) {
+        return this.gui.Knob({
+            label: _label, min: _min, max: _max, size: _size, accentColor: _accentColor,
+            x: _x + this.x, y: _y + this.y,
+            callback: callback,
+            showLabel: 1, showValue: 1, // Assuming these are common settings
+            curve: 2, // Adjust as needed
+            border: 2 // Adjust as needed
+        });
+    }
+
     /**
      * Connects to Tone.js destination
      * @param {object} destination - Tone.js destination object
@@ -323,18 +336,18 @@ export class MonophonicTemplate {
      * @returns {void}
      * @example synth.savePreset('default')
      */
-	savePreset = (name) => {
-	    const preset = {};
+	savePreset (name) {
+	    const _preset = {};
 	    for (let element of Object.values(this.gui.elements)) {
-	        preset[element.id] = element.value;
+	        _preset[element.id] = element.value;
 	    }
-
+        console.log(this.presets, this.gui)
 	    // Update the presetsData in memory
 	    //console.log(this.presets);
 	    if (!this.presets[name]) {
 	        this.presets[name] = {};
 	    }
-	    this.presets[name] = preset;
+	    this.presets[name] = _preset;
 
 	    console.log(`Preset saved under ${this.name}/${name}`);
 	};
@@ -344,7 +357,7 @@ export class MonophonicTemplate {
      * @returns {void}
      * @example synth.downloadPresets()
      */
-	downloadPresets = () => {
+	downloadPresets ()  {
 	    this.presetsData = this.presets;
 	    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.presetsData, null, 2));
 	    const downloadAnchorNode = document.createElement('a');
@@ -403,7 +416,7 @@ export class MonophonicTemplate {
                 //if(num == 0) this.callback(this.index)
                 let curBeat = this.seq[num][this.index%this.seq[num].length];
                 curBeat = this.checkForRandomElement(num,curBeat)
-                //console.log(curBeat)
+                // if(Array.isArray(curBeat)) JSON.stringify(curBeat)
                 const event = parsePitchStringBeat(curBeat, time)
                 //console.log(event[0])
                 //console.log(num,this.index, event, this.seq[num])
@@ -437,23 +450,43 @@ export class MonophonicTemplate {
         // Iterate through each element in seq[num] to build validElements
         this.seq[num].forEach(item => {
             if (typeof item === 'string') {
-                if (/^[a-zA-Z0-9]$/.test(item)) {
-                    // If it's a single number or letter, add it
-                    validElements.push(item);
-                } else if (/^\?$/.test(item)) {
-                    // If it's a single '?', skip it
-                    return;
-                } else if (/^\[.*\]$/.test(item)) {
-                    // If it's a bracketed string, extract letters and numbers and add them individually
-                    let insideBrackets = item.replace(/\[|\]/g, '');  // Remove brackets
-                    insideBrackets.split(' ').forEach(el => {
-                        if (/^[a-zA-Z0-9]$/.test(el)) {
-                            validElements.push(el);  // Add valid individual items
-                        }
-                    });
-                }
+
+                  // Define the regex patterns
+                  const letterPattern = /[A-G]|[ac-g]|[#b]?[A-G]|[#b]?[ac-g]/g;
+                  const symbolPattern = /[oOxX\*\^]/g;
+                  const numberPattern = /(-?\d+)/g;
+                  const symbolNumberPattern = /([oOxX\*\^])\s*(1|2|3)/g;
+
+                  // Find all matching letters (A-G, a, c-g, and variations with b or #)
+                  let letterMatches = item.match(letterPattern);
+                  if (letterMatches) {
+                    validElements.push(...letterMatches);
+                  }
+
+                  // Find all matching symbols (o O x X * ^)
+                  let symbolMatches = item.match(symbolPattern);
+                  if (symbolMatches) {
+                    validElements.push(...symbolMatches);
+
+                    // Also include numbers 1, 2, 3 without regard to space if symbols are present
+                    let symbolNumberMatches = item.match(symbolNumberPattern);
+                    if (symbolNumberMatches) {
+                      symbolNumberMatches.forEach(match => {
+                        const [symbol, number] = match.split(/\s*/);
+                        validElements.push(number);
+                      });
+                    }
+                  }
+
+                  // Find all other numbers, space-separated
+                  let otherNumbers = item.match(numberPattern);
+                  if (otherNumbers) {
+                    validElements.push(...otherNumbers);
+                  }
+
             }
         });
+        console.log(validElements)
 
         // Function to get a random non-? element
         function getRandomElement() {
@@ -495,7 +528,7 @@ export class MonophonicTemplate {
         const arr = Array.from({ length: len }, (_, i) => func(i))
 
         this.seq[num] = arr.map(element => {
-            return typeof element === 'string' ? element : element//.toString();
+            return typeof element === 'string' ? element : Array.isArray(element) ? JSON.stringify(element): element;
         });
 
         //console.log(this.seq[num])

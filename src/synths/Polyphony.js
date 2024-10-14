@@ -177,7 +177,7 @@ export class Polyphony extends MonophonicTemplate{
 		                let funcString = element.callback.toString();
 
 		                if (funcString.includes('this.super')) {
-		                	console.log('super function returned', funcString)
+		                	//console.log('super function returned', funcString)
 		                	continue;
 		                }
 
@@ -273,7 +273,7 @@ export class Polyphony extends MonophonicTemplate{
         //console.log('Captured:', match[1]);  // Output: 'cutoff.value' or similar
         return match[1];  // Returns 'cutoff.value'
     } else {
-        console.log('No match found');
+        //console.log('No match found');
     }
 
     return null;

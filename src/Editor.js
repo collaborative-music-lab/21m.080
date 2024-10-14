@@ -582,7 +582,7 @@ function Editor(props) {
     const addLineDecoration = (lineNumber, duration = 1000) => {
       if (editorView) {
         const line = editorView.state.doc.line(lineNumber + 1);
-        console.log(line)
+        //console.log(line)
         // Create a blue background decoration (without fade-out initially)
         const deco = Decoration.line({ class: "line-highlight" }).range(line.from);
 
@@ -679,7 +679,6 @@ function Editor(props) {
           const currentDoc = editorView.state.doc.toString(); // Get the current content
           //console.log(currentDoc);
         }
-        console.log('change')
 
         localStorage.setItem(`${props.page}Value`, value);
         setCode(value);

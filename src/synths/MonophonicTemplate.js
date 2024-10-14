@@ -486,7 +486,7 @@ export class MonophonicTemplate {
 
             }
         });
-        console.log(validElements)
+        //console.log(validElements)
 
         // Function to get a random non-? element
         function getRandomElement() {

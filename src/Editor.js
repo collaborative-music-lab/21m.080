@@ -7,6 +7,7 @@ import { javascript } from '@codemirror/lang-javascript';
 //tone
 import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns, AnalogDelay,
         Rumble, Daisies, DatoDuo, ESPSynth, Polyphony, Stripe, Diffuseur, KP, Sympathy, Kick, DrumSampler, Snare, Cymbal} from './synths/index.js';
+import {NexusElement, Button} from './NexusElements/nexus_index.js'
 import { drumPatterns } from './lib/drumPatterns.js';
 import {Sequencer} from './Sequencer.js';
 import {MultiVCO} from './MultiVCO.js'
@@ -122,6 +123,9 @@ function Editor(props) {
     window.Cymbal = Cymbal
     window.DrumSampler = DrumSampler   
     window.Snare = Snare;
+
+    window.NexusElement = NexusElement
+    window.Button = Button
 
     //utilities
     window.stepper = stepper

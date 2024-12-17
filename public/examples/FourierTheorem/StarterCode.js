@@ -1,65 +1,26 @@
-let vcos = []
-let vcas = []
-const numVoices = 8
-let fundamental = 100
+const vco = new Tone.Oscillator().start()
 const output = new Tone.Multiply(0.02).toDestination()
 const display = new Tone.Multiply(1)
-//create vcos and vcas
-for(let i=0;i<numVoices;i++){
-  vcos.push( new Tone.Oscillator() )
-  vcas.push( new Tone.Multiply(1) )
-}
+vco.connect(output), vco.connect(display)
 
-let setFrequency = function(i){
-  //'i' is between 0 and numVoices-1
-  let freq = fundamental + i*fundamental
-  //let freq =  [1,2,3,4,5,6,7,8][i] * fundamental
-  return freq
-}
-//updateVCOs()
+//VCO properties
+vco.frequency.value = 100
+vco.partials = [1,1/2,1/3,1/4,1/5,1/6]
 
-let setGain = function(i){
-  return 1 / (i*1+1)
+//freely set the harmonic amplitudes
+let partials = []
+let numPartials = 16
+for(let i=0;i<numPartials;i++){ //i is the harmonic number
+  partials.push(1/(i+1) * (i%2==0)) //generates the amplitude
 }
-//updateVCOs()
-
-let updateVCOs = function(){
-  for(let i=0;i<numVoices;i++){
-    let freq = setFrequency(i)
-    let gain = setGain(i)
-    vcos[i].frequency.value = freq
-    vcas[i].factor.value = gain
-  }
-}
-updateVCOs()
-
-let setFundamental = function(val){
-  fundamental = val
-  updateVCOs()
-}
-setFundamental(100)
-
-//set everything up
-for(let i=0;i<numVoices;i++){
-  vcos[i].start()
-  vcos[i].connect( vcas[i] )
-  setFrequency()
-  setGain()
-  vcas[i].connect( output )
-  vcas[i].connect( display)
-}
-
-//reset phase if necessary
-for(let i=0;i<numVoices;i++) vcos[i].phase = Math.random()*360
-for(let i=0;i<numVoices;i++) vcos[i].phase = 0
+vco.partials = partials
 
 //oscilloscope
 display.factor.value = 1/2
-
 let scope = new Oscilloscope('FourierTheorem')
 display.connect( scope.input )
 scope.setFftSize( 1024*4 )
-scope.threshold = -.9
+scope.threshold = -.2
 
 //view the spectroscope
 let spectrum = new Spectroscope( "FourierTheorem" )

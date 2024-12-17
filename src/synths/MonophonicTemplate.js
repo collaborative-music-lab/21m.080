@@ -1,7 +1,7 @@
 // MonophonicTemplate.js
 
 import * as Tone from 'tone';
-import {parsePitchStringSequence, parsePitchStringBeat,getChord, pitchNameToMidi, intervalToMidi} from '../Theory'
+import {Theory2, parsePitchStringSequence, parsePitchStringBeat,getChord, pitchNameToMidi, intervalToMidi} from '../Theory'
 import { ArrayVisualizer } from '../visualizers/VisualizeArray';
 
 
@@ -376,8 +376,8 @@ export class MonophonicTemplate {
      * @param {string} num (default 0) - the sequence number. Up to 10 sequences per instance.
      */
     sequence(arr, subdivision = '8n', num = 0) {
-
-        this.seq[num] = parsePitchStringSequence(arr)
+        if( Array.isArray(arr) ) this.seq[num] = arr
+        else this.seq[num] = parsePitchStringSequence(arr)
 
         this.createLoop(subdivision, num)
 
@@ -624,7 +624,6 @@ export class MonophonicTemplate {
         }
     }
 
-
     parseNoteString(val, time, num){
         //console.log(val)
         if(val[0] === ".") return
@@ -637,7 +636,7 @@ export class MonophonicTemplate {
         else note = intervalToMidi(val[0], this.min, this.max)
         const div = val[1]
         if(note < 0) return
-        //console.log(note, this.velocity[num], this.sustain)
+        //console.log(note, this.velocity[num])
         try{
             this.triggerAttackRelease(note + this.octave[num]*12, this.velocity[num], this.sustain[num], time + div * (Tone.Time(this.subdivision[num])));
         } catch(e){

@@ -47,342 +47,327 @@ getInterval(num,scale): returns MIDI note number of scale degree (from 0)
 import * as Tone from 'tone';
 import * as Ornament from './Ornament.js'
 
-class MusicGenerator {
-  constructor() {
-    this._tonic = 'C';
-    this.tonicNumber = 0; // MIDI note of tonic, 0-11
-    this.keyType = 'major';
-    this.octave = 4;
-    this.voicing = 'closed';
-    this.previousChord = [];
+let tonic = 'C';
+let tonicNumber = 0; //midi note of tonic, 0-11
+let keyType = 'major';
+let octave = 4;
+let voicing = 'closed'
+let previousChord = [];
 
-    this._scale = 'major'; // Private variable for scale
-    this._chord = 'I'; // Private variable for chord
-    this._timeSignature = '4/4'; // Private variable for time signature
-    this._harmonicTempo = 120; // Private variable for harmonic tempo
-    this._beat = 0; // Private variable for beat
-    this._bar = 0; // Private variable for bar
-    
-    this.pulsePerChord = 16;
-    this.harmonicRhythm = 8;
-    this.progressionChords = [];
-    this._progression = [];
-    
-    this.voicings = {
-      "closed": [0, 2, 4, 6],
-      "open": [0, 4, 6, 9],
-      "drop2": [-3, 0, 2, 6],
-      "drop3": [-1, 0, 3, 4]
-    };
-    this.notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    this.noteToInterval = {
-      'C': 0, 'B#': 12, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 
-      'Fb': 4, 'E#': 5, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 
-      'A': 9, 'A#': 10, 'Bb': 10, 'B': 11, 'Cb': 11
-    };
-    this.chordIntervals = {
-      "major": [0, 4, 7],
-      "minor": [0, 3, 7],
-      "dominant7": [0, 4, 7, 10],
-      "minor7": [0, 3, 7, 10],
-      "major7": [0, 4, 7, 11],
-      "minorMaj7": [0, 3, 7, 11],
-      "diminished": [0, 3, 6],
-      "diminished7": [0, 3, 6, 9],
-      "add9": [0, 4, 7, 14] // Major triad with added ninth
-    };
-    this.chordScales = {
-      "major": [0, 2, 4, 5, 7, 9, 11],
-      "minor": [0, 2, 3, 5, 7, 8, 10], // aeolian
-      "lydianDominant": [0, 2, 4, 6, 7, 9, 10], //lydian dominant?
-      "mixolydian": [0,2,4,5,7,9,10], //for V7
-      "phrygianDominant": [0,1,4,5,7,8,10], //for minor V7
-      "minor7": [0, 2, 3, 5, 7, 9, 10], //dorian
-      "major7": [0, 2, 4, 5, 7, 9, 11],
-      "minorMaj7": [0, 2, 3, 5, 7, 9, 11], //melodic minor
-      "diminished": [0, 2, 3, 5, 6, 8, 9, 11],
-      "diminished7": [0, 2, 3, 5, 6, 8, 9, 11],
-      "add9": [0, 2, 4, 5, 7, 9, 11],
-      "dorian": [0,2,3,5,7,9,10], //minor natural-6
-      "phrygian": [0,1,3,5,7,8,10], //minor flat-2
-      "lydian": [0,2,4,6,7,9,11], //major sharp-4
-      "locrian": [0,1,3,5,6,8,10], //half-diminished
-    };
-    this.MajorScaleDegrees = {
-      'I': 0, 'bII': 1, 'II': 2, 'bIII': 3,'III': 4, 'IV': 5, '#IV': 6, 
-      'bV': 6,'V': 7,'#V': 8, 'bVI': 8,'VI': 9, 'bVII': 10,'VII': 11,
-      'i': 0, 'bii': 1, 'ii': 2, 'biii': 3,'iii': 4, 'iv': 5, '#iv': 6, 
-      'bv': 6,'v': 7, 'bvi': 8,'vi': 9, 'bvii': 10,'vii': 11 
-    };
-    this.MinorScaleDegrees = {
-      'I': 0, 'bII': 1, 'II': 2, 'III': 3,'#III': 4, 'IV': 5, '#IV': 6, 
-      'bV': 6,'V': 7,'#V': 8, 'VI': 8,'#VI': 9, 'VII': 10,'#VII': 11,
-      'i': 0, 'bii': 1, 'ii': 2, 'iii': 3,'#iii': 4, 'iv': 5, '#iv': 6, 
-      'bv': 6,'v': 7, 'vi': 8,'#vi': 9, 'bvii': 10,'vii': 11
-    };
-  }
+let pulsePerChord = 16
+let harmonicRhythm = 8
+let progressionChords = []
+let progression = []
 
-  set tonic(value) {this.setTonic(value);}
-  get tonic() {return this._tonic;}
-  set root(value) {this.setTonic(value);}
-  get root() {return this._tonic;}
-  set key(value) {this.setTonic(value);}
-  get key() { return this._tonic; }
-  set progression(value) {this.setProgression(value);}
-  get progression() {return this._progression;}
-  set tempo(value) {Tone.Transport.bpm.value = value;}
-  get tempo() {return Tone.Transport.bpm.value;}
-  
-  set scale(value) { this._scale = value;}
-  get scale() { return this._scale;}
-  set chord(value) { this._chord = value;}
-  get chord() {   return this._chord; }
-  set timeSignature(value) {  this._timeSignature = value; }
-  get timeSignature() { return this._timeSignature; }
-  set harmonicTempo(value) {  this._harmonicTempo = value; }
-  get harmonicTempo() {   return this._harmonicTempo;  }
-  set beat(value) { this._beat = value;  }
-  get beat() {   return this._beat;  }
-  set bar(value) {  this._bar = value; }
-  get bar() {  return this._bar; }
-
-  setTonic(val) {
-    if (typeof val === 'string') {
-      const noteRegex = /[A-Ga-g][#b]?/;
-      const numberRegex = /\d+/;
-  
-      const noteMatch = val.match(noteRegex);
-      const numberMatch = val.match(numberRegex);
-  
-      if (noteMatch) {
-        this._tonic = noteMatch[0].toUpperCase();
-        this.keyType = noteMatch[0] === noteMatch[0].toUpperCase() ? 'major' : 'minor';
-      }
-  
-      if (numberMatch) {
-        this.octave = parseInt(numberMatch[0], 10);
-      }
-    } else if (typeof val === 'number') {
-      this.octave = Math.floor(val / 12) - 1;
-      const noteIndex = val % 12;
-      this._tonic = this.notes[noteIndex];
-    }
-  
-    this.tonicNumber = this.noteToInterval[this._tonic];
-    console.log(`Tonic: ${this._tonic}, Number: ${this.tonicNumber}, Key Type: ${this.keyType}, Octave: ${this.octave}`);
-  }
-
-  setProgression(val) {
-    let newProgression = [];
-    let error = -1;
-  
-    if (val.constructor !== Array) {
-      val = val.replaceAll(',', ' ').split(' ');
-    }
-  
-    for (let i = 0; i < val.length; i++) {
-      let chord = val[i];
-      try {
-        if (val[i] !== '') {
-          const romanNumeral = chord.match(/[iIvVb#]+/)[0];
-          const quality = this.getChordType(chord);
-          console.log(chord, quality)
-          if (typeof this.MajorScaleDegrees[romanNumeral] !== "number") error = i;
-          if (this.chordScales[quality].constructor !== Array) error = i;
-          if (error < 0) newProgression.push(chord);
-        }
-      } catch {
-        console.log("error with element ", val[i]);
-        error = 0;
-      }
-    }
-  
-    if (error < 0) {
-      this._progression = newProgression;
-      this.progressionChords = [];
-      for (let i = 0; i < this._progression.length; i++) {
-        this.progressionChords.push(new Chord(this._progression[i]));
-      }
-    } else {
-      console.log("error in progression element", val[error]);
-    }
-  }
-
-  setVoicing(name) {
-    if (this.voicings.hasOwnProperty(name)) this.voicing = name;
-    else console.log('invalid voicing name ', name);
-    console.log('current voicing: ', this.voicing);
-  }
-
-  getChord(index) {
-    let index2 = this.getChordIndex();
-    if (this.progressionChords.length < 1) this.progressionChords.push(new Chord('I'));
-    return this.progressionChords[Math.floor(index2 % this.progressionChords.length)];
-  }
-
-  getChordIndex() {
-    let index = Math.floor((Tone.Transport.ticks + 8) / Tone.Time('1n').toTicks());
-    return index;
-  }
-
-  getChordType(name) {
-    const suffix = name.replace(/[iIvVb#]+/, '');
-    let majorMinor = name.match(/[iIvV]+/)[0];
-
-    if(!majorMinor) majorMinor = 'I'
-
-    const defaultMode = this.getDefaultMode(majorMinor, this.keyType)
-    //console.log(name, this.keyType, defaultMode)
-      //look for a specific scale defined in suffix
-    for (const key of Object.keys(this.chordScales)) {
-      if (suffix.toLowerCase().includes(key.toLowerCase())) {
-        console.log('key', key)
-        return key;
-      }
-    }
-    //look for special cases
-    if (suffix.includes('dim'))  return 'diminished';
-    if (suffix.includes('m6'))  return 'dorian';
-    if (suffix.includes('min6'))  return 'dorian';
-    if (suffix.includes('m13'))  return 'dorian';
-    if (suffix.includes('min13'))  return 'dorian';
-    if (suffix.includes('m7b9'))  return 'phrygian';
-    if (suffix.includes('7b9'))  return 'phrygianDominant';
-    if (suffix.includes('Maj7#11'))  return 'lydian';
-    if (suffix.includes('m7b5'))  return 'locrian';
-    if (suffix.includes('7b5'))  return 'lydianDominant';
-    if (suffix.includes('Maj7')) {
-      const isMajor = majorMinor === majorMinor.toUpperCase() 
-      if(defaultMode === 'lydian') return defaultMode
-      return isMajor === true ? 'major7' : 'minorMaj7'
-    }
-    if (suffix.includes('7')) {
-      // if(defaultMode !== 'none') return defaultMode
-      // else 
-    return majorMinor === majorMinor.toUpperCase() ? 'mixolydian' : 'minor7'; 
-    }
-    if (suffix.includes('2')) return 'major9';
-
-    if( defaultMode !== 'none') return defaultMode
-    return majorMinor === majorMinor.toUpperCase() ? 'major' : 'minor';
-  }
-
-  getDefaultMode(numeral, key){
-    if (key === 'major'){
-      switch(numeral){
-      case 'I': return 'major'
-      case 'ii': return 'dorian'
-      case 'iii': return 'phrygian'
-      case 'IV': return 'lydian'
-      case 'V': return 'mixolydian'
-      case 'vi': return 'minor'
-      case 'vii': return 'locrian'
-      }
-    }
-    if (key === 'minor'){
-      switch(numeral){
-      case 'i': return 'minor'
-      case 'ii': return 'locrian'
-      case 'III': return 'major'
-      case 'iv': return 'dorian'
-      case 'v': return 'phrygian'
-      case 'V': return 'phrygianDominant'
-      case 'VI': return 'lydian'
-      case 'VII': return 'mixolydian'
-      }
-    }
-    return 'none'
-  }
-
-  // Add other methods from your previous code as needed
-  /************************************
- * Helper functions
- * ************************************/
-
-  getChordRoot(name){
-    //parse chord name
-    const romanNumeral = name.match(/[iIvVb#]+/)[0];
-
-    //set keyType
-    if (!romanNumeral) {
-      console.log('incorrent chord name ${name}')
-      return this.tonicNumber
-    }
-    let degree = 0
-    
-    if (this.keyType == 'major') {
-      degree =  this.MajorScaleDegrees[romanNumeral];
-      if(degree == undefined) degree = this.MinorScaleDegrees[romanNumeral];
-      if(degree == undefined) degree = 0
-    }
-    else {
-      degree =  this.MinorScaleDegrees[romanNumeral];
-      if(degree == undefined) degree = this.MajorScaleDegrees[romanNumeral];
-      if(degree == undefined) degree = 0
-    }
-    if(degree == undefined) degree = 0
-
-    return degree % 12
-  }
-
-  //return midi note numbers for current chord
-  getChordTones(root, quality, scale){
-    let chord = []
-    let len = 3
-    if( /\d/.test(quality)) len = 4
-    for(let i=0;i<len;i++) chord[i] = scale[i*2]+root
-  }
-
-  getInterval(num,scale){
-    let len = scale.length
-    if (typeof num === 'number') {
-      let _octave = Math.floor(num/len)
-      if(num<0) num = len+num%len //check negative numbers
-      num = scale[num%len] + _octave*12
-      return num
-    } else if (typeof num === 'string') {
-      //parse num to look for # and b notes
-      const match = num.match(/^([^\d-]+)?(-?\d+)$/);
-
-      //get scale degree
-      num = Number(match[2])
-      let _octave = Math.floor(num/len)
-      if(num<0) num = 7+num%7
-      num = scale[num%len] + _octave*12
-
-      //apply accidentals
-      if(match[1]== '#')num+=1
-      else if (match[1] == 'b') num-=1
-
-      num += this.tonicNumber
-
-      return num
-    }
-    return 0
-  }
-
-  minimizeMovement(chord, previousChord) {
-    let distance = Math.abs(chord[0]%12-previousChord[0]%12)
-    let lowNote = 0
-
-    for(let i=1;i<chord.length;i++){
-      if(Math.abs(chord[i]%12-previousChord[0]%12) < distance){
-        distance = Math.abs(chord[i]%12-previousChord[0]%12)
-          lowNote = i
-      }
-    }
-
-    while(chord[lowNote] < previousChord[0]-2)chord = chord.map(x=>x+12)
-   
-    for(let i=0;i<chord.length;i++){
-      if(chord[i] < previousChord[0])chord[i]+=12
-    }
-
-    return chord.sort((a, b) => a - b);
-  }
+const voicings = { 
+  "closed": [0,2,4,6],
+  "open": [0,4,6,9],
+  "drop2": [-3,0,2,6],
+  "drop3": [-1,0,3,4]
 }
 
-export const Theory2 = new MusicGenerator()
+const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const noteToInterval = {
+  'C': 0, 'B#': 12, 'C#': 1, 'Db': 1,'D': 2, 'D#':3, 'Eb':3, 'E': 4, 'Fb': 4,
+  'E#': 5, 'F': 5,'F#': 6, 'Gb': 6, 'G': 7,'G#': 8, 'Ab': 8,'A': 9,
+  'A#': 10, 'Bb': 10, 'B': 11, 'Cb': 11,
+  };
+
+export const chordIntervals = {
+  "major": [0, 4, 7],
+  "minor": [0, 3, 7],
+  "dominant7": [0, 4, 7, 10],
+  "minor7": [0, 3, 7, 10],
+  "major7": [0, 4, 7, 11],
+  "minorMaj7": [0, 3, 7, 11],
+  "diminished": [0, 3, 6],
+  "diminished7": [0, 3, 6, 9],
+  "add9": [0, 4, 7, 14], // Major triad with added ninth
+};
+
+export const chordScales = {
+  "major": [0, 2, 4, 5, 7, 9, 11],
+  "minor": [0, 2, 3, 5, 7, 8, 10], //aeolian
+  "lydianDominant": [0, 2, 4, 6, 7, 9, 10], //lydian dominant?
+  "mixolydian": [0,2,4,5,7,9,10], //for V7
+  "phrygianDominant": [0,1,4,5,7,8,10], //for minor V7
+  "minor7": [0, 2, 3, 5, 7, 9, 10], //dorian
+  "major7": [0, 2, 4, 5, 7, 9, 11],
+  "minorMaj7": [0, 2, 3, 5, 7, 9, 11], //melodic minor
+  "diminished": [0, 2, 3, 5, 6, 8, 9, 11],
+  "diminished7": [0, 2, 3, 5, 6, 8, 9, 11],
+  "add9": [0, 2, 4, 5, 7, 9, 11],
+  "dorian": [0,2,3,5,7,9,10], //minor natural-6
+  "phrygian": [0,1,3,5,7,8,10], //minor flat-2
+  "lydian": [0,2,4,6,7,9,11], //major sharp-4
+  "locrian": [0,1,3,5,6,8,10], //half-diminished
+};
+
+const MajorScaleDegrees = {
+  'I': 0, 'bII': 1, 'II': 2, 'bIII': 3,'III': 4, 'IV': 5, '#IV': 6, 
+  'bV': 6,'V': 7,'#V': 8, 'bVI': 8,'VI': 9, 'bVII': 10,'VII': 11,
+  'i': 0, 'bii': 1, 'ii': 2, 'biii': 3,'iii': 4, 'iv': 5, '#iv': 6, 
+  'bv': 6,'v': 7, 'bvi': 8,'vi': 9, 'bvii': 10,'vii': 11 
+};
+const MinorScaleDegrees = {
+  'I': 0, 'bII': 1, 'II': 2, 'III': 3,'#III': 4, 'IV': 5, '#IV': 6, 
+  'bV': 6,'V': 7,'#V': 8, 'VI': 8,'#VI': 9, 'VII': 10,'#VII': 11,
+  'i': 0, 'bii': 1, 'ii': 2, 'iii': 3,'#iii': 4, 'iv': 5, '#iv': 6, 
+  'bv': 6,'v': 7, 'vi': 8,'#vi': 9, 'bvii': 10,'vii': 11
+};
+
+export function orn(note,pattern=0,scalar=1, length=4 ){
+  return Ornament.orn(note,pattern,scalar,length)
+}
+
+
+export function setVoicing(name){
+  if (voicings.hasOwnProperty(name)) voicing = name 
+  else console.log('invalid voicing name ', name)
+console.log('current voicing: ', voicing)
+}
+
+/**
+ * Sets the chord progression and validates the input.
+ *
+ * @param {string|string[]} val - The chord progression as a string or an array of strings.
+ *                                If provided as a string, it will be split into an array.
+ */
+export function setProgression(val){
+  let newProgression = []
+  let error = -1
+
+  //convert progressions in a single string to an array of strings
+  if( val.constructor !== Array ){
+    val = val.replaceAll(',', ' ')
+    val = val.split(' ')
+  }
+  //iteratate through array, check for errors
+  for(let i=0;i<val.length;i++){
+    let chord = val[i]
+    try{
+      if(val[i] !== ''){ //remove empty strings
+        const romanNumeral = chord.match(/[iIvVb#]+/)[0];
+        const quality = getChordType(chord);
+        console.log(quality)
+        if( typeof MajorScaleDegrees[romanNumeral] !== "number") error = i
+        if( chordScales[quality].constructor !== Array) error = i
+        if( error < 0 ) newProgression.push(chord)
+      } 
+    } catch{
+      console.log("error with element ", val[i])
+      error = 0
+    }
+  }
+
+  if(error < 0) {
+    progression = newProgression
+    progressionChords = []
+    for(let i=0;i<progression.length;i++) progressionChords.push(new Chord(progression[i]))
+  }
+  else console.log("error in progression element", val[error])
+  //console.log(progression)
+}
+
+export function printProgression(){
+  console.log(progressionChords)
+}
+
+//gets the index of the current chord based on tranpost position
+export function getChordIndex(){
+  let index = Math.floor((Tone.Transport.ticks+8) / Tone.Time('1n').toTicks());
+  // console.log(index)
+  return index
+}
+
+/**
+ * Retrieves an index for an array, based on the transport position.
+
+ * 
+ * @param {number} length - The length of the array we are indexing.
+ *                         The index is wrapped around based on the length
+ * @returns {string} - The subdivision for our sequence
+ */
+export function getIndex(length=8, sub='8n'){
+  let index = Math.floor(Tone.Transport.ticks / Tone.Time(sub).toTicks());
+  //console.log('index', length, sub, index%length, Tone.Transport.ticks)
+  return index%length
+}
+
+/**
+ * Sets the number of pulses per chord in the progression.
+
+ *
+ * @param {number} num - The number of pulses to set for each chord in the progression.
+ */
+export function setProgressionRate(num) {
+  harmonicRhythm = num;
+}
+
+/**
+ * Retrieves the chord at a given index within the progression.
+
+ * 
+ * @param {number} index - The index within the progression to retrieve the chord from.
+ *                         The index is wrapped around based on the length of the progression and pulsePerChord.
+ * @returns {Chord} - The chord object corresponding to the provided index.
+ */
+export function getChord(index){
+  let index2 = getChordIndex()// index % (pulsePerChord * progression.length)
+  if (progressionChords.length < 1) progressionChords.push( new Chord('I'))
+  //console.log(index2, progressionChords[Math.floor( index2%progressionChords.length )].name)
+  return progressionChords[Math.floor( index2%progressionChords.length )]
+}
+
+/**
+ * Sets the tonic for the key, key type, and octave.
+
+ * 
+ * @param {string|number} val - The tonic value, which can be a musical note (e.g., "C4", "g#") 
+ *                              or a MIDI number representing the pitch.
+ */
+export function setTonic(val) {
+  if (typeof val === 'string') {
+    const noteRegex = /[A-Ga-g][#b]?/; // Regular expression to detect musical notes including sharps and flats
+    const numberRegex = /\d+/; // Regular expression to detect numbers
+
+    const noteMatch = val.match(noteRegex);
+    const numberMatch = val.match(numberRegex);
+
+    if (noteMatch) {
+      tonic = noteMatch[0].toUpperCase(); // Set the tonic and convert to uppercase
+      keyType = noteMatch[0] === noteMatch[0].toUpperCase() ? 'major' : 'minor'; // Set the key type based on case
+    }
+
+    if (numberMatch) {
+      octave = parseInt(numberMatch[0], 10); // Set the octave
+    }
+  } else if (typeof val === 'number') {
+    octave = Math.floor(val / 12) - 1; // Calculate the octave from the MIDI number
+    const noteIndex = val % 12;
+    tonic = notes[noteIndex]; // Set the tonic based on the note index
+    //keyType = 'major'; // Default to major when using MIDI number
+  }
+
+  //set midi note of tonic
+  tonicNumber = noteToInterval[tonic]
+
+  console.log(`Tonic: ${tonic}, Number: ${tonicNumber}, Key Type: ${keyType}, Octave: ${octave}`);
+}
+
+export function rotateVoicing(steps){
+  const len = previousChord.length
+  steps = steps % len
+  //console.log(steps, previousChord)
+  let newChord = Array.from({length:len},(x,i)=>{
+    x=previousChord[(i+steps+len)%len]
+    if((i+steps)>=len)x+=12
+    else if( (i+steps) < 0)x-=12
+    return x
+  })
+  
+  previousChord = newChord
+}
+
+//returns chord quality
+function getChordType(name) {
+  const suffix = name.replace(/[iIvVb#]+/, '');
+  let majorMinor = name.match(/[iIvV]+/)[0];
+  if(!majorMinor) majorMinor = 'I'
+
+  const defaultMode = getDefaultMode(majorMinor, keyType)
+
+    //look for a specific scale defined in suffix
+  for (const key of Object.keys(chordScales)) {
+    if (suffix.toLowerCase().includes(key.toLowerCase())) {
+      return key;
+    }
+  }
+  //look for special cases
+  if (suffix.includes('dim'))  return 'diminished';
+  if (suffix.includes('m6'))  return 'dorian';
+  if (suffix.includes('min6'))  return 'dorian';
+  if (suffix.includes('m13'))  return 'dorian';
+  if (suffix.includes('min13'))  return 'dorian';
+  if (suffix.includes('m7b9'))  return 'phrygian';
+  if (suffix.includes('7b9'))  return 'phrygianDominant';
+  if (suffix.includes('Maj7#11'))  return 'lydian';
+  if (suffix.includes('m7b5'))  return 'locrian';
+  if (suffix.includes('7b5'))  return 'lydianDominant';
+  if (suffix.includes('Maj7')) {
+    const isMajor = majorMinor === majorMinor.toUpperCase() 
+    if(defaultMode === 'lydian') return defaultMode
+    return isMajor === true ? 'major7' : 'minorMaj7'
+  }
+  if (suffix.includes('7')) {
+    if(defaultMode !== 'none') return defaultMode
+    else return majorMinor === majorMinor.toUpperCase() ? 'mixolydian' : 'minor7'; 
+  }
+  if (suffix.includes('2')) return 'major9';
+
+  if( defaultMode !== 'none') return defaultMode
+  return majorMinor === majorMinor.toUpperCase() ? 'major' : 'minor';
+}
+
+function getDefaultMode(numeral, key){
+  if (key === 'major'){
+    switch(numeral){
+    case 'I': return 'major'
+    case 'ii': return 'dorian'
+    case 'iii': return 'phrygian'
+    case 'IV': return 'lydian'
+    case 'V': return 'mixolydian'
+    case 'vi': return 'minor'
+    case 'vii': return 'locrian'
+    }
+  }
+  if (key === 'minor'){
+    switch(numeral){
+    case 'i': return 'minor'
+    case 'ii': return 'locrian'
+    case 'III': return 'major'
+    case 'iv': return 'dorian'
+    case 'v': return 'locrian'
+    case 'V': return 'phrygianDominant'
+    case 'VI': return 'lydian'
+    case 'VII': return 'mixolydian'
+    }
+  }
+  return 'none'
+}
+
+function applyVoicing(name, _voicing,scale) {
+  //console.log(_voicing, scale)
+  // Apply different voicings (closed, drop2, drop3, etc.)
+  let cVoicing = voicings[_voicing]
+  let voicedChord = Array(cVoicing.length)
+
+  for(let i=0;i<cVoicing.length;i++){
+    voicedChord[i] = getInterval(cVoicing[i],scale)
+  }
+  //console.log(voicedChord)
+  return voicedChord
+}
+
+function minimizeMovement(chord, previousChord) {
+  let distance = Math.abs(chord[0]%12-previousChord[0]%12)
+  let lowNote = 0
+
+  for(let i=1;i<chord.length;i++){
+    if(Math.abs(chord[i]%12-previousChord[0]%12) < distance){
+      distance = Math.abs(chord[i]%12-previousChord[0]%12)
+        lowNote = i
+    }
+  }
+
+  while(chord[lowNote] < previousChord[0]-2)chord = chord.map(x=>x+12)
+ 
+  for(let i=0;i<chord.length;i++){
+    if(chord[i] < previousChord[0])chord[i]+=12
+  }
+
+  return chord.sort((a, b) => a - b);
+}
 
 /****************** 
  * CHORD Class
@@ -412,14 +397,14 @@ export class Chord {
    * @param {number} [_octave=octave] - The octave in which the chord is played.
    * @param {string} [_voicing=voicing] - The voicing to use for the chord.
    */
-  constructor(name, _octave = Theory2.octave, _voicing = Theory2.voicing) {
+  constructor(name, _octave = octave, _voicing = voicing) {
     this.name = name;
     this.octave = _octave;
     this.voicing = _voicing;
-    this.rootValue = Theory2.getChordRoot(name); //integer 0-11
-    this.quality = Theory2.getChordType(name) //'Maj7'
-    this.scale = Theory2.chordScales[this.quality];
-    if(this.name == 'V7') this.scale = Theory2.chordScales['mixolydian']
+    this.rootValue = getChordRoot(name); //integer 0-11
+    this.quality = getChordType(name) //'Maj7'
+    this.scale = chordScales[this.quality];
+    if(this.name == 'V7') this.scale = chordScales['mixolydian']
     this.chordTones = this.getChordTones(this.rootValue,this.quality,this.scale);
     this.length = this.chordTones.length
   }
@@ -430,13 +415,13 @@ export class Chord {
    * @param {number} [max=null] - The maximum MIDI note number for the interval. Defaults to min + 12.
    * @returns {number} - The MIDI note number for the interval.
    */
-  interval(num, min = 12, max = null){
+  interval(num, min = 48, max = null){
     if(max === null) max = min + 12
     return this.getInterval(num,min,max)
   }
 
   getInterval(num, min = 0, max = 127){ 
-    num = Theory2.getInterval(num, this.scale) + this.rootValue + this.octave*12 
+    num = getInterval(num, this.scale) + this.rootValue + this.octave*12 
     if(num<min) {
       const count = Math.floor((min-num)/12)+1
       for(let i=0;i<count;i++)num += 12
@@ -487,13 +472,13 @@ export class Chord {
   }
 
   applyVoicing(chordTones) {
-    const voicingOffsets = Theory2.voicings[this.voicing];
-    return Theory2.chordTones.map((tone, index) => tone + (voicingOffsets[index] || 0));
+    const voicingOffsets = voicings[this.voicing];
+    return chordTones.map((tone, index) => tone + (voicingOffsets[index] || 0));
   }
 
   getChord(name,  lowNote = null, _voicing = null){
 
-    if(_voicing == null) _voicing = Theory2.voicing
+    if(_voicing == null) _voicing = voicing
 
     // Adjust the chord tones based on the voicing type
     //let chord = applyVoicing(name, _voicing, this.scale);
@@ -508,18 +493,84 @@ export class Chord {
         chord.push( this.scale [parseInt(match[0], 10)%7]); // Convert the matched string to a number
       }
     }
-    chord = chord.map(x=> x+ this.octave*12 + this.rootValue)// + Theory2.tonicNumber)
-
+    //console.log(octave, this.scale, tonicNumber)
+    chord = chord.map(x=> x+ this.octave*12 + this.rootValue + tonicNumber)
+    //console.log(chord)
     // Adjust the chord tones to be as close as possible to the previous chord
-    if (Theory2.previousChord.length > 0) {
-      if(lowNote){ Theory2.previousChord[0] = lowNote}
-      chord = Theory2.minimizeMovement(chord, Theory2.previousChord);
+    if (previousChord.length > 0) {
+      if(lowNote){ previousChord[0] = lowNote}
+      chord = minimizeMovement(chord, previousChord);
     }
-
-    Theory2.previousChord = chord;
-    return chord.map(x=> x + Theory2.tonicNumber)
+    //console.log("post", chord, lowNote)
+    previousChord = chord;
+    return chord
   }
 }
+
+/************************************
+ * Helper functions
+ * ************************************/
+
+export function getChordRoot(name){
+  //parse chord name
+  const romanNumeral = name.match(/[iIvVb#]+/)[0];
+
+  //set keyType
+  if (!romanNumeral) {
+    console.log('incorrent chord name ${name}')
+    return tonicNumber
+  }
+  let degree = 0
+  
+  if (keyType == 'major') {
+    degree =  MajorScaleDegrees[romanNumeral];
+    if(degree == undefined) degree = MinorScaleDegrees[romanNumeral];
+    if(degree == undefined) degree = 0
+  }
+  else {
+    degree =  MinorScaleDegrees[romanNumeral];
+    if(degree == undefined) degree = MajorScaleDegrees[romanNumeral];
+    if(degree == undefined) degree = 0
+  }
+  if(degree == undefined) degree = 0
+
+  return degree % 12
+}
+
+//return midi note numbers for current chord
+function getChordTones(root, quality, scale){
+  let chord = []
+  let len = 3
+  if( /\d/.test(quality)) len = 4
+  for(let i=0;i<len;i++) chord[i] = scale[i*2]+root
+}
+
+function getInterval(num,scale){
+  let len = scale.length
+  if (typeof num === 'number') {
+    let _octave = Math.floor(num/len)
+    if(num<0) num = len+num%len //check negative numbers
+    num = scale[num%len] + _octave*12
+    return num
+  } else if (typeof num === 'string') {
+    //parse num to look for # and b notes
+    const match = num.match(/^([^\d-]+)?(-?\d+)$/);
+
+    //get scale degree
+    num = Number(match[2])
+    let _octave = Math.floor(num/len)
+    if(num<0) num = 7+num%7
+    num = scale[num%len] + _octave*12
+
+    //apply accidentals
+    if(match[1]== '#')num+=1
+    else if (match[1] == 'b') num-=1
+    return num
+  }
+  return 0
+}
+
+
 
 /************************************
  * String parsing functions
@@ -676,7 +727,7 @@ export function parsePitchStringBeat(curBeat, time){
  * @returns {number} - The corresponding MIDI note number.
  */
 export function pitchNameToMidi(name) {
-    const pitchClasses = Theory2.noteToInterval
+    const pitchClasses = noteToInterval
 
     // Normalize input to remove spaces
     name = name.trim()
@@ -725,8 +776,7 @@ export function intervalToMidi(interval, min=12, max = 127) {
     const accidental = interval.match(/[b#]+/g);
 
     let midiNote = -1
-    //console.log(degree, min, max, Theory2.getChord())
-    try{  midiNote = Theory2.getChord().interval(degree,min,max)}
+    try{  midiNote = getChord().interval(degree,min,max)}
     catch(e){ console.log('bad interval: ', degree)}
 
     //console.log(midiNote)
@@ -745,10 +795,7 @@ export function intervalToMidi(interval, min=12, max = 127) {
     // Adjust the MIDI note for flats (# and b are already handled in pitchClasses)
     //let midiNote = pitchClasses[pitchClass] + (octave+1) * 12;
     //return 60
-
-    //console.log(interval, midiNote, Theory2.getChord())
-
-    return midiNote //+ Theory2.tonicNumber;
+    return midiNote;
 }
 
 //parses a symbol and makes sure it is in correct order

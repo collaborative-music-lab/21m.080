@@ -41,8 +41,8 @@ noise.connect( delay_level), vco.connect( delay_level ), player.connect( delay_l
 delay_level.connect( delay )
 delay.connect( vca )
 //
-const scope = new Oscilloscope('PhaseLab')
-vca.connect( scope.input)
+// const scope = new Oscilloscope('PhaseLab')
+// vca.connect( scope.input)
 //
 const spectrum = new Spectroscope('PhaseLab')
 vca.connect( spectrum.input)
@@ -54,38 +54,27 @@ let vol_knob = gui.Knob({
   max: .5, curve: 2
 })
 //
-const sample_period = 1/Tone.context.sampleRate
-console.log('sample rate is ', Tone.context.sampleRate)
-console.log('sample period is ', sample_period)
-let delay_time_coarse = 100
+
 //
 let dly_level_knob = gui.Knob({
   label: 'dly lvl',
   mapto: 'delay_level.factor',
-  curve: 2
+  curve: 2, max:1
 })
-dly_level_knob.value = 1
+dly_level_knob.set(1)
 //
 let feedback_knob = gui.Knob({
   label: 'feedback',
   mapto: 'delay.feedback',
   max: 1, curve: .5
 })
-feedback_knob.value = 0
+feedback_knob.set(0)
 
 let dly_time_knob = gui.Knob({
-  label: 'fineTime',
+  label: 'delay time',
   callback: function(x){
-    delay.delayTime.rampTo( x*sample_period*delay_time_coarse )
-    console.log('dly time (ms): ', sample_period*x*delay_time_coarse*1000)
+    delay.delayTime.rampTo( x/1000 )
+    console.log('dly time (ms): ', x)
   },
-  max: 250, min:1
+  max: 25, min:0, curve: 2
 })
-
-let coarse_time_knob = gui.Knob({
-  label: 'coarseTime',
-  callback: function(x){delay_time_coarse =  x },
-  max: 1/(sample_period*250)-1, 
-  min:1
-})
-coarse_time_knob.value = 0

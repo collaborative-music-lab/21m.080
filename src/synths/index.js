@@ -22,5 +22,7 @@ export { ModDelay } from './Chorus.js';
 //export * from './waveshapers.js';
 export { Snare } from './Snare.js';
 
+export { DrumSynth } from  './DrumVoice.js';
+
 
 

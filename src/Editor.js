@@ -8,7 +8,7 @@ import { StateEffect, StateField } from "@codemirror/state";
 
 
 //tone
-import { NoiseVoice, Resonator, ToneWood, DelayOp, Caverns, AnalogDelay,
+import { DrumVoice, NoiseVoice, Resonator, ToneWood, DelayOp, Caverns, AnalogDelay,
         Rumble, Daisy, Daisies, DatoDuo, ESPSynth, Polyphony, Stripe, Diffuseur, KP, Sympathy, 
         ModDelay, Kick, DrumSampler, Simpler, Snare, Cymbal} from './synths/index.js';
 import { drumPatterns } from './lib/drumPatterns.js';
@@ -100,7 +100,7 @@ const decorationsField = StateField.define({
 function Editor(props) {
     window.p5 = p5;
     window.Tone = Tone;
-    window.Theory = Theory;
+    window.Theory = Theory.Theory2;
     window.ws = waveshapers
     //window.ml5 = ml5;
     window.Oscilloscope = Oscilloscope;
@@ -152,6 +152,7 @@ function Editor(props) {
     window.Simpler = Simpler   
     window.Snare = Snare;
     window.ModDelay = ModDelay;
+    window.DrumVoice = DrumVoice;
 
     //utilities
     window.stepper = stepper
@@ -251,11 +252,11 @@ function Editor(props) {
 
     useEffect(() => {
         // collab-hub socket instance
-        //window.chClient = new CollabHubClient(); // needs to happen once (!)
-        //window.chTracker = new CollabHubTracker(window.chClient);
+        window.chClient = new CollabHubClient(); // needs to happen once (!)
+        window.chTracker = new CollabHubTracker(window.chClient);
 
         // collab-hub join a room
-        //window.chClient.joinRoom('21m080-temp-room'); // TODO change this to the patch-specific room name
+        window.chClient.joinRoom('21m080-temp-room'); // TODO change this to the patch-specific room name
 
         const container = document.getElementById('container');
         if (container) {

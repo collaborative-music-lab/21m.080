@@ -79,7 +79,7 @@ function Editor(props) {
     //window.ml5 = ml5;
     window.Oscilloscope = Oscilloscope;
     window.Spectroscope = Spectroscope;
-    window.CollabHub = CollabHubDisplay;
+    //window.CollabHub = CollabHubDisplay;
     window.plotTransferFunction = PlotTransferFunction;
 
     window.enableAsciiInput = asciiCallbackInstance.enable.bind(asciiCallbackInstance);
@@ -211,11 +211,11 @@ function Editor(props) {
 
     useEffect(() => {
         // collab-hub socket instance
-        window.chClient = new CollabHubClient(); // needs to happen once (!)
-        window.chTracker = new CollabHubTracker(window.chClient);
+        //window.chClient = new CollabHubClient(); // needs to happen once (!)
+        //window.chTracker = new CollabHubTracker(window.chClient);
 
         // collab-hub join a room
-        window.chClient.joinRoom('21m080-temp-room'); // TODO change this to the patch-specific room name
+        //window.chClient.joinRoom('21m080-temp-room'); // TODO change this to the patch-specific room name
 
         const container = document.getElementById('container');
         if (container) {
@@ -417,7 +417,7 @@ function Editor(props) {
             if (typeof window.gui !== 'undefined') {
                 if( p5Code.length > 2) window.gui.p5Code = p5Code;
             } else {
-                console.log(`Warning: p5 instance 'gui' does not exist.`);
+                //console.log(`Warning: p5 instance 'gui' does not exist.`);
             }
         } catch (error) {
             console.log("Error Evaluating Code", error);

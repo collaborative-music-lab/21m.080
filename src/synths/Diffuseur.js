@@ -33,17 +33,87 @@ export class Diffuseur {
     this.input.connect(this.eq);
     this.eq.connect( this.convolver);
     this.convolver.connect(this.output);
+
+    this.sampleFiles = {
+          plate: './audio/plate_reverb.mp3',
+          spring: './audio/spring_reverb.mp3',
+          hall:   './audio/hall_reverb.mp3',
+          ampeg: './audio/ampeg_amp.mp3',
+          marshall: './audio/marshall_amp.mp3',
+          vox:   './audio/voxAC30_amp.mp3',
+          dreadnought: './audio/dreadnought_guitar.mp3',
+          taylor: './audio/taylor_guitar.mp3',
+          guitar:   './audio/custom_guitar.mp3',
+          bell3:  'berklee/bell_mallet_2.mp3',
+          horn: 'berklee/casiohorn2.mp3',
+          chotone:  'berklee/chotone_c4_!.mp3',
+          voice:  'berklee/femalevoice_aa_Db4.mp3',
+          kalimba:  'berklee/Kalimba_1.mp3',
+          dreamyPiano:  'salamander/A5.mp3',
+          softPiano:  'salamander/A4.mp3',
+          piano:  'salamander/A3.mp3',
+          casio: 'casio/C2.mp3'
+        }
   }
 
-  load(url) {
+  load(url = null) {
+    if(url === null){
+      // Create a file input element programmatically
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'audio/*'; // Accept only audio files
+
+        // Handle file selection
+        fileInput.onchange = (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                console.log("No file selected");
+                return;
+            }
+
+            // Use FileReader to read the file as a Data URL
+            const fileReader = new FileReader();
+            fileReader.onload = () => {
+                this.buffer = new Tone.Buffer(fileReader.result)
+                this.convolver.buffer = this.buffer
+                console.log("Audio loaded into diffuseur");
+                return
+            };
+            fileReader.readAsDataURL(file);
+            
+        };
+
+        // Trigger the file dialog
+        fileInput.click();
+    }
+
+    // If the `url` is a number, treat it as an index into the `sampleFiles` object
+    if (typeof url === 'number') {
+        // Convert the keys of the `sampleFiles` object to an array
+        const fileKeys = Object.keys(this.sampleFiles);
+        url = Math.floor(url) % fileKeys.length; // Calculate a valid index
+        url = fileKeys[url]; // Reassign `url` to the corresponding filename
+    }
+
+    // Check if the `url` exists in `sampleFiles`
+    if (url in this.sampleFiles) {
+        console.log(`Diffuseur loading ${url}`);
+        this.sample = url; // Store the selected sample
+    } else {
+        console.error(`The sample "${url}" is not available.`);
+        return;
+    }
+
+    // Load the buffer and assign it to `this.buffer` and `this.convolver.buffer`
     return new Promise((resolve, reject) => {
-      new Tone.Buffer(url, (buffer) => {
-        this.buffer = buffer;
-        this.convolver.buffer = buffer
-        resolve();
-      }, reject);
+        new Tone.Buffer(this.sampleFiles[url], (buffer) => {
+            this.buffer = buffer;
+            this.convolver.buffer = buffer;
+            resolve();
+        }, reject);
     });
-  }
+}
+
 
   async filterIR(filterFreq) {
     if (!this.buffer) {
@@ -208,6 +278,7 @@ export class Diffuseur {
   //   console.log(curve)
   //   return curve;
   // }
+
   setEQ(low,mid,hi){
     this.eq.high.value = hi
     this.eq.mid.value = mid
@@ -222,9 +293,33 @@ export class Diffuseur {
     this.eq.lowFrequency.value = low
   }
 
+  listSamples(){
+        const fileKeys = Object.keys(this.sampleFiles);
+        console.log(fileKeys)
+    }
 
 
+  /**
+   * Connect the output to a destination.
+   * @param {Tone.Signal | AudioNode} destination - The destination to connect to.
+   */
   connect(destination) {
-    this.output.connect(destination);
+    if (destination.input) {
+      this.output.connect(destination.input);
+    } else {
+      this.output.connect(destination);
+    }
+  }
+
+  /**
+   * Disconnect the output from a destination.
+   * @param {Tone.Signal | AudioNode} destination - The destination to disconnect from.
+   */
+  disconnect(destination) {
+    if (destination.input) {
+      this.output.disconnect(destination.input);
+    } else {
+      this.output.disconnect(destination);
+    }
   }
 }

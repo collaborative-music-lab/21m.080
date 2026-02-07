@@ -18,16 +18,32 @@ properties:
 - gain.factor.value
 */
 
-import p5 from 'p5';
 import * as Tone from 'tone';
-import { NoiseVoice } from './NoiseVoice.js';
-import { Resonator } from './Resonator.js';
+import TwinklePresets from './synthPresets/TwinklePresets.json';
+import { MonophonicTemplate } from './MonophonicTemplate.js';
+import {Parameter} from './ParameterModule.js'
+import basicLayout from './layouts/halfLayout.json';
+import paramDefinitions from './params/kpVoiceParams.js';
 
-class Voice{
+export class KP extends MonophonicTemplate{
 	constructor(color = [200,200,200]){
+      super()
+      this.presets = TwinklePresets
+      this.synthPresetName = "TwinklePresets"
+      //this.accessPreset()
+      this.isGlide = false
+      this.backgroundColor = [200,50,50]
+      this.name = "Twinkle"
+      this.guiHeight = 1
+      this.layout = basicLayout
+      this.detuneVal = 0
+
+      this.frequency = new Tone.Signal(100)
+
       this.impulse = new Tone.Noise().start()
       this.hpf = new Tone.Filter({frequency: 200, type:'highpass', Q: 0, rolloff:-24})
       this.lpf = new Tone.Filter({frequency: 1000, type:'lowpass', Q: 0, rolloff:-12})
+      this.lpf2 = new Tone.Filter({frequency: 1000, type:'lowpass', Q: 0, rolloff:-12})
       this.dry = new Tone.Signal(0.)
       this.wet = new Tone.Multiply(1)
       this.vca= new Tone.Multiply(1)
@@ -36,9 +52,9 @@ class Voice{
       //control
       this.env = new Tone.Envelope()
       this.env_depth = new Tone.Multiply(1)
-      this.velocity = new Tone.Multiply(1)
+      this.velocitySig = new Tone.Signal(1)
       this.choke = new Tone.Signal()
-      this.resonance = new Tone.Signal(.9)
+      this.resonanceAmount = new Tone.Signal(.9)
       this.velocity_depth = new Tone.Multiply(1)
       this.lowpassCutoffSignal = new Tone.Signal(1000)
       this.highpassCutoffSignal = new Tone.Signal(1000)
@@ -46,90 +62,168 @@ class Voice{
       this.hpfBandWidthNegate = new Tone.Negate()
       this.hpf_env_depth = new Tone.Multiply()
       this.lpf_env_depth = new Tone.Multiply()
-      this.delayTime = new Tone.Signal(.1)
-      this.detune = new Tone.Multiply(1)
+      this.detuneAmount = new Tone.Signal(0)
       this.output = new Tone.Multiply(1)
       //connections
       this.impulse.connect(this.hpf)
       this.hpf.connect(this.lpf)
       this.lpf.connect(this.vca)
-      this.dry.connect(this.vca.factor)
+      //this.dry.connect(this.vca.factor)
       this.vca.connect(this.wet)
       this.wet.connect(this.delay_1)
       this.wet.connect(this.delay_2)
-      this.delay_1.connect(this.output)
-      this.delay_2.connect(this.output)
-      this.resonance.connect(this.delay_1.resonance)
-      this.resonance.connect(this.delay_2.resonance)
+      this.delay_1.connect(this.lpf2)
+      this.delay_2.connect(this.lpf2)
+      this.lpf2.connect(this.output)
+
+      this.frequency.connect( this.delay_1.delayTime)
+      //this.frequency.connect( this.detuneAmount)
+      this.frequency.connect( this.delay_2.delayTime)
+      this.detuneAmount.connect(this.delay_2.delayTime)
+
+      this.resonanceAmount.connect(this.delay_1.resonance)
+      this.resonanceAmount.connect(this.delay_2.resonance)
       this.choke.connect(this.delay_1.resonance)
       this.choke.connect(this.delay_2.resonance)
       this.env.connect(this.env_depth)
       this.env_depth.connect(this.velocity_depth)
       this.velocity_depth.connect(this.vca.factor)
-      this.velocity.connect(this.velocity_depth)
-      this.delayTime.connect( this.delay_1.delayTime)
-      this.delayTime.connect( this.detune)
-      this.detune.connect( this.delay_2.delayTime)
+      this.velocitySig.connect(this.velocity_depth.factor)
+      
       //filter cutoffs
       this.highpassCutoffSignal.connect( this.hpf.frequency)
       this.lowpassCutoffSignal.connect( this.lpf.frequency)
-      this.env.connect(this.hpf_env_depth.factor)
-      this.env.connect(this.hpf_env_depth.factor)
+      this.lowpassCutoffSignal.connect( this.lpf2.frequency)
+      this.env.connect(this.hpf_env_depth)
+      this.env.connect(this.lpf_env_depth)
       this.hpf_env_depth.connect( this.hpf.frequency)
       this.lpf_env_depth.connect( this.lpf.frequency)
-      //this.bandwidthSignal.connect( this.lpf.frequency)
-      //this.bandwidthSignal.connect(this.hpfBandWidthNegate)
-      //this.hpfBandWidthNegate.connect(this.hpf.frequency)
-	}
+      this.lpf_env_depth.connect( this.lpf2.frequency)
+      // this.bandwidthSignal.connect( this.lpf.frequency)
+      // this.bandwidthSignal.connect(this.hpfBandWidthNegate)
+      // this.hpfBandWidthNegate.connect(this.hpf.frequency)
+	
+
+    // Bind parameters with this instance
+    this.paramDefinitions = paramDefinitions(this)
+    //console.log(this.paramDefinitions)
+    this.param = this.generateParameters(this.paramDefinitions)
+    this.createAccessors(this, this.param);
+
+    //for autocomplete
+    this.autocompleteList = this.paramDefinitions.map(def => def.name);;
+    //for(let i=0;i<this.paramDefinitions.length;i++)this.autocompleteList.push(this.paramDefinitions[i].name)
+    setTimeout(()=>{this.loadPreset('default')}, 500);
+
+  }
   cutoff = function(val,time=null){
-    if(time)this.lowpassCutoffSignal.setValueAtTime(val, time)
-    else this.lowpassCutoffSignal.value = val  
+    if(time){
+      this.lowpassCutoffSignal.setValueAtTime(val, time)
+      this.highpassCutoffSignal.setValueAtTime(val, time)
+    }
+    else {
+      this.lowpassCutoffSignal.rampTo( val , 0.01) 
+      this.highpassCutoffSignal.rampTo( val , 0.01)
+    }
   }
   bandwidth = function(val, time){
     if(time) this.bandwidthSignal.setValueAtTime(val, time)
     else this.bandwidthSignal.value = val
   }
-  frequency = function(val,time=null){
+  setFrequency = function(val,time=null){
     if(time){
-    	this.delayTime.setValueAtTime(1/val, time)
+    	this.frequency.setValueAtTime(1/val, time)
     }
     else {
-    	this.delayTime.rampTo( 1/val, .01)
+    	this.frequency.rampTo( 1/val, .01)
     }
   }
-  triggerAttack = function(val, vel, time=null){
-    if(time){
-      this.env.triggerAttack(time)
-      this.frequency(val, time)
-      this.velocity_depth.linearRampToValueAtTime(vel,.01,time)
-    } else{
-      this.env.triggerAttack()
-      this.frequency(val)
-      this.velocity_depth.rampTo(vel,0.002)
-    }
+  setDamping = function(val){
+      this.delay_1.dampening = val
+      this.delay_2.dampening = val
   }
+  
+  triggerAttack(val, vel = 100, time = null) {
+        vel = vel / 127;
+        if (time) {
+            this.frequency.setValueAtTime(1 / Tone.Midi(val).toFrequency(), time);
+            this.env.triggerAttack(time);
+        } else {
+            this.frequency.value = 1 / Tone.Midi(val).toFrequency();
+            this.env.triggerAttack();
+        }
+    }
   triggerRelease = function(val, time=null){
     if(time) this.env.triggerRelease(time)
     else this.env.triggerRelease()
   }
-  triggerAttackRelease = function(val, vel, dur=0.01, time=null){
-    if(time){
-      this.env.triggerAttackRelease(dur, time)
-      this.frequency(val, time)
-      this.velocity_depth.linearRampToValueAtTime(vel,.01,time)
-    } else{
-      this.env.triggerAttackRelease(dur)
-      this.frequency(val)
-      this.velocity_depth.rampTo(vel,0.002)
+  triggerAttackRelease(val, vel = 100, dur = 0.01, time = null) {
+        //console.log('AR ',val,vel,dur,time)
+        let amp = vel/127
+        if (time) {
+          this.frequency.setValueAtTime(this.frequency.value,time);
+          this.frequency.exponentialRampToValueAtTime(1 / Tone.Midi(val).toFrequency(), time + 0.02);
+            //this.frequency.linearRampToValueAtTime(1 / Tone.Midi(val).toFrequency(), time);
+            this.velocitySig.setValueAtTime(amp, time); // 0.03s time constant for smoother fade
+            this.env.triggerAttackRelease(dur, time);
+            this.updateDetune(1 / Tone.Midi(val).toFrequency(), time)
+        } else {
+            this.frequency.rampTo( 1 / Tone.Midi(val).toFrequency() , .1);
+            this.velocitySig.rampTo(amp, 0.005); // 0.03s time constant for smoother fade
+            this.env.triggerAttackRelease(dur);
+            this.updateDetune( 1 / Tone.Midi(val).toFrequency(), time)
+        }
     }
-  }//attackRelease
+
+    setDetune(val) {
+      let normalizedVal = Math.max(0., Math.min(1, val));
+      if( normalizedVal < 0.01) normalizedVal = 0
+      this.detuneVal = this.detuneFocusCurve(normalizedVal)
+      this.updateDetune(this.frequency.value, null)
+    }
+
+    updateDetune(val, time) {
+    
+      if( time) {
+        this.detuneAmount.setValueAtTime (this.frequency.value * this.detuneVal, time)
+        this.detuneAmount.exponentialRampToValueAtTime(val * this.detuneVal, time + 0.02);
+           
+      }
+      else this.detuneAmount.value =  val * this.detuneVal
+    }
+
+    detuneFocusCurve(x) {
+    // Center at 1, 1.5, 2 with slight flattening using tanh or logistic smoothing
+    // Use a weighted sum of bumps
+    const centerVals = [0, 0.5, 1];
+    const numDivisions = centerVals.length - 1;
+    const divisionSize = 1 / numDivisions;
+    let outputVal = 0
+
+    const sigmoid = (x) => 1 / (1 + Math.exp(-x * 8)); // steeper sigmoid
+
+      for (let i = 0; i < numDivisions; i++) {
+        const start = i * divisionSize;
+        const end = (i + 1) * divisionSize;
+        const center = centerVals[i + 1];
+
+        if (x >= start && x < end) {
+          const normalized = (x - start) / divisionSize; // maps to 0–1
+          const curved = sigmoid(normalized * 2 - 1);     // sigmoid centered at 0
+          let outputVal =  start + curved * divisionSize;          // remap to original range
+          //if(outputVal < 0.00001) outputVal = 0
+          return outputVal
+        }
+      }
+      return x; // fallback
+  }
 }
 
-export class KP {
+class KP2 {
   constructor(num = 8, color = [200,200,200]){
     this.numVoices = num
     this.voice = []
-    for(let i=0;i<this.numVoices;i++) this.voice.push(new Voice())
+    for(let i=0;i<this.numVoices;i++) this.voice.push(new KP())
     
     //waveShaper
     this.clip = new Tone.Multiply(0.125)
@@ -293,7 +387,7 @@ export class KP {
   }
   setDetune(val){
     for(let i=0;i<this.numVoices;i++) {
-      this.voice[i].detune.value = val
+      this.voice[i].detuneAmount.value = val
     }
   }
   setDry(val){

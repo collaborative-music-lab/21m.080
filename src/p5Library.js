@@ -1,19 +1,23 @@
 import { initialize, divResized, drawElements, drawBackground, GuiColors, 
-    setColor, setFont, setTheme, debug,
+    setColor, setFont, setp5Theme, debug,
     listThemes, setThemeParameters, exportTheme } from './p5Elements';
 
-export const sketch = (p) => {
+import themes from './p5Themes.json';
+
+export const sketch = (p, config = {}) => {
     let grey = p.color(220, 229, 234);
     let div;
     p.setColor = setColor;
     p.setFont = setFont;
     p.debug = debug
+    p.backgroundColor = [0,0,0]
 
     //theme functions
-    p.setTheme = setTheme
+    p.setTheme = setp5Theme
     p.listThemes = listThemes
     p.setThemeParameters = setThemeParameters
     p.exportTheme = exportTheme
+    //p.theme = setp5Theme('default')
 
     p.p5Code = '';
 
@@ -22,11 +26,13 @@ export const sketch = (p) => {
     p.setup = function () {
         let divID = p.canvas.parentElement.id;
         let div = document.getElementById(p.canvas.parentElement.id);
-        // div = document.getElementById(props.id);
-        let dim =  p.initialize(div, grey) 
+        if( config.height === undefined) config.height = 1
+        let dim =  p.initialize(div, config.height)
 
+        p.activeTheme = themes['dark']
         p.width = dim[0]
         p.height = dim[1]
+        //console.log(p.width, p.height)
         p.frame = 0
         p.x = 0
         p.y = 0
@@ -96,7 +102,7 @@ export const sketch = (p) => {
     }
 
     p.windowResized = function () {
-        p.divResized();
+        //p.divResized();
     };
 
     p.openWebcam = function(width, height) {

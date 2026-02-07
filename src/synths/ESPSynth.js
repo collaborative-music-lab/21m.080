@@ -8,14 +8,16 @@ import p5 from 'p5';
 import * as Tone from 'tone';
 import {MultiVCO} from '../MultiVCO.js'
 import {stepper} from  '../Utilities.js'
-import ESPSynthPresets from './synthPresets/ESPSynthPresets.json';
-import { MonophonicTemplate } from './MonophonicTemplate';
+// import ESPSynthPresets from './synthPresets/ESPSynthPresets.json';
+import { MonophonicTemplate } from './MonophonicTemplate.js';
 
 export class ESPSynth extends MonophonicTemplate {
     constructor (gui = null, waves = ['triangle', 'sawtooth', 'square', 'square', 'square', 'noise'], pitches = [1, 1, 1, 0.5, 0.25, 1]) {
         super()
         this.gui = gui
-        this.presets = ESPSynthPresets
+    	this.presets = {};
+		this.synthPresetName = "ESPSynthPresets"
+		this.accessPreset()
         this.name = "ESPSynth"
         //console.log(this.name, " loaded, available preset: ", ESPSynthPresets)
 
@@ -110,7 +112,7 @@ export class ESPSynth extends MonophonicTemplate {
         }
     }
 
-    octaveMapping(x) {
+    octaveMapping = (x)=> {
         if (x !== undefined) {
             if (x === '4') return 2;
             else if (x === '8') return 1;
@@ -119,13 +121,15 @@ export class ESPSynth extends MonophonicTemplate {
         else return 1
     }
 
-    lfoControl(x) {
+    lfoControl = (x)=> {
         if (x !== undefined) {
             let controlVal = Math.abs(x-0.5) * 2
             let lfoDepth = 50
             if (x < 0.47) {
-                this.lfo.min = -lfoDepth * stepper(controlVal, 0, 1, [[0,0],[0.6,0.2],[1,1]])
-                this.lfo.max = lfoDepth * stepper(controlVal, 0, 1, [[0,0],[0.6,0.2],[1,1]])
+                //this.lfo.min = -lfoDepth * stepper(controlVal, 0, 1, [[0,0],[0.6,0.2],[1,1]])
+                this.lfo.min = -lfoDepth * controlVal
+                // this.lfo.max = lfoDepth * stepper(controlVal, 0, 1, [[0,0],[0.6,0.2],[1,1]])
+                this.lfo.max = lfoDepth * controlVal
                 this.vibratoSwitch.value = 1
                 this.wahSwitch.value = 0
             }
@@ -135,35 +139,14 @@ export class ESPSynth extends MonophonicTemplate {
             }
             else if (x > 0.49) {
                 this.lfo.min =  0
-                this.lfo.max = lfoDepth * stepper(controlVal, 0, 1, [[0,0],[0.6,0.2],[1,1]])
+                //this.lfo.max = lfoDepth * stepper(controlVal, 0, 1, [[0,0],[0.6,0.2],[1,1]])
+                this.lfo.max = lfoDepth * controlVal
                 this.vibratoSwitch.value = 0
                 this.wahSwitch.value = 100 * controlVal
             }
         }
     }
 
-    polyLfoControl(x) {
-        if (x !== undefined) {
-            let controlVal = Math.abs(x-0.5) * 2
-            let lfoDepth = 50
-            if (x < 0.47) {
-                this.super.set('lfo.min', -lfoDepth * stepper(controlVal, 0, 1, [[0,0],[0.6,0.2],[1,1]]))
-                this.super.set('lfo.max', lfoDepth * stepper(controlVal, 0, 1, [[0,0],[0.6,0.2],[1,1]]))
-                this.super.set('vibratoSwitch.value', 1)
-                this.super.set('wahSwitch.value', 0)
-            }
-            else if (x >= 0.47 && x <= 0.49) {
-                this.super.set('vibratoSwitch.value', 0)
-                this.super.set('wahSwitch.value', 0)
-            }
-            else if (x > 0.49) {
-                this.super.set('lfo.min', 0)
-                this.super.set('lfo.max', lfoDepth * stepper(controlVal, 0, 1, [[0,0],[0.6,0.2],[1,1]]))
-                this.super.set('vibratoSwitch.value', 0)
-                this.super.set('wahSwitch.value', 100 * controlVal)
-            }
-        }
-    }
 
     //envelopes
     triggerAttack (freq, amp, time=null){ 
@@ -229,12 +212,16 @@ export class ESPSynth extends MonophonicTemplate {
         this.output.factor.value = out
     } 
 
+    setVcoGain(num,val){
+        this.vco.setGain(num, val)
+    }
+
     initGui(gui = this.gui) {
         this.gui = gui
         this.octave_radio =  this.gui.RadioButton({
             label:'octave',
             radioOptions: ['4','8','16'],
-            callback: (x)=>{this.pitchshift.value = this.octaveMapping(x)},
+            callback: x=>this.pitchshift.value = this.octaveMapping(x),
             x: 5, y:50,size:1, orientation:'vertical'
         })
         this.octave_radio.set('8');
@@ -243,7 +230,7 @@ export class ESPSynth extends MonophonicTemplate {
 
         this.triangle_fader = this.gui.Slider({
             label:'tri',
-            callback: (x)=>{this.vco.setGain(0, x)},
+            callback: (x)=>{this.setVcoGain(0, x)},
             x: 11, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -255,7 +242,7 @@ export class ESPSynth extends MonophonicTemplate {
 
         this.saw_fader = this.gui.Slider({
             label:'saw',
-            callback: (x)=>{this.vco.setGain(1, x)},
+            callback: (x)=>{this.setVcoGain(1, x)},
             x: 17, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -267,7 +254,7 @@ export class ESPSynth extends MonophonicTemplate {
 
         this.square_fader = this.gui.Slider({
             label:'squ',
-            callback: (x)=>{this.vco.setGain(2, x)},
+            callback: (x)=>{this.setVcoGain(2, x)},
             x: 23, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -279,7 +266,7 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.octave_down_fader = this.gui.Slider({
             label:'-1',
-            callback: (x)=>{this.vco.setGain(3, x)},
+            callback: (x)=>{this.setVcoGain(3, x)},
             x: 29, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -291,7 +278,7 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.two_octave_down_fader = this.gui.Slider({
             label:'-2',
-            callback: (x)=>{this.vco.setGain(4, x)},
+            callback: (x)=>{this.setVcoGain(4, x)},
             x: 35, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -303,7 +290,7 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.noise_fader = this.gui.Slider({
             label:'noise',
-            callback: (x)=>{this.vco.setGain(5, x)},
+            callback: (x)=>{this.setVcoGain(5, x)},
             x: 41, y: 50, size: 1.5,
             min:0.0001, max: 2,
             orientation: 'vertical',
@@ -331,7 +318,7 @@ export class ESPSynth extends MonophonicTemplate {
             callback: (x)=>{this.lfo.frequency.value = x},
             x: 35, y: 23, size:1.1,
             showValue: false,
-            min:0.01, max: 20
+            min:0.01, max: 20,curve:2.5
         })
         this.lfo_speed_knob.set( 10 )
         this.lfo.frequency.value = 10
@@ -342,10 +329,11 @@ export class ESPSynth extends MonophonicTemplate {
 
         this.cutoff_frequency_knob = this.gui.Knob({
             label:'frequency',
-            callback: (x)=>{this.cutoff.value = stepper(x, 50, 2500, [[0,0],[0.95,0.75], [1,1]])},
+            // callback: (x)=>{this.cutoff.value = stepper(x, 50, 2500, [[0,0],[0.95,0.75], [1,1]])},
+            callback: (x)=>{this.cutoff.value = x},
             x: 53, y: 25, size:1.4,
             showValue: false,
-            min:50, max: 2500
+            min:50, max: 2500, curve:2
         })
         this.cutoff_frequency_knob.set( 1200 )
         this.cutoff.value = 1200
@@ -418,8 +406,9 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.attack_fader = this.gui.Slider({
             label:'A',
-            callback: (x)=>{this.env.attack = stepper(x, 0, 10, [[0,0],[0.01,0.01], [0.4, 0.03], [0.7, 0.25], [0.85, 0.5], [1,1]])},
-            x: 76, y: 36, size: 1, curve: 1,
+            //callback: (x)=>{this.env.attack = stepper(x, 0, 10, [[0,0],[0.01,0.01], [0.4, 0.03], [0.7, 0.25], [0.85, 0.5], [1,1]])},
+            callback: (x)=>{this.env.attack = x},
+            x: 76, y: 36, size: 1, curve: 2,
             min:0.01, max: 10,
             orientation: 'vertical',
             showValue: false,
@@ -431,8 +420,9 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.decay_fader = this.gui.Slider({
             label:'D',
-            callback: (x)=>{this.env.decay = stepper(x, 0, 10, [[0,0],[0.01,0.01], [0.4, 0.03], [0.7, 0.25], [0.85, 0.5], [1,1]])},
-            x: 82, y: 36, size: 1, curve: 1,
+            //callback: (x)=>{this.env.decay = stepper(x, 0, 10, [[0,0],[0.01,0.01], [0.4, 0.03], [0.7, 0.25], [0.85, 0.5], [1,1]])},
+            callback: (x)=>{this.env.decay = x},
+            x: 82, y: 36, size: 1, curve: 2,
             min:0.01, max: 10,
             orientation: 'vertical',
             showValue: false,
@@ -457,9 +447,10 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.release_fader = this.gui.Slider({
             label:'R',
-            callback: (x)=>{this.env.release = stepper(x, 0, 20, [[0,0],[0.01,0.01], [0.4, 0.03], [0.7, 0.25], [0.85, 0.5], [1,1]])},
+            //callback: (x)=>{this.env.release = stepper(x, 0, 20, [[0,0],[0.01,0.01], [0.4, 0.03], [0.7, 0.25], [0.85, 0.5], [1,1]])},
+            callback: (x)=>{this.env.release = x},
             x: 94, y: 36, size: 1,
-            min:0.1, max: 20,
+            min:0.1, max: 20, curve:2,
             orientation: 'vertical',
             showValue: false,
         })
@@ -470,13 +461,13 @@ export class ESPSynth extends MonophonicTemplate {
         
         this.chorus_filter_knob = this.gui.Knob({
             label:'chorus',
-            callback: (x)=>{this.chorgain.factor.value = x},
+            callback: (x)=>{this.chor.wet.value = x},
             x: 91, y: 15, size:0.85,
             min:0.0001, max: 1,
             showValue: false,
         })
         this.chorus_filter_knob.set( 0.0001 )
-        this.chorgain.factor.value = 0.0001
+        //this.chorgain.factor.value = 0.0001
         this.chorus_filter_knob.borderColor = [178,192,191]
         this.chorus_filter_knob.accentColor = [255,162,1]
         this.chorus_filter_knob.border = 5
@@ -499,275 +490,6 @@ export class ESPSynth extends MonophonicTemplate {
             this.volume_knob, this.velocity_filter_knob, this.velocity_volume_knob, this.attack_fader,
             this.decay_fader, this.sustain_fader, this.release_fader, this.chorus_filter_knob, 
             this.dist_volume_knob]
-    }
-
-    initPolyGui(superClass, gui){
-        this.gui = gui
-        this.super = superClass
-
-        this.octave_radio =  this.gui.RadioButton({
-            label:'octave',
-            radioOptions: ['4','8','16'],
-            callback: (x)=>{this.super.set('pitchshift.value', this.octaveMapping(x))},
-            x: 5, y:50,size:1, orientation:'vertical'
-        })
-        this.octave_radio.set('8');
-        this.octave_radio.accentColor = [122,132,132]
-        this.octave_radio.borderColor = [178,192,191]
-
-        this.triangle_fader = this.gui.Slider({
-            label:'tri',
-            callback: (x)=>{this.super.set('vco.gainStages.0.factor.value', x)},
-            x: 11, y: 50, size: 1.5,
-            min:0.0001, max: 2,
-            orientation: 'vertical',
-            showValue: false,
-        })
-        this.triangle_fader.accentColor = [255,162,1]
-        this.triangle_fader.borderColor = [20, 20, 20]
-        this.triangle_fader.set(1)
-
-        this.saw_fader = this.gui.Slider({
-            label:'saw',
-            callback: (x)=>{this.super.set('vco.gainStages.1.factor.value', x)},
-            x: 17, y: 50, size: 1.5,
-            min:0.0001, max: 2,
-            orientation: 'vertical',
-            showValue: false,
-        })
-        this.saw_fader.accentColor = [255,162,1]
-        this.saw_fader.borderColor = [20, 20, 20]
-        this.saw_fader.set(1)
-
-        this.square_fader = this.gui.Slider({
-            label:'squ',
-            callback: (x)=>{this.super.set('vco.gainStages.2.factor.value', x)},
-            x: 23, y: 50, size: 1.5,
-            min:0.0001, max: 2,
-            orientation: 'vertical',
-            showValue: false,
-        })
-        this.square_fader.accentColor = [255,162,1]
-        this.square_fader.borderColor = [20, 20, 20]
-        this.square_fader.set(1)
-        
-        this.octave_down_fader = this.gui.Slider({
-            label:'-1',
-            callback: (x)=>{this.super.set('vco.gainStages.3.factor.value', x)},
-            x: 29, y: 50, size: 1.5,
-            min:0.0001, max: 2,
-            orientation: 'vertical',
-            showValue: false,
-        })
-        this.octave_down_fader.accentColor = [255,162,1]
-        this.octave_down_fader.borderColor = [20, 20, 20]
-        this.octave_down_fader.set(1)
-        
-        this.two_octave_down_fader = this.gui.Slider({
-            label:'-2',
-            callback: (x)=>{this.super.set('vco.gainStages.4.factor.value', x)},
-            x: 35, y: 50, size: 1.5,
-            min:0.0001, max: 2,
-            orientation: 'vertical',
-            showValue: false,
-        })
-        this.two_octave_down_fader.accentColor = [255,162,1]
-        this.two_octave_down_fader.borderColor = [20, 20, 20]
-        this.two_octave_down_fader.set(1)
-        
-        this.noise_fader = this.gui.Slider({
-            label:'noise',
-            callback: (x)=>{this.super.set('vco.gainStages.5.factor.value', x)},
-            x: 41, y: 50, size: 1.5,
-            min:0.0001, max: 2,
-            orientation: 'vertical',
-            showValue: false,
-        })
-        this.noise_fader.accentColor = [255,162,1]
-        this.noise_fader.borderColor = [20, 20, 20]
-        this.noise_fader.set(1)
-        
-        this.lfo_intensity_knob = this.gui.Knob({
-            label:'vib/wah',
-            callback: (x)=>{this.polyLfoControl(x)},
-            x: 20, y: 23, size:1.1,
-            showValue: false,
-            min:0.0001, max: 0.95
-        })
-        this.lfo_intensity_knob.set( 0.48 )
-        this.lfo_intensity_knob.borderColor = [178,192,191]
-        this.lfo_intensity_knob.accentColor = [255,162,1]
-        this.lfo_intensity_knob.border = 5
-        
-        this.lfo_speed_knob = this.gui.Knob({
-            label:'speed',
-            callback: (x)=>{this.super.set('lfo.frequency.value' , x)},
-            x: 35, y: 23, size:1.1,
-            showValue: false,
-            min:0.01, max: 20
-        })
-        this.lfo_speed_knob.set( 10 )
-        this.super.set('lfo.frequency.value', 10)
-        this.lfo_speed_knob.borderColor = [178,192,191]
-        this.lfo_speed_knob.accentColor = [255,162,1]
-        this.lfo_speed_knob.border = 5
-        
-
-        this.cutoff_frequency_knob = this.gui.Knob({
-            label:'frequency',
-            callback: (x)=>{this.super.set('cutoff.value', stepper(x, 50, 2500, [[0,0],[0.95,0.75], [1,1]]))},
-            x: 53, y: 25, size:1.4,
-            showValue: false,
-            min:50, max: 2500
-        })
-        this.cutoff_frequency_knob.set( 1200 )
-        this.super.set('cutoff.value' , 1200)
-        this.cutoff_frequency_knob.borderColor = [178,192,191]
-        this.cutoff_frequency_knob.accentColor = [255,162,1]
-        this.cutoff_frequency_knob.border = 5
-        
-        
-        this.resonance_knob = this.gui.Knob({
-            label:'resonance',
-            callback: (x)=>{ this.super.set('vcf.Q.value', x)},
-            x: 53, y: 72, size:1.4,
-            min:0.99999, max: 18, curve: 2,
-            showValue: false,
-        })
-        this.resonance_knob.set( 1 )
-        this.super.set('vcf.Q.value', 1)
-        this.resonance_knob.borderColor = [178,192,191]
-        this.resonance_knob.accentColor = [255,162,1]
-        this.resonance_knob.border = 5
-        
-        this.asdr_int_knob = this.gui.Knob({
-            label:'VCF Env Depth',
-            callback: (x)=>{this.super.set('vcfEnvDepth.factor.value', x)},
-            x: 66, y: 34, size:0.85, curve: 3,
-            min:0, max: 5000,
-            showValue: false,
-        })
-        this.asdr_int_knob.set( 0.01 )
-        this.asdr_int_knob.borderColor = [178,192,191]
-        this.asdr_int_knob.accentColor = [255,162,1]
-        this.asdr_int_knob.border = 5
-        
-        this.volume_knob = this.gui.Knob({
-            label:'volume',
-            callback: (x)=>{this.super.set('output.factor.value',  x)},
-            x: 66, y: 68, size:0.85,
-            min:0.0001, max: 1.5,
-            showValue: false,
-        })
-        this.volume_knob.set( 1 )
-        this.super.set('output.factor.value', 1)
-        this.volume_knob.borderColor = [178,192,191]
-        this.volume_knob.accentColor = [255,162,1]
-        this.volume_knob.border = 5
-        
-        this.velocity_filter_knob = this.gui.Knob({
-            label:'velo filter',
-            callback: (x)=>{this.super.set('vcfDynamicRange', x)},
-            x: 77, y: 15, size:0.85,
-            min:0.01, max: 0.99,
-            showValue: false,
-        })
-        this.velocity_filter_knob.set( 0.99 )
-        this.velocity_filter_knob.borderColor = [178,192,191]
-        this.velocity_filter_knob.accentColor = [255,162,1]
-        this.velocity_filter_knob.border = 5
-        
-        this.velocity_volume_knob = this.gui.Knob({
-            label:'velo volume',
-            callback: (x)=>{this.super.set('vcaDynamicRange', x)},
-            x: 77, y: 83, size:0.85,
-            min:0.01, max: 0.99,
-            showValue: false,
-        })
-        this.velocity_volume_knob.set( 0.99 )
-        this.velocity_volume_knob.borderColor = [178,192,191]
-        this.velocity_volume_knob.accentColor = [255,162,1]
-        this.velocity_volume_knob.border = 5
-        
-        this.attack_fader = this.gui.Slider({
-            label:'A',
-            callback: (x)=>{this.super.set('env.attack' , stepper(x, 0, 10, [[0,0],[0.01,0.01], [0.4, 0.03], [0.7, 0.25], [0.85, 0.5], [1,1]]))},
-            x: 76, y: 36, size: 1, curve: 1,
-            min:0.01, max: 10,
-            orientation: 'vertical',
-            showValue: false,
-        })
-        this.attack_fader.accentColor = [255,162,1]
-        this.attack_fader.borderColor = [20, 20, 20]
-        this.super.set('env.attack' , 0.1)
-        this.attack_fader.set(0.1)
-        
-        this.decay_fader = this.gui.Slider({
-            label:'D',
-            callback: (x)=>{this.super.set('env.decay' , stepper(x, 0, 10, [[0,0],[0.01,0.01], [0.4, 0.03], [0.7, 0.25], [0.85, 0.5], [1,1]]))},
-            x: 82, y: 36, size: 1, curve: 1,
-            min:0.01, max: 10,
-            orientation: 'vertical',
-            showValue: false,
-        })
-        this.decay_fader.accentColor = [255,162,1]
-        this.decay_fader.borderColor = [20, 20, 20]
-        this.super.set('env.decay' , 0.1)
-        this.decay_fader.set(0.1)
-        
-        this.sustain_fader = this.gui.Slider({
-            label:'S',
-            callback: (x)=>{this.super.set('env.sustain' , x)},
-            x: 88, y: 36, size: 1,
-            min:0.0001, max: 1,
-            orientation: 'vertical',
-            showValue: false,
-        })
-        this.sustain_fader.accentColor = [255,162,1]
-        this.sustain_fader.borderColor = [20, 20, 20]
-        this.sustain_fader.set(1)
-        this.super.set('env.sustain' , 1)
-        
-        this.release_fader = this.gui.Slider({
-            label:'R',
-            callback: (x)=>{this.super.set('env.release' , stepper(x, 0, 20, [[0,0],[0.01,0.01], [0.4, 0.03], [0.7, 0.25], [0.85, 0.5], [1,1]]))},
-            x: 94, y: 36, size: 1,
-            min:0.1, max: 20,
-            orientation: 'vertical',
-            showValue: false,
-        })
-        this.release_fader.accentColor = [255,162,1]
-        this.release_fader.borderColor = [20, 20, 20]
-        this.release_fader.set(1)
-        this.super.set('env.release' , 1)
-        
-        this.chorus_filter_knob = this.gui.Knob({
-            label:'chorus',
-            callback: (x)=>{
-                this.super.set('chor.wet.value' , x)
-              //  this.super.set('chor.')
-            },
-            x: 91, y: 15, size:0.85,
-            min:0.000, max: 1,
-            showValue: false,
-        })
-        this.chorus_filter_knob.set( 0.0001 )
-        this.super.set('chorgain.factor.value' , 0.0001)
-        this.chorus_filter_knob.borderColor = [178,192,191]
-        this.chorus_filter_knob.accentColor = [255,162,1]
-        this.chorus_filter_knob.border = 5
-        
-        this.dist_volume_knob = this.gui.Knob({
-            label:'Overdrive',
-            callback: (x)=>{this.super.set('dist.distortion' , x)},
-            x: 91, y: 83, size:0.85,
-            min:0.0001, max: 1,
-            showValue: false,
-        })
-        this.dist_volume_knob.set( 0.0001 )
-        this.dist_volume_knob.borderColor = [178,192,191]
-        this.dist_volume_knob.accentColor = [255,162,1]
-        this.dist_volume_knob.border = 5
     }
 }
 

@@ -1,7 +1,6 @@
 /* Intro
 Be sure to open the javascript console in Chrome for this tutorial
-Also, click the '+' button next to export
-- makes the codebox fullscreen!
+Also, you can drag the divider to make the codebox wider
 */
 
 /**** A - Variables, values, and objects *****/

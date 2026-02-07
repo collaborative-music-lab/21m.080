@@ -36,7 +36,7 @@ export class MultiVCO{
         }
     }
 
-    addVoice(vcoType) {
+    addVoice = (vcoType)=> {
         this.freqScalars.push(new Tone.Multiply(1))
         if (vcoType === 'noise') {
             this.vco.push(new Tone.Noise("white").start())
@@ -55,7 +55,7 @@ export class MultiVCO{
         this.output.factor.value = 1/this.numInputs
     }
 
-    removeVoice(index = 0) {
+    removeVoice = (index = 0)=> {
         this.vco[index].stop()
         this.frequency.disconnect(this.freqScalars[index])
         if (this.vco[index].type !== 'noise') {
@@ -78,7 +78,7 @@ export class MultiVCO{
         this.output.factor.value = this.numInputs === 0 ? 1 : 1/this.numInputs
     }
 
-    setPitchshift(index, shift) {
+    setPitchshift= (index, shift) =>{
         if (index >= this.numInputs || index < 0) {
             console.log("Index out of range")
         }
@@ -87,7 +87,7 @@ export class MultiVCO{
         }
     }
 
-    setGain(index, level) {
+    setGain = (index, level)=> {
         if (index >= this.numInputs || index < 0) {
             console.log("Index out of range")
         }

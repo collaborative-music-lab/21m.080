@@ -1184,18 +1184,18 @@ function Editor(props) {
 
     useEffect(() => {
         //rerouting console log
-          const originals = {
-            log: console.log,
-            warn: console.warn,
-            error: console.error
-          };
+          // const originals = {
+          //   log: console.log,
+          //   warn: console.warn,
+          //   error: console.error
+          // };
 
-          Object.entries(originals).forEach(([type, original]) => {
-            console[type] = (...args) => {
-              original(...args);
-              addToInternalConsole({ type, args });
-            };
-          });
+          // Object.entries(originals).forEach(([type, original]) => {
+          //   console[type] = (...args) => {
+          //     original(...args);
+          //     addToInternalConsole({ type, args });
+          //   };
+          // });
 
 
         return () => {
@@ -1217,9 +1217,9 @@ function Editor(props) {
             }
 
             //console logs
-            Object.entries(originals).forEach(([type, original]) => {
-              console[type] = original;
-            });
+            // Object.entries(originals).forEach(([type, original]) => {
+            //   console[type] = original;
+            // });
         };
     }, []);
 

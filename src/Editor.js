@@ -1223,59 +1223,59 @@ function Editor(props) {
         };
     }, []);
 
-    const textConsoleRef = useRef(null);
-    const consoleLinesRef = useRef([]);
+    // const textConsoleRef = useRef(null);
+    // const consoleLinesRef = useRef([]);
 
-    window.openConsole = () => {
-      if (textConsoleRef.current) {
-        return textConsoleRef.current;
-      }
+    // window.openConsole = () => {
+    //   if (textConsoleRef.current) {
+    //     return textConsoleRef.current;
+    //   }
 
-      const tc = new window.TextField();
-      textConsoleRef.current = tc;
+    //   const tc = new window.TextField();
+    //   textConsoleRef.current = tc;
 
-      consoleLinesRef.current.forEach(line => {
-        tc.writeLine(line);
-      });
+    //   consoleLinesRef.current.forEach(line => {
+    //     tc.writeLine(line);
+    //   });
 
-      return tc;
-    };
+    //   return tc;
+    // };
 
-    const addToInternalConsole = (entry) => {
-      let type = "log";
-      let args = [];
+    // const addToInternalConsole = (entry) => {
+    //   let type = "log";
+    //   let args = [];
 
-      // Normalize input
-      if (Array.isArray(entry)) {
-        args = entry;
-      } else if (entry && typeof entry === "object") {
-        type = entry.type || "log";
-        args = Array.isArray(entry.args) ? entry.args : [entry.args];
-      } else {
-        args = [entry];
-      }
+    //   // Normalize input
+    //   if (Array.isArray(entry)) {
+    //     args = entry;
+    //   } else if (entry && typeof entry === "object") {
+    //     type = entry.type || "log";
+    //     args = Array.isArray(entry.args) ? entry.args : [entry.args];
+    //   } else {
+    //     args = [entry];
+    //   }
 
-      const line = args
-        .map(v => {
-          if (typeof v === "string") return v;
-          try {
-            return JSON.stringify(v, null, 2);
-          } catch {
-            return String(v);
-          }
-        })
-        .join(" ");
+    //   const line = args
+    //     .map(v => {
+    //       if (typeof v === "string") return v;
+    //       try {
+    //         return JSON.stringify(v, null, 2);
+    //       } catch {
+    //         return String(v);
+    //       }
+    //     })
+    //     .join(" ");
 
-      consoleLinesRef.current.push({ type, line });
+    //   consoleLinesRef.current.push({ type, line });
 
-      if (textConsoleRef.current) {
-        textConsoleRef.current.writeLine(
-          type === "error" ? `[error] ${line}` :
-          type === "warn"  ? `[warn] ${line}`  :
-                             line
-        );
-      }
-    };
+    //   if (textConsoleRef.current) {
+    //     textConsoleRef.current.writeLine(
+    //       type === "error" ? `[error] ${line}` :
+    //       type === "warn"  ? `[warn] ${line}`  :
+    //                          line
+    //     );
+    //   }
+    // };
 
 
     //remote users

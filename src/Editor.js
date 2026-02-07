@@ -399,7 +399,9 @@ function Editor(props) {
      *
      *************************************************/
     // Save history in browser
-    const serializedState = localStorage.getItem(`${props.page}EditorState`);
+    const STORAGE_PREFIX = "mysite";
+
+    const serializedState = localStorage.getItem(`${STORAGE_PREFIX}-${props.page}EditorState`);
 
     //console.log(serializedState)
     // Decoding the URL and reloading the page
@@ -416,7 +418,7 @@ function Editor(props) {
             // while (encodedContent.length % 4 !== 0) {
             //     encodedContent += '=';
             // }
-            localStorage.setItem(`${props.page}Value`, encodedContent);
+            localStorage.setItem(`${STORAGE_PREFIX}-${props.page}Value`, encodedContent);
             const url = window.location.origin + window.location.pathname;
             window.location.assign(url);
         }
@@ -424,7 +426,7 @@ function Editor(props) {
 
     urlDecode();
     //console.log('test')
-    const value = localStorage.getItem(`${props.page}Value`) || props.starterCode;
+    const value = localStorage.getItem(`${STORAGE_PREFIX}-${props.page}Value`) || props.starterCode;
 
     function create_sequencer_gui(gui) {
         let num_pads = 8
@@ -1780,11 +1782,11 @@ function Editor(props) {
             //console.log(currentDoc);
         }
 
-        localStorage.setItem(`${props.page}Value`, value);
+        localStorage.setItem(`${STORAGE_PREFIX}-${props.page}Value`, value);
         setCode(value);
         //viewUpdate.view.dom.clientHeight = document.getElementById('main').clientHeight;
         const state = viewUpdate.state.toJSON(stateFields);
-        localStorage.setItem(`${props.page}EditorState`, JSON.stringify(state));
+        localStorage.setItem(`${STORAGE_PREFIX}-${props.page}EditorState`, JSON.stringify(state));
 
         if (viewUpdate.changes) {
           try {
@@ -1858,7 +1860,7 @@ function Editor(props) {
     //Handle refresh/max/min buttons
     const refreshClicked = () => {
         setRefresh(true);
-        localStorage.setItem(`${props.page}Value`, props.starterCode);
+        localStorage.setItem(`${STORAGE_PREFIX}-${props.page}Value`, props.starterCode);
     }
 
     /************************************************
@@ -2107,7 +2109,7 @@ function Editor(props) {
                 if (loadInEditor) {
                     // Load into editor - replace with starter template
                     const starterTemplate = `/*\n  Alt(option)-Enter: Evaluate Line\n  Alt(option)-Shift-Enter: Evaluate Block\n*/\n\n${text}`;
-                    localStorage.setItem(`${props.page}Value`, starterTemplate);
+                    localStorage.setItem(`${STORAGE_PREFIX}-${props.page}Value`, starterTemplate);
                     setCode(starterTemplate);
                     setRefresh(!refresh);
                     console.log(`✓ Loaded ${file.name} into editor`);
@@ -2255,7 +2257,7 @@ function Editor(props) {
     }
 
     function exportAsLink(code) {
-        const liveCode = localStorage.getItem(`${props.page}Value`);
+        const liveCode = localStorage.getItem(`${STORAGE_PREFIX}-${props.page}Value`);
         const compressedCode = LZString.compressToEncodedURIComponent(liveCode)
         // .replace(/\+/g, '-')
         // .replace(/\//g, '_')
@@ -2268,12 +2270,12 @@ function Editor(props) {
 
     //Export webpage code
     const exportAsTextFile = () => {
-        const blob = new Blob([localStorage.getItem(`${props.page}Value`)], { type: 'text/plain' });
+        const blob = new Blob([localStorage.getItem(`${STORAGE_PREFIX}-${props.page}Value`)], { type: 'text/plain' });
         let filename = prompt('Enter the filename:', 'mySynth.txt');
         if (!filename) {
             filename = 'mySynth.txt';  // Default filename if the user cancels the prompt
         }
-        console.log(localStorage.getItem(`${props.page}Value`))
+        console.log(localStorage.getItem(`${STORAGE_PREFIX}-${props.page}Value`))
 
         const url = URL.createObjectURL(blob);
         // Create an invisible anchor element
@@ -2298,7 +2300,7 @@ function Editor(props) {
     //end export dialog support
 
     async function exportAsWebPage() {
-        const code = localStorage.getItem(`${props.page}Value`);
+        const code = localStorage.getItem(`${STORAGE_PREFIX}-${props.page}Value`);
 
         // Create HTML template with required dependencies
         const htmlContent = await webExportHTMLContentGenerator(code);

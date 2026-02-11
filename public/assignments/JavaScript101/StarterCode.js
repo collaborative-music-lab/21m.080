@@ -7,17 +7,22 @@ Also, you can drag the divider to make the codebox wider
 //let, const, and var all let you define variables
 //if in doubt, just use let!
 
+// an object is a collection of code which you can also 
+//save in a variable. 
+//Objects are created using the *new* keyword.
+
 //define an oscillator object, and refer to it as vco:
 let vco = new Tone.Oscillator()
 //var and const can be used just like let (mostly)
 //var vco = new Tone.Oscillator()
 //const vco = new Tone.Oscillator()
 
-//we can also just store numbers:
+//we can also just store numbers or text:
 let val = 100
+let val = 'hello'
 
 //DON'T redefine objects! But updating numbers is ok:
-val = 200
+let val = 200
 
 /**** B - Executing and Debugging *****/
 //execute a line by putting your cursor on it and typing option/alt-enter

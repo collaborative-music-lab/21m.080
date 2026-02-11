@@ -8,5 +8,5 @@ This document will cover pretty much all the coding you will need to do to work 
 
 A few general words of advice before we get started:
 * Spelling, capitalization, and syntax are crucial. Pay attention as you code, and when you have problems check here first.
-* Don’t worry about what you don’t know. JavaScript has lots of built-in features, functions, and objects. We will use a bunch - just accept them as they are and don’t worry about learning ‘all the options’.
+* Don’t worry about what you don’t know. JavaScript has lots of built-in features, functions, and objects. We will use a small selection of these - just accept them as they are and don’t worry about learning ‘all the options’.
 * Start simple, and find ways to check everything is working one step at a time. Making errors is normal, and debugging is a great way to learn!

@@ -1,5 +1,5 @@
 //21M.080 phase lab
-const gui = new p5(sketch, PhaseLab)
+const gui = new p5(sketch, Canvas)
 let output = new Tone.Multiply(0.1).toDestination()
 
 //we will start by exploring a sine wave
@@ -41,10 +41,10 @@ noise.connect( delay_level), vco.connect( delay_level ), player.connect( delay_l
 delay_level.connect( delay )
 delay.connect( vca )
 //
-const scope = new Oscilloscope('PhaseLab')
+const scope = new Oscilloscope()
 vca.connect( scope.input)
 //
-const spectrum = new Spectroscope('PhaseLab')
+const spectrum = new Spectroscope()
 vca.connect( spectrum.input)
 
 /**** GUI ELEMENTS ****/

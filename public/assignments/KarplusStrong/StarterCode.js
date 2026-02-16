@@ -28,7 +28,7 @@ resonator.connect( output)
 // resonator.load('./audio/spring_reverb.mp3')
 // resonator.load('./audio/plate_reverb.mp3')
 
-let gui = new p5(sketch, KarplusStrong)
+let gui = new p5(sketch, Canvas)
 //
 let impulse_tone_knob = gui.Knob({
   label: 'impulse tone',
@@ -68,7 +68,7 @@ let resonator_gain_knob = gui.Knob({
   min:0, max:2, curve: 2
 })
 
-let scope = new Oscilloscope('KarplusStrong')
+let scope = new Oscilloscope()
 delay.connect( scope.input)
 
 setNoteOnHandler( (note,vel)=>{

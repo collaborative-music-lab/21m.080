@@ -89,8 +89,8 @@ function gotFrequency(error, outputs) {
 }
 //
 /********** GUI **********/
-const gui = new p5(sketch, Perceptron);
-const gui2 = new p5(sketch, Perceptron);
+const gui = new p5(sketch, Canvas);
+const gui2 = new p5(sketch, Canvas);
 gui2.noLoop()
 //
 gui2.Text({

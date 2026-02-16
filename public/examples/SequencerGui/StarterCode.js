@@ -55,7 +55,7 @@ vcf.rolloff = -24
 vcf.Q.value = 1
 
 //GUI
-let gui = new p5(sketch, SequencerGui)
+let gui = new p5(sketch, Canvas)
 let detune_knob = gui.Knob({
   label: 'detune', mapto: vco2_detune.factor,
   min: .5, max:1, curve:1, value: .99,

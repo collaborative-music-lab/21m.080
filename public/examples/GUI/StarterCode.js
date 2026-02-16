@@ -5,7 +5,7 @@ let output = new Tone.Multiply(0.1).toDestination()
 vco.connect(vcf), vcf.connect( vca ), vca.connect( output )
 let env = new Tone.Envelope()
 env.connect(vca.factor)
-const gui = new p5( sketch, GUI )
+const gui = new p5( sketch, Canvas )
 
 gui.setTheme('dark')
 gui.listThemes() 

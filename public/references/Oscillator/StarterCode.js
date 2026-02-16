@@ -5,7 +5,7 @@ vco.start()
 vco.frequency.value = 220
 vco.type = "square"
 
-let scope = new Oscilloscope('Oscillator')
-vco.connect( scope.analyserNode )
+let scope = new Oscilloscope()
+vco.connect( scope.input )
 scope.start()
 scope.setFftSize( 1024*2 )

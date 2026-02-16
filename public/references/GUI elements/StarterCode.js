@@ -2,7 +2,7 @@ let vco = new Tone.Oscillator(440).start()
 let output = new Tone.Multiply(0.02).toDestination()
 vco.connect( output ), vco.frequency.value = 220, vco.type = "square"
 
-const gui = new p5(sketch, 'GUI elements')
+const gui = new p5(sketch, Canvas)
 
 let vco_freq = gui.Knob({
   label:'frequency', 

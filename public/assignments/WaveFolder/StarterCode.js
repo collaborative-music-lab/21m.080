@@ -35,7 +35,7 @@ waveShaper.setMap(hardClipper);
 waveShaper.setMap(sineFolder);
 
 //GUI
-let gui = new p5(sketch, WaveFolder)
+let gui = new p5(sketch, Canvas)
 let depth_knob = gui.Knob({
   label: 'depth',
   mapto: shaperInput.factor,
@@ -45,5 +45,5 @@ let enable_tog = gui.Toggle({
   label: 'mute', mapto: vca.factor
 })
 
-let scope= new Oscilloscope('WaveFolder')
+let scope= new Oscilloscope()
 waveShaper.connect( scope.input)

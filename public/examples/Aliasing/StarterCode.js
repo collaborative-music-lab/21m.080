@@ -9,7 +9,7 @@ carrier.connect( amp_mod ), modulator.connect( amp_mod2 )
 amp_mod2.connect( amp_mod.factor ), modulator2.connect( amp_mod2.factor )
 amp_mod.connect(output)
 
-let gui = new p5( sketch, Aliasing)
+let gui = new p5( sketch, Canvas)
 let car_knob = gui.Knob({
   label:'carrier',
   mapto: carrier.frequency,
@@ -27,7 +27,7 @@ let mod2_knob = gui.Knob({
 })
 
 //visual monitor to see frequencies
-let spectrum = new Spectroscope('Aliasing')
+let spectrum = new Spectroscope()
 amp_mod.connect( spectrum.input )
 spectrum.maxFrequency = 24000
 

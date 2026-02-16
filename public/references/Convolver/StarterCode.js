@@ -48,7 +48,7 @@ let newNote = function(){
 let mySeq = setInterval( newNote, 150)
 
 //// GUI
-let gui = new p5(gui_sketch, Convolver )
+let gui = new p5(gui_sketch, Canvas )
 
 let decay_knob = gui.Knob({
   label: 'decay',

@@ -24,6 +24,6 @@ mod_amp.factor.rampTo( .25 * 1, 2)
 car_amp.factor.value = .25
 vca.factor.value = .5
 
-let spectrum = new Spectroscope('AmplitudeModulation')
+let spectrum = new Spectroscope()
 car_amp.connect( spectrum.input)
 spectrum.maxFrequency = 22050

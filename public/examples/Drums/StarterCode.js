@@ -115,7 +115,7 @@ kick.pitch_env_depth.factor.value = 100
 console.log( kick.pitch_env.get())
 
 
-let gui = new p5(sketch, Drums)
+let gui = new p5(sketch, Canvas)
 //
 let kick_pitch_knob = gui.Knob({
   label: 'kick pitch',
@@ -156,14 +156,6 @@ let hat_open_day_knob = gui.Knob({
   min: .01, max: 1, curve: 2, value: .5,
   accentColor: [200,0,0]
 })
-
-// let scope = new Oscilloscope('Canvas2')
-// kick.waveShaper.connect(scope.input)
-// scope.setFftSize(1024*32)
-
-// let spectrum = new Spectroscope('Canvas3')
-// kick.waveShaper.connect( spectrum.input)
-// spectrum.maxFrequency = 2000
 
 let index = 0
 let seq = new Tone.Sequence((time,note)=>{

@@ -10,7 +10,7 @@ vca.factor.value = .1
 vca.factor.rampTo( .0, .75 )
 modulator.connect( vca.factor )
 
-let scope = new Oscilloscope('Multiply')
-vca.connect( scope.analyserNode )
+let scope = new Oscilloscope()
+vca.connect( scope.input )
 scope.start()
 scope.threshold = .4

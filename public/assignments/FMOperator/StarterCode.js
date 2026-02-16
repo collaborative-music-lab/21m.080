@@ -1,4 +1,4 @@
-let gui = new p5(sketch, FMOperator)
+let gui = new p5(sketch, Canvas)
 class FMOperator {
   constructor(x=0,y=0,color=[0,0,0],carrier = 'no') {
     //audio objects

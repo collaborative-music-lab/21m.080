@@ -26,6 +26,6 @@ granularSynth.detune = 0 //cents, 1200=1 octave
 
 //granularSynth.stop()
 
-let scope = new Oscilloscope('GranularSynth')
+let scope = new Oscilloscope()
 granularSynth.connect( scope.input )
 scope.setFftSize(1028*32)

@@ -11,7 +11,7 @@ env.attack = .01
 env.attackCurve = "exponential" //or "linear"
 
 //show the envelope on the oscilloscope
-let scope = new Oscilloscope('Envelope')
+let scope = new Oscilloscope()
 env.connect( scope.analyserNode )
 scope.start()
 scope.setFftSize( 1024 * 32) //big fft size to zoom out and see whole envelope

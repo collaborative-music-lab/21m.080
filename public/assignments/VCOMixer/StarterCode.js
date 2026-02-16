@@ -38,7 +38,7 @@ vco_3.type = 'square'
 frequency.rampTo( 100, 1)
 
 
-let gui = new p5(sketch, VCOMixer)
+let gui = new p5(sketch, Canvas)
 let vco_knob_x = [15,25,35]
 //labels
 let vco1_label = gui.Text({
@@ -172,6 +172,6 @@ let vca_knob = gui.Knob({
   border: 3, accentColor: [0,0,255]
 })
 
-let scope = new Oscilloscope('VCOMixer')
+let scope = new Oscilloscope()
 vcf.connect( scope.input)
 scope.threshold = .99

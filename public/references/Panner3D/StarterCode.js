@@ -34,7 +34,7 @@ panner2.positionZ.value = 2
 
 //console.log(sampler.get())
 
-let gui = new p5(gui_sketch, Panner3D)
+let gui = new p5(sketch, Canvas)
 
 let knobX = gui.Knob({
   label:'voice 1 x', 

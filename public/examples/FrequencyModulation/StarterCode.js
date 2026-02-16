@@ -13,7 +13,7 @@ carrier.connect( vca), vca.connect( output)
 modulator.connect( mod_amp ), mod_amp.connect( carrier.frequency)
 freq.connect( carrier.frequency), freq.connect( harmonicity)
 // monitor the frequency spectrum
-let spectrum = new Spectroscope('FrequencyModulation')
+let spectrum = new Spectroscope()
 carrier.connect( spectrum.input)
 spectrum.maxFrequency = 24000
 

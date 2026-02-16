@@ -39,6 +39,6 @@ cutoff.value = 100
 //execute this line of code to trigger the envelope
 env.triggerAttackRelease(0.01)
 
-let spectrum = new Spectroscope('SubtractiveSynth')
+let spectrum = new Spectroscope()
 vcf.connect( spectrum.input )
 spectrum.maxFrequency = 20000

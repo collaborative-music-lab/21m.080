@@ -456,7 +456,7 @@ let poly = new Polyphony(PolyExample, 8)
 let out  = new Tone.Multiply(0.2).toDestination()
 poly.connect(out)
 
-const gui = new p5(sketch, 'Polyphony')
+const gui = new p5(sketch, Canvas)
 
 poly.initGui(poly, gui)
 

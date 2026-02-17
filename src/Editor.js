@@ -1105,64 +1105,53 @@ function Editor(props) {
         const ownerView = splitContainerRef.current?.ownerDocument?.defaultView || window;
         const requestFrame = ownerView?.requestAnimationFrame?.bind(ownerView) || window.requestAnimationFrame?.bind(window);
 
-        const triggerResizeNow = () => {
-            for (const id of canvases) {
-                const contexts = [];
-                const seen = new Set();
+ const triggerResizeNow = () => {
+    for (const id of canvases) {
 
-                const pushContext = (candidate) => {
-                    if (!candidate || typeof candidate.divResized !== 'function') {
-                        return;
-                    }
-                    if (seen.has(candidate)) {
-                        return;
-                    }
-                    seen.add(candidate);
-                    contexts.push(candidate);
-                };
+        const contexts = [];
+        const seen = new Set();
 
-                const collectFromRegistry = (view) => {
-                    if (!view) {
-                        return;
-                    }
-                    const registry = view.__creativitasCanvasRegistry;
-                    if (registry && Object.prototype.hasOwnProperty.call(registry, id)) {
-                        pushContext(registry[id]);
-                    }
-                };
+        const pushContext = (candidate) => {
+            //console.log(candidate)
+            if (!candidate || typeof candidate.divResized !== 'function') return;
+            if (seen.has(candidate)) return;
+            seen.add(candidate);
+            contexts.push(candidate);
+        };
 
-                collectFromRegistry(ownerView);
-                if (typeof document !== 'undefined') {
-                    const element = document.getElementById(id);
-                    const elementView = element?.ownerDocument?.defaultView;
-                    if (elementView && elementView !== ownerView) {
-                        collectFromRegistry(elementView);
-                    }
-                }
-                collectFromRegistry(window);
+        const collectFromRegistry = (view) => {
 
-                // Fallback to globals exposed by window or other views (legacy behaviour)
-                if (ownerView && ownerView !== window) {
-                    pushContext(ownerView[id]);
-                }
-                if (typeof document !== 'undefined') {
-                    const element = document.getElementById(id);
-                    const elementView = element?.ownerDocument?.defaultView;
-                    if (elementView && elementView !== ownerView && elementView !== window) {
-                        pushContext(elementView[id]);
-                    }
-                }
-                pushContext(window[id]);
+            if (!view) return;
 
-                for (const context of contexts) {
-                    try {
-                        context.divResized();
-                    } catch (error) {
-                        console.log(error);
-                    }
-                }
+            const registry = view.__creativitasCanvasRegistry;
+            //console.log('v', registry, id)
+            if (registry && registry[id]) {
+                pushContext(registry[id]);
             }
         };
+
+        // collect from known views
+        collectFromRegistry(ownerView);
+        collectFromRegistry(window);
+
+        if (typeof document !== 'undefined') {
+            const element = document.getElementById(id);
+            const elementView = element?.ownerDocument?.defaultView;
+
+            if (elementView) {
+                collectFromRegistry(elementView);
+            }
+        }
+        //console.log(contexts)
+        for (const context of contexts) {
+            try {
+                context.divResized();
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    }
+};
 
         // Kick off a synchronous resize so p5 instances react right away.
         triggerResizeNow();

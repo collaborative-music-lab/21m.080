@@ -9,15 +9,13 @@ let noteOn = [true, true, true, true, true, true, true, true]
 let keys = ['a','s','d','f','g','h','j','k']
 let noteToggles = []
 let index = 0
-const sequence = new Tone.Sequence( (time, note) => {
+const sequence = new Tone.Loop( (time) => {
   if (noteOn[index]) {
     rumble.triggerAttackRelease(pitches[index],127,'8n',time);
   }
   index = index+1
   if(index >= pitches.length) index = 0
-  },
-  pitches,
-  '8n'
+  }, '8n'
 );
 
 //start the transport

@@ -20,12 +20,12 @@ function App() {
   const [markdownContent, setMarkdownContent] = useState("");
 
   const exampleFiles = [
-    'FirstSteps', 
-    //'FourierTheorem',  'GUI', 'SubtractiveSynth', 'Temperaments', 'Aliasing', 'AmplitudeModulation', 
+    'FirstSteps', 'MIDI', 'ASCII','GUI', 'SubtractiveSynth', 'FrequencyModulation'
+    //'FourierTheorem', 'SubtractiveSynth', 'Temperaments', 'Aliasing', 'AmplitudeModulation', 
     //'FrequencyModulation','MIDI', 'ASCII', 'Sampler', 'GranularSynth', 'Physical Model', 'SequencerGui', 'Drums', 'Polyphony'
   ];
   const assignmentFiles = [
-    'JavaScript101', 
+    'JavaScript101', 'Sequencer', 'WaveFolder', 'VCOMixer', 'Sequencer',
     //'VCOMixer', 'Sequencer', 'FMOperator', 'WaveFolder', 'KarplusStrong',
     //'PhaseLab', 'PhaseLab2','MarkovChains', 'Perceptron'
     ];
